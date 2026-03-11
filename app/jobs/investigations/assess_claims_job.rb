@@ -21,7 +21,9 @@ module Investigations
               conflict_score: result.conflict_score,
               authority_score: result.authority_score,
               independence_score: result.independence_score,
-              timeliness_score: result.timeliness_score
+              timeliness_score: result.timeliness_score,
+              disagreement_details: result.disagreement_details,
+              unanimous: result.unanimous || false
             )
 
             sync_evidence_items!(assessment)

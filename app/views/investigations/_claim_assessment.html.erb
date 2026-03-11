@@ -54,6 +54,33 @@
     </div>
   </dl>
 
+  <% if assessment.disagreement_details.present? %>
+    <details class="consensus-details">
+      <summary>
+        LLM consensus
+        <% if assessment.unanimous? %>
+          <span class="badge badge--green">Unanimous</span>
+        <% else %>
+          <span class="badge badge--amber">Disagreement</span>
+        <% end %>
+      </summary>
+      <p class="muted"><%= assessment.disagreement_details %></p>
+      <% if assessment.llm_interactions.any? %>
+        <ul class="llm-verdicts-list">
+          <% assessment.llm_interactions.where(interaction_type: :assessment, status: :completed).each do |interaction| %>
+            <li>
+              <strong><%= interaction.model_id %></strong>:
+              <% if interaction.response_json.present? %>
+                <span class="<%= badge_class_for(interaction.response_json['verdict'] || 'pending') %>"><%= (interaction.response_json['verdict'] || 'unknown').humanize %></span>
+                <span class="muted"><%= score_percent((interaction.response_json['confidence_score'].to_f * 100)) %> confidence</span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </details>
+  <% end %>
+
   <% if assessment.missing_evidence_summary.present? %>
     <p class="muted"><strong>Missing evidence:</strong> <%= assessment.missing_evidence_summary %></p>
   <% end %>

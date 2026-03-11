@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_11_193000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_11_194000) do
   create_table "article_claims", force: :cascade do |t|
     t.integer "article_id", null: false
     t.integer "claim_id", null: false
@@ -79,11 +79,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_193000) do
     t.decimal "confidence_score", precision: 5, scale: 2, default: "0.0", null: false
     t.decimal "conflict_score", precision: 5, scale: 2, default: "0.0", null: false
     t.datetime "created_at", null: false
+    t.text "disagreement_details"
     t.decimal "independence_score", precision: 5, scale: 2, default: "0.0", null: false
     t.integer "investigation_id", null: false
     t.text "missing_evidence_summary"
     t.text "reason_summary"
     t.decimal "timeliness_score", precision: 5, scale: 2, default: "0.0", null: false
+    t.boolean "unanimous", default: false, null: false
     t.datetime "updated_at", null: false
     t.string "verdict", default: "pending", null: false
     t.index ["checkability_status"], name: "index_claim_assessments_on_checkability_status"

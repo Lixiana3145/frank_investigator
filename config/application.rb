@@ -32,5 +32,8 @@ module FrankInvestigator
       "FRANK_INVESTIGATOR_OPENROUTER_MODELS",
       "openai/gpt-5-mini,anthropic/claude-3.7-sonnet,google/gemini-2.5-pro"
     ).split(",").map(&:strip).reject(&:blank?)
+    config.x.frank_investigator.quarantined_models = ENV.fetch(
+      "QUARANTINED_MODELS", ""
+    ).split(",").map(&:strip).reject(&:blank?)
   end
 end

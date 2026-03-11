@@ -1,6 +1,6 @@
 module Llm
   class RubyLlmClient
-    Result = Struct.new(:verdict, :confidence_score, :reason_summary, keyword_init: true)
+    Result = Struct.new(:verdict, :confidence_score, :reason_summary, :model_results, :disagreement_details, :unanimous, keyword_init: true)
 
     SYSTEM_PROMPT = <<~PROMPT.freeze
       You are part of a news fact-checking pipeline. Your task is to assess a claim based on retrieved evidence.
@@ -18,8 +18,11 @@ module Llm
       reason_summary must reference specific evidence sources.
     PROMPT
 
+    VERDICT_ORDER = %w[supported mixed disputed needs_more_evidence not_checkable].freeze
+
     def initialize(models: Rails.application.config.x.frank_investigator.openrouter_models)
-      @models = Array(models)
+      quarantined = ENV.fetch("QUARANTINED_MODELS", "").split(",").map(&:strip).reject(&:blank?)
+      @models = Array(models).reject { |m| quarantined.include?(m) }
     end
 
     def call(claim:, evidence_packet:, investigation: nil, claim_assessment: nil)
@@ -54,15 +57,14 @@ module Llm
       majority_verdict = verdict_groups.max_by { |_, votes| votes.length }&.first || "needs_more_evidence"
       mean_confidence = results.sum { |r| r.confidence_score.to_f } / results.size
 
-      # Penalize disagreement
-      unique_verdicts = results.map(&:verdict).uniq
-      disagreement_penalty = if unique_verdicts.one?
-        0
-      elsif unique_verdicts.size == 2
-        0.12
-      else
-        0.2
-      end
+      # Graduated disagreement penalty based on verdict distance
+      disagreement_penalty = compute_disagreement_penalty(results)
+      unanimous = results.map(&:verdict).uniq.one?
+
+      # Build per-model details string
+      model_results = results.map { |r| { verdict: r.verdict, confidence: r.confidence_score } }
+      details_parts = results.map { |r| "#{r.verdict} (#{(r.confidence_score.to_f * 100).round}%)" }
+      disagreement_details = unanimous ? "All models agree: #{details_parts.first}" : "Models disagree: #{details_parts.join(', ')}"
 
       # Pick the best reason from majority group
       majority_results = verdict_groups[majority_verdict] || results
@@ -71,8 +73,36 @@ module Llm
       Result.new(
         verdict: majority_verdict,
         confidence_score: [mean_confidence - disagreement_penalty, 0].max.round(2),
-        reason_summary: best_reason
+        reason_summary: best_reason,
+        model_results: model_results,
+        disagreement_details: disagreement_details,
+        unanimous: unanimous
       )
+    end
+
+    def compute_disagreement_penalty(results)
+      verdicts = results.map(&:verdict).uniq
+      return 0 if verdicts.one?
+
+      if verdicts.size == 2
+        pair_penalty(verdicts[0], verdicts[1])
+      elsif verdicts.size >= 3
+        0.25
+      else
+        0
+      end
+    end
+
+    def pair_penalty(a, b)
+      idx_a = VERDICT_ORDER.index(a.to_s) || 4
+      idx_b = VERDICT_ORDER.index(b.to_s) || 4
+      distance = (idx_a - idx_b).abs
+
+      case distance
+      when 0 then 0
+      when 1 then 0.08  # adjacent (supported↔mixed, mixed↔disputed)
+      else 0.15          # opposed (supported↔disputed, etc.)
+      end
     end
 
     def ask_model(model:, claim:, evidence_packet:, prompt_text:, packet_fingerprint:, investigation:, claim_assessment:)

@@ -1,6 +1,6 @@
 module Llm
   class FakeClient
-    Result = Struct.new(:verdict, :confidence_score, :reason_summary, keyword_init: true)
+    Result = Struct.new(:verdict, :confidence_score, :reason_summary, :model_results, :disagreement_details, :unanimous, keyword_init: true)
 
     class << self
       attr_accessor :next_result

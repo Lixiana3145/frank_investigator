@@ -19,4 +19,5 @@ class ClaimAssessment < ApplicationRecord
   belongs_to :claim
 
   has_many :evidence_items, dependent: :destroy
+  has_many :llm_interactions, dependent: :nullify
 end

@@ -10,6 +10,8 @@ module Analyzers
       :authority_score,
       :independence_score,
       :timeliness_score,
+      :disagreement_details,
+      :unanimous,
       keyword_init: true
     )
 
@@ -57,7 +59,9 @@ module Analyzers
         conflict_score: scores[:conflict_score].round(2),
         authority_score: scores[:authority_score].round(2),
         independence_score: scores[:independence_score].round(2),
-        timeliness_score: scores[:timeliness_score].round(2)
+        timeliness_score: scores[:timeliness_score].round(2),
+        disagreement_details: llm_result&.disagreement_details,
+        unanimous: llm_result&.unanimous
       )
     end
 
