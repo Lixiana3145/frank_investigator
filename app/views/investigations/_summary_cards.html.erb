@@ -8,11 +8,21 @@
     <p class="metric-value"><span class="<%= badge_class_for(investigation.checkability_status) %>"><%= investigation.checkability_status.humanize %></span></p>
   </article>
   <article class="metric-card">
-    <p class="metric-label">Headline bait score</p>
-    <p class="metric-value"><%= score_percent(investigation.headline_bait_score) %></p>
+    <p class="metric-label">Headline bait</p>
+    <p class="metric-value">
+      <span class="score-bar <%= score_color_class(investigation.headline_bait_score) %>">
+        <span class="score-bar__fill" style="width: <%= score_bar_width(investigation.headline_bait_score) %>%"></span>
+      </span>
+      <span class="metric-number"><%= score_percent(investigation.headline_bait_score) %></span>
+    </p>
   </article>
   <article class="metric-card">
     <p class="metric-label">Overall confidence</p>
-    <p class="metric-value"><%= score_percent(investigation.overall_confidence_score * 100) %></p>
+    <p class="metric-value">
+      <span class="score-bar <%= score_color_class(investigation.overall_confidence_score) %>">
+        <span class="score-bar__fill" style="width: <%= score_bar_width(investigation.overall_confidence_score) %>%"></span>
+      </span>
+      <span class="metric-number"><%= score_percent(investigation.overall_confidence_score * 100) %></span>
+    </p>
   </article>
 </section>

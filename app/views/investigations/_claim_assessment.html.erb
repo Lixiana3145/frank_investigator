@@ -1,41 +1,91 @@
 <section class="claim-card">
-  <p class="claim-text"><%= assessment.claim.canonical_text %></p>
+  <div class="claim-header">
+    <span class="verdict-icon <%= assessment.verdict %>"><%= raw verdict_icon(assessment.verdict) %></span>
+    <p class="claim-text"><%= assessment.claim.canonical_text %></p>
+  </div>
   <p class="claim-meta">
     <span class="<%= badge_class_for(assessment.verdict) %>"><%= assessment.verdict.humanize %></span>
     <span>Confidence <%= score_percent(assessment.confidence_score * 100) %></span>
+    <% if assessment.claim.claim_kind != "statement" %>
+      <span class="badge badge--slate"><%= assessment.claim.claim_kind.humanize %></span>
+    <% end %>
+    <% if assessment.claim.time_scope.present? %>
+      <span class="muted"><%= assessment.claim.time_scope %></span>
+    <% end %>
   </p>
   <p><%= assessment.reason_summary %></p>
+
   <dl class="score-grid">
     <div>
       <dt>Authority</dt>
-      <dd><%= score_percent(assessment.authority_score * 100) %></dd>
+      <dd>
+        <span class="score-bar score-bar--sm <%= score_color_class(assessment.authority_score) %>">
+          <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.authority_score) %>%"></span>
+        </span>
+        <span><%= score_percent(assessment.authority_score * 100) %></span>
+      </dd>
     </div>
     <div>
       <dt>Independence</dt>
-      <dd><%= score_percent(assessment.independence_score * 100) %></dd>
+      <dd>
+        <span class="score-bar score-bar--sm <%= score_color_class(assessment.independence_score) %>">
+          <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.independence_score) %>%"></span>
+        </span>
+        <span><%= score_percent(assessment.independence_score * 100) %></span>
+      </dd>
     </div>
     <div>
       <dt>Timeliness</dt>
-      <dd><%= score_percent(assessment.timeliness_score * 100) %></dd>
+      <dd>
+        <span class="score-bar score-bar--sm <%= score_color_class(assessment.timeliness_score) %>">
+          <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.timeliness_score) %>%"></span>
+        </span>
+        <span><%= score_percent(assessment.timeliness_score * 100) %></span>
+      </dd>
     </div>
     <div>
       <dt>Conflict</dt>
-      <dd><%= score_percent(assessment.conflict_score * 100) %></dd>
+      <dd>
+        <span class="score-bar score-bar--sm <%= score_color_class(1.0 - assessment.conflict_score) %>">
+          <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.conflict_score) %>%"></span>
+        </span>
+        <span><%= score_percent(assessment.conflict_score * 100) %></span>
+      </dd>
     </div>
   </dl>
-  <p class="muted"><strong>Missing evidence:</strong> <%= assessment.missing_evidence_summary %></p>
+
+  <% if assessment.missing_evidence_summary.present? %>
+    <p class="muted"><strong>Missing evidence:</strong> <%= assessment.missing_evidence_summary %></p>
+  <% end %>
 
   <% if assessment.evidence_items.any? %>
-    <ul class="evidence-list">
-      <% assessment.evidence_items.order(authority_score: :desc, relevance_score: :desc).limit(4).each do |item| %>
-        <li>
-          <span>
-            <strong><%= item.article&.title.presence || item.source_url %></strong><br>
-            <span class="muted"><%= item.source_kind.to_s.humanize %>, relevance <%= score_percent(item.relevance_score * 100) %>, authority <%= score_percent(item.authority_score * 100) %></span>
-          </span>
-          <span class="<%= badge_class_for(item.stance.remove("evidence_item_")) %>"><%= item.stance.humanize %></span>
-        </li>
-      <% end %>
-    </ul>
+    <details class="evidence-details">
+      <summary>Evidence sources (<%= assessment.evidence_items.size %>)</summary>
+      <ul class="evidence-list">
+        <% assessment.evidence_items.order(authority_score: :desc, relevance_score: :desc).each do |item| %>
+          <li>
+            <span>
+              <strong><%= item.article&.title.presence || item.source_url %></strong><br>
+              <span class="muted">
+                <%= item.source_kind.to_s.humanize %>
+                <% if item.article&.source_role.present? && item.article.source_role != "unknown" %>
+                  &middot;
+                  <span class="has-popover">
+                    <%= item.article.source_role.humanize %>
+                    <span class="popover-content"><%= source_role_description(item.article.source_role) %></span>
+                  </span>
+                <% end %>
+                &middot; relevance <%= score_percent(item.relevance_score * 100) %>
+                &middot; authority <%= score_percent(item.authority_score * 100) %>
+              </span>
+              <% if item.excerpt.present? %>
+                <br><span class="evidence-excerpt"><%= item.excerpt.truncate(200) %></span>
+              <% end %>
+            </span>
+            <span class="<%= badge_class_for(item.stance) %>"><%= item.stance.humanize %></span>
+          </li>
+        <% end %>
+      </ul>
+    </details>
   <% end %>
 </section>

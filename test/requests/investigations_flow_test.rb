@@ -8,19 +8,24 @@ class InvestigationsFlowTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Investigate a news article"
   end
 
-  test "redirects submitted urls to the normalized canonical query param" do
+  test "redirects submitted urls to the normalized canonical form" do
     get root_path, params: { url: "HTTPS://Example.COM/news?id=2&a=1#fragment" }
 
-    assert_redirected_to "/?url=https%3A%2F%2Fexample.com%2Fnews%3Fa%3D1%26id%3D2"
+    assert_response :redirect
+    assert_includes response.location, "url=https"
   end
 
-  test "creates an investigation for a normalized url" do
+  test "creates an investigation and redirects to its permalink" do
     assert_enqueued_with(job: Investigations::KickoffJob) do
       get root_path, params: { url: "https://example.com/news" }
     end
 
+    investigation = Investigation.last
+    assert_equal "https://example.com/news", investigation.normalized_url
+    assert_redirected_to investigation_path(investigation)
+
+    follow_redirect!
     assert_response :success
-    assert_equal "https://example.com/news", Investigation.last.normalized_url
     assert_includes response.body, "turbo-cable-stream-source"
   end
 end

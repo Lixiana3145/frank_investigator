@@ -1,0 +1,55 @@
+<article class="panel panel--wide">
+  <h2>Source graph</h2>
+  <% if links.any? %>
+    <div class="source-graph-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Kind</th>
+            <th>Authority</th>
+            <th>Role</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% links.each do |link| %>
+            <% target = link.target_article %>
+            <tr>
+              <td>
+                <strong><%= link.anchor_text.presence || target.host %></strong>
+                <br><span class="muted"><%= link.href.truncate(80) %></span>
+              </td>
+              <td><%= target.source_kind.humanize %></td>
+              <td>
+                <span class="has-popover">
+                  <%= target.authority_tier.humanize %>
+                  (<%= score_percent(target.authority_score * 100) %>)
+                  <span class="popover-content"><%= authority_tier_description(target.authority_tier) %></span>
+                </span>
+              </td>
+              <td>
+                <% if target.source_role != "unknown" %>
+                  <span class="has-popover">
+                    <%= target.source_role.humanize %>
+                    <span class="popover-content"><%= source_role_description(target.source_role) %></span>
+                  </span>
+                <% else %>
+                  <span class="muted">--</span>
+                <% end %>
+              </td>
+              <td><span class="<%= badge_class_for(link.follow_status) %>"><%= link.follow_status.humanize %></span></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# Server-rendered SVG link graph %>
+    <% if links.size >= 2 %>
+      <%= render "source_graph_svg", links: links, investigation: investigation %>
+    <% end %>
+  <% else %>
+    <p class="empty-state">No in-body links have been cataloged yet.</p>
+  <% end %>
+</article>

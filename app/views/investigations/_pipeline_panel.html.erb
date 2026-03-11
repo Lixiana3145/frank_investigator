@@ -1,0 +1,20 @@
+<article class="panel">
+  <h2>Pipeline steps</h2>
+  <% if steps.any? %>
+    <ul class="steps-list">
+      <% steps.each do |step| %>
+        <li>
+          <span>
+            <%= step.name.humanize %>
+            <% if (duration = pipeline_step_duration(step)) %>
+              <span class="muted"> &middot; <%= duration %></span>
+            <% end %>
+          </span>
+          <span class="<%= badge_class_for(step.status) %>"><%= step.status.humanize %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="empty-state">Jobs have not started yet.</p>
+  <% end %>
+</article>

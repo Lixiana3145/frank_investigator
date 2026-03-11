@@ -1,0 +1,47 @@
+<article class="panel">
+  <h2>Root article</h2>
+  <% if root_article.present? %>
+    <dl class="fact-list">
+      <div>
+        <dt>Title</dt>
+        <dd><%= root_article.title.presence || "Pending fetch" %></dd>
+      </div>
+      <div>
+        <dt>Fetch status</dt>
+        <dd><span class="<%= badge_class_for(root_article.fetch_status) %>"><%= root_article.fetch_status.humanize %></span></dd>
+      </div>
+      <div>
+        <dt>Source kind</dt>
+        <dd><%= root_article.source_kind.humanize %></dd>
+      </div>
+      <div>
+        <dt>Authority tier</dt>
+        <dd>
+          <span class="has-popover">
+            <%= root_article.authority_tier.humanize %> (<%= score_percent(root_article.authority_score * 100) %>)
+            <span class="popover-content"><%= authority_tier_description(root_article.authority_tier) %></span>
+          </span>
+        </dd>
+      </div>
+      <% if root_article.source_role != "unknown" %>
+        <div>
+          <dt>Source role</dt>
+          <dd>
+            <span class="has-popover">
+              <%= root_article.source_role.humanize %>
+              <span class="popover-content"><%= source_role_description(root_article.source_role) %></span>
+            </span>
+          </dd>
+        </div>
+      <% end %>
+      <div>
+        <dt>Linked sources</dt>
+        <dd><%= root_article.sourced_links.count %></dd>
+      </div>
+    </dl>
+
+    <% if root_article.excerpt.present? %>
+      <p class="excerpt"><%= root_article.excerpt %></p>
+    <% end %>
+  <% end %>
+</article>

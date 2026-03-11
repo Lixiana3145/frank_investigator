@@ -1,0 +1,42 @@
+<%
+  evidence_items = investigation.claim_assessments
+    .includes(evidence_items: :article)
+    .flat_map(&:evidence_items)
+    .select { |ei| ei.article&.fetched_at.present? || ei.article&.published_at.present? }
+    .sort_by { |ei| ei.article.published_at || ei.article.fetched_at }
+%>
+
+<article class="panel panel--wide">
+  <h2>Evidence timeline</h2>
+  <% if evidence_items.any? %>
+    <div class="timeline">
+      <% evidence_items.each do |item| %>
+        <% date = item.article.published_at || item.article.fetched_at %>
+        <div class="timeline-entry">
+          <div class="timeline-date"><%= date.strftime("%b %d, %Y") %></div>
+          <div class="timeline-dot timeline-dot--<%= item.stance %>"></div>
+          <div class="timeline-content">
+            <p class="timeline-title"><%= item.article.title.presence || item.article.host %></p>
+            <p class="timeline-meta">
+              <span class="<%= badge_class_for(item.stance) %>"><%= item.stance.humanize %></span>
+              <span class="muted"><%= item.source_kind.to_s.humanize %></span>
+              <% if item.article.authority_tier != "unknown" %>
+                <span class="muted">
+                  <span class="has-popover">
+                    <%= item.article.authority_tier.humanize %> authority
+                    <span class="popover-content"><%= authority_tier_description(item.article.authority_tier) %></span>
+                  </span>
+                </span>
+              <% end %>
+            </p>
+            <% if item.excerpt.present? %>
+              <p class="timeline-excerpt muted"><%= item.excerpt.truncate(180) %></p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="empty-state">No dated evidence has been collected yet.</p>
+  <% end %>
+</article>

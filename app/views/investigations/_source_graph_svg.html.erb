@@ -1,0 +1,47 @@
+<%
+  root = investigation.root_article
+  targets = links.map(&:target_article).uniq
+  total = targets.size
+
+  svg_width = 800
+  svg_height = [300, 80 + total * 45].min
+  cx = 100
+  cy = svg_height / 2
+
+  tier_colors = {
+    "primary" => "#205f3b",
+    "secondary" => "#915d09",
+    "low" => "#9f2d28",
+    "unknown" => "#5b646f"
+  }
+%>
+
+<svg viewBox="0 0 <%= svg_width %> <%= svg_height %>" class="source-graph-svg" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="var(--muted)" />
+    </marker>
+  </defs>
+
+  <% targets.each_with_index do |target, i| %>
+    <%
+      tx = svg_width - 200
+      ty = 30 + (i.to_f / [total - 1, 1].max) * (svg_height - 60)
+      color = tier_colors[target.authority_tier] || tier_colors["unknown"]
+    %>
+    <line x1="<%= cx + 8 %>" y1="<%= cy %>"
+          x2="<%= tx - 8 %>" y2="<%= ty %>"
+          stroke="<%= color %>" stroke-width="1.5" stroke-opacity="0.4"
+          marker-end="url(#arrowhead)" />
+    <circle cx="<%= tx %>" cy="<%= ty %>" r="7" fill="<%= color %>" fill-opacity="0.2" stroke="<%= color %>" stroke-width="1.5" />
+    <text x="<%= tx + 14 %>" y="<%= ty + 4 %>" font-size="11" fill="var(--ink)" font-family="Georgia, serif">
+      <%= target.host.truncate(35) %>
+      <tspan fill="var(--muted)" font-size="10"> (<%= target.authority_tier %>)</tspan>
+    </text>
+  <% end %>
+
+  <circle cx="<%= cx %>" cy="<%= cy %>" r="10" fill="var(--ink)" fill-opacity="0.1" stroke="var(--ink)" stroke-width="2" />
+  <text x="<%= cx + 16 %>" y="<%= cy + 4 %>" font-size="12" font-weight="bold" fill="var(--ink)" font-family="Georgia, serif">
+    <%= root&.host.to_s.truncate(30) %>
+  </text>
+</svg>

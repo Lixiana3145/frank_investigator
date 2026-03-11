@@ -18,48 +18,17 @@
 
   <%= render "summary_cards", investigation: @investigation %>
 
+  <% if @investigation.headline_bait_score > 0 %>
+    <%= render "headline_bait", investigation: @investigation %>
+  <% end %>
+
   <section class="content-grid">
-    <article class="panel">
-      <h2>Root article</h2>
-      <% if @investigation.root_article.present? %>
-        <dl class="fact-list">
-          <div>
-            <dt>Title</dt>
-            <dd><%= @investigation.root_article.title.presence || "Pending fetch" %></dd>
-          </div>
-          <div>
-            <dt>Fetch status</dt>
-            <dd><span class="<%= badge_class_for(@investigation.root_article.fetch_status) %>"><%= @investigation.root_article.fetch_status.humanize %></span></dd>
-          </div>
-          <div>
-            <dt>Main content selector</dt>
-            <dd><%= @investigation.root_article.main_content_path.presence || "Pending" %></dd>
-          </div>
-          <div>
-            <dt>Linked sources found</dt>
-            <dd><%= @investigation.root_article.sourced_links.count %></dd>
-          </div>
-          <div>
-            <dt>Source kind</dt>
-            <dd><%= @investigation.root_article.source_kind.humanize %></dd>
-          </div>
-          <div>
-            <dt>Authority tier</dt>
-            <dd><%= @investigation.root_article.authority_tier.humanize %> (<%= score_percent(@investigation.root_article.authority_score * 100) %>)</dd>
-          </div>
-        </dl>
-
-        <% if @investigation.root_article.excerpt.present? %>
-          <p class="excerpt"><%= @investigation.root_article.excerpt %></p>
-        <% end %>
-      <% end %>
-    </article>
+    <%= render "root_article_panel", root_article: @root_article %>
 
     <article class="panel">
-      <h2>Checkable claims</h2>
-      <% checkable_claims = @investigation.claim_assessments.includes(:claim).where(checkability_status: "checkable").order(confidence_score: :desc) %>
-      <% if checkable_claims.any? %>
-        <% checkable_claims.each do |assessment| %>
+      <h2>What we checked</h2>
+      <% if @checkable_claims.any? %>
+        <% @checkable_claims.each do |assessment| %>
           <%= render "claim_assessment", assessment: %>
         <% end %>
       <% else %>
@@ -68,16 +37,18 @@
     </article>
 
     <article class="panel">
-      <h2>Not checkable or ambiguous</h2>
-      <% uncheckable_claims = @investigation.claim_assessments.includes(:claim).where(checkability_status: ["not_checkable", "ambiguous"]).order(created_at: :asc) %>
-      <% if uncheckable_claims.any? %>
-        <% uncheckable_claims.each do |assessment| %>
+      <h2>What we could not check</h2>
+      <% if @uncheckable_claims.any? %>
+        <% @uncheckable_claims.each do |assessment| %>
           <section class="claim-card">
             <p class="claim-text"><%= assessment.claim.canonical_text %></p>
             <p class="claim-meta">
               <span class="<%= badge_class_for(assessment.checkability_status) %>"><%= assessment.checkability_status.humanize %></span>
+              <% if assessment.claim.claim_kind != "statement" %>
+                <span class="badge badge--slate"><%= assessment.claim.claim_kind.humanize %></span>
+              <% end %>
             </p>
-            <p><%= assessment.reason_summary.presence || "This claim needs more context before it can be checked." %></p>
+            <p class="muted"><%= assessment.reason_summary.presence || "This claim needs more context before it can be checked." %></p>
           </section>
         <% end %>
       <% else %>
@@ -85,41 +56,10 @@
       <% end %>
     </article>
 
-    <article class="panel">
-      <h2>Pipeline steps</h2>
-      <% if @investigation.pipeline_steps.any? %>
-        <ul class="steps-list">
-          <% @investigation.pipeline_steps.order(:created_at).each do |step| %>
-            <li>
-              <span><%= step.name.humanize %></span>
-              <span class="<%= badge_class_for(step.status) %>"><%= step.status.humanize %></span>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">Jobs have not started yet.</p>
-      <% end %>
-    </article>
+    <%= render "evidence_timeline", investigation: @investigation %>
 
-    <article class="panel">
-      <h2>Linked source graph</h2>
-      <% links = @investigation.root_article&.sourced_links&.includes(:target_article)&.order(:position) || [] %>
-      <% if links.any? %>
-        <ul class="steps-list">
-          <% links.each do |link| %>
-            <li>
-              <span>
-                <strong><%= link.anchor_text.presence || link.href %></strong><br>
-                <span class="muted"><%= link.href %></span><br>
-                <span class="muted"><%= link.target_article.source_kind.humanize %>, <%= score_percent(link.target_article.authority_score * 100) %> authority</span>
-              </span>
-              <span class="<%= badge_class_for(link.follow_status) %>"><%= link.follow_status.humanize %></span>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">No in-body links have been cataloged yet.</p>
-      <% end %>
-    </article>
+    <%= render "source_graph", links: @links, investigation: @investigation %>
+
+    <%= render "pipeline_panel", steps: @pipeline_steps %>
   </section>
 </main>
