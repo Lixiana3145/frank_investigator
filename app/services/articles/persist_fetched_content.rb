@@ -12,7 +12,12 @@ module Articles
     end
 
     def call
-      extracted = Parsing::MainContentExtractor.call(html: @html, url: @article.normalized_url)
+      extracted = if Parsing::DocumentExtractor.document_url?(@article.normalized_url)
+        extract_document
+      else
+        Parsing::MainContentExtractor.call(html: @html, url: @article.normalized_url)
+      end
+
       source_metadata = Sources::AuthorityClassifier.call(url: @article.normalized_url, host: @article.host, title: extracted.title || @fetched_title)
       connector_result = Sources::ConnectorRouter.call(
         url: @article.normalized_url,
@@ -50,6 +55,31 @@ module Articles
     end
 
     private
+
+    def extract_document
+      # Write the fetched HTML (which is actually binary content from Chromium dump-dom) to a temp file
+      # For documents, we need to download the file directly
+      require "open3"
+      require "tempfile"
+
+      ext = File.extname(URI.parse(@article.normalized_url).path)
+      tempfile = Tempfile.new(["document", ext])
+      tempfile.binmode
+      tempfile.write(@html)
+      tempfile.close
+
+      doc = Parsing::DocumentExtractor.call(file_path: tempfile.path, url: @article.normalized_url)
+
+      Parsing::MainContentExtractor::Result.new(
+        title: doc.title,
+        body_text: doc.body_text.presence || @fetched_title,
+        excerpt: doc.body_text.to_s.truncate(280),
+        main_content_path: "document:#{ext}",
+        links: []
+      )
+    ensure
+      tempfile&.unlink
+    end
 
     def store_html_snapshot!
       HtmlSnapshot.store!(article: @article, html: @html, url: @article.normalized_url)
