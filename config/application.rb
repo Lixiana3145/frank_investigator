@@ -27,6 +27,7 @@ module FrankInvestigator
     config.x.frank_investigator = ActiveSupport::OrderedOptions.new
     config.x.frank_investigator.max_link_depth = ENV.fetch("FRANK_INVESTIGATOR_MAX_LINK_DEPTH", 1).to_i
     config.x.frank_investigator.fetcher_class = ENV.fetch("FRANK_INVESTIGATOR_FETCHER_CLASS", "Fetchers::ChromiumFetcher")
+    config.x.frank_investigator.llm_client_class = ENV.fetch("FRANK_INVESTIGATOR_LLM_CLIENT_CLASS", "Llm::RubyLlmClient")
     config.x.frank_investigator.openrouter_models = ENV.fetch(
       "FRANK_INVESTIGATOR_OPENROUTER_MODELS",
       "openai/gpt-5-mini,anthropic/claude-3.7-sonnet,google/gemini-2.5-pro"

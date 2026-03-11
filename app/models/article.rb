@@ -11,5 +11,7 @@ class Article < ApplicationRecord
   has_many :targeted_links, class_name: "ArticleLink", foreign_key: :target_article_id, inverse_of: :target_article, dependent: :destroy
   has_many :evidence_items, dependent: :nullify
 
+  scope :fetched, -> { where(fetch_status: "fetched") }
+
   validates :url, :normalized_url, :host, presence: true
 end

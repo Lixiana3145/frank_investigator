@@ -42,5 +42,8 @@ class Investigations::FetchRootArticleJobTest < ActiveJob::TestCase
     assert_equal 1, investigation.root_article.sourced_links.count
     assert_equal "https://example.com/budget", investigation.root_article.sourced_links.first.href
     assert_equal "completed", investigation.pipeline_steps.find_by!(name: "fetch_root_article").status
+    assert_enqueued_with(job: Investigations::FetchLinkedArticleJob, args: [investigation.id, investigation.root_article.sourced_links.first.id]) do
+      Investigations::ExpandLinkedArticlesJob.perform_now(investigation.id, source_article_id: investigation.root_article.id)
+    end
   end
 end

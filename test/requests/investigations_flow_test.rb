@@ -21,5 +21,6 @@ class InvestigationsFlowTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal "https://example.com/news", Investigation.last.normalized_url
+    assert_includes response.body, "turbo-cable-stream-source"
   end
 end

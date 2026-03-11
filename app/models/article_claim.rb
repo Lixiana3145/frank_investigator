@@ -5,14 +5,14 @@ class ArticleClaim < ApplicationRecord
     body: "body",
     supporting: "supporting",
     linked_source: "linked_source"
-  }, default: :body, validate: true
+  }, default: :body, validate: true, prefix: true
 
   enum :stance, {
     repeats: "repeats",
     supports: "supports",
     disputes: "disputes",
-    references: "references"
-  }, default: :repeats, validate: true
+    cites: "cites"
+  }, default: :repeats, validate: true, prefix: true
 
   belongs_to :article
   belongs_to :claim

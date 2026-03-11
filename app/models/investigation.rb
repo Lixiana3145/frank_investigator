@@ -1,5 +1,7 @@
 class Investigation < ApplicationRecord
-  REQUIRED_STEPS = %w[fetch_root_article extract_claims analyze_headline assess_claims].freeze
+  REQUIRED_STEPS = %w[fetch_root_article extract_claims analyze_headline assess_claims expand_linked_articles_root].freeze
+
+  broadcasts_refreshes
 
   enum :status, {
     queued: "queued",

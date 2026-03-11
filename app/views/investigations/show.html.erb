@@ -1,5 +1,7 @@
 <% content_for :title, "Frank Investigator" %>
 
+<%= turbo_stream_from @investigation %>
+
 <main class="page-shell">
   <header class="analysis-header">
     <div>
@@ -113,6 +115,26 @@
         </ul>
       <% else %>
         <p class="empty-state">Jobs have not started yet.</p>
+      <% end %>
+    </article>
+
+    <article class="panel">
+      <h2>Linked source graph</h2>
+      <% links = @investigation.root_article&.sourced_links&.includes(:target_article)&.order(:position) || [] %>
+      <% if links.any? %>
+        <ul class="steps-list">
+          <% links.each do |link| %>
+            <li>
+              <span>
+                <strong><%= link.anchor_text.presence || link.href %></strong><br>
+                <span class="muted"><%= link.href %></span>
+              </span>
+              <span class="<%= badge_class_for(link.follow_status) %>"><%= link.follow_status.humanize %></span>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="empty-state">No in-body links have been cataloged yet.</p>
       <% end %>
     </article>
   </section>

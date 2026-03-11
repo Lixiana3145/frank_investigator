@@ -4,13 +4,14 @@ module Pipeline
 
     Result = Struct.new(:step, :executed, keyword_init: true)
 
-    def self.call(investigation:, name:, &block)
-      new(investigation:, name:).call(&block)
+    def self.call(investigation:, name:, allow_rerun: false, &block)
+      new(investigation:, name:, allow_rerun:).call(&block)
     end
 
-    def initialize(investigation:, name:)
+    def initialize(investigation:, name:, allow_rerun:)
       @investigation = investigation
       @name = name
+      @allow_rerun = allow_rerun
     end
 
     def call
@@ -18,7 +19,7 @@ module Pipeline
 
       step.with_lock do
         step.reload
-        return Result.new(step:, executed: false) if step.completed?
+        return Result.new(step:, executed: false) if step.completed? && !@allow_rerun
         return Result.new(step:, executed: false) if step.running? && !stale?(step)
 
         step.update!(
