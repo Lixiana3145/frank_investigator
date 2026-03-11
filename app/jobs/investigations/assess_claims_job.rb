@@ -6,6 +6,8 @@ module Investigations
       @investigation = Investigation.includes(:claim_assessments, :root_article).find(investigation_id)
 
       Pipeline::StepRunner.call(investigation: @investigation, name: "assess_claims", allow_rerun: true) do
+        run_authority_retrieval!
+
         ApplicationRecord.transaction do
           @investigation.claim_assessments.includes(:claim).find_each do |assessment|
             result = Analyzers::ClaimAssessor.call(investigation: @investigation, claim: assessment.claim)
@@ -32,6 +34,19 @@ module Investigations
     end
 
     private
+
+    def run_authority_retrieval!
+      @investigation.claim_assessments.includes(:claim).find_each do |assessment|
+        next unless assessment.claim.checkable? || assessment.claim.pending?
+
+        Analyzers::AuthorityRetrievalDispatcher.call(
+          investigation: @investigation,
+          claim: assessment.claim
+        )
+      end
+    rescue StandardError => e
+      Rails.logger.warn("Authority retrieval failed: #{e.message}")
+    end
 
     def sync_evidence_items!(assessment)
       existing_urls = []
