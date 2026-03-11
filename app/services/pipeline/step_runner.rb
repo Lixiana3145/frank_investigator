@@ -1,8 +1,10 @@
 module Pipeline
   class StepRunner
     STALE_AFTER = 10.minutes
+    MAX_STEPS_PER_INVESTIGATION = 50
 
     Result = Struct.new(:step, :executed, keyword_init: true)
+    class BudgetExceededError < StandardError; end
 
     def self.call(investigation:, name:, allow_rerun: false, &block)
       new(investigation:, name:, allow_rerun:).call(&block)
@@ -48,9 +50,17 @@ module Pipeline
     private
 
     def find_or_create_step!
+      enforce_budget!
       @investigation.pipeline_steps.find_or_create_by!(name: @name)
     rescue ActiveRecord::RecordNotUnique
       @investigation.pipeline_steps.find_by!(name: @name)
+    end
+
+    def enforce_budget!
+      step_count = @investigation.pipeline_steps.count
+      if step_count >= MAX_STEPS_PER_INVESTIGATION
+        raise BudgetExceededError, "Investigation has reached the maximum of #{MAX_STEPS_PER_INVESTIGATION} pipeline steps"
+      end
     end
 
     def stale?(step)

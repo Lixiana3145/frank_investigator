@@ -17,6 +17,7 @@ module Investigations
 
       uri = URI.parse(candidate_url)
       validate_http_url!(uri)
+      validate_ssrf_safe!(uri)
 
       uri.scheme = uri.scheme.downcase
       uri.host = uri.host.downcase
@@ -39,6 +40,12 @@ module Investigations
 
     def validate_http_url!(uri)
       raise InvalidUrlError, "URL is not valid" unless uri.is_a?(URI::HTTP) && uri.host.present?
+    end
+
+    def validate_ssrf_safe!(uri)
+      Security::SsrfValidator.validate!(uri.to_s)
+    rescue Security::SsrfValidator::SsrfError => e
+      raise InvalidUrlError, e.message
     end
 
     def default_port?(uri)

@@ -3,10 +3,19 @@ module Llm
     Result = Struct.new(:verdict, :confidence_score, :reason_summary, keyword_init: true)
 
     SYSTEM_PROMPT = <<~PROMPT.freeze
-      You are part of a news fact-checking pipeline.
-      Return only strict JSON with keys verdict, confidence_score, and reason_summary.
-      Base the answer only on the provided evidence packet.
+      You are part of a news fact-checking pipeline. Your task is to assess a claim based on retrieved evidence.
+
+      Rules:
+      - Base your assessment ONLY on the provided evidence, not your own knowledge.
+      - Cite specific evidence items by their source URL or title in your reasoning.
+      - If evidence is insufficient to reach a conclusion, say so explicitly.
+      - If sources disagree, note the disagreement and which sources are more authoritative.
+      - Be conservative: prefer "needs_more_evidence" over weak "supported" or "disputed".
+
+      Return only strict JSON with keys: verdict, confidence_score, reason_summary.
       Use verdict values: supported, disputed, mixed, needs_more_evidence, not_checkable.
+      confidence_score must be between 0.0 and 0.97.
+      reason_summary must reference specific evidence sources.
     PROMPT
 
     def initialize(models: Rails.application.config.x.frank_investigator.openrouter_models)
@@ -31,15 +40,7 @@ module Llm
 
       return nil if results.empty?
 
-      majority_verdict = results.group_by(&:verdict).max_by { |_, votes| votes.length }&.first || "needs_more_evidence"
-      mean_confidence = results.sum { |result| result.confidence_score.to_f } / results.size
-      disagreement_penalty = results.map(&:verdict).uniq.one? ? 0 : 0.15
-
-      Result.new(
-        verdict: majority_verdict,
-        confidence_score: [mean_confidence - disagreement_penalty, 0].max.round(2),
-        reason_summary: results.first.reason_summary
-      )
+      aggregate_results(results)
     end
 
     def available?
@@ -47,6 +48,32 @@ module Llm
     end
 
     private
+
+    def aggregate_results(results)
+      verdict_groups = results.group_by(&:verdict)
+      majority_verdict = verdict_groups.max_by { |_, votes| votes.length }&.first || "needs_more_evidence"
+      mean_confidence = results.sum { |r| r.confidence_score.to_f } / results.size
+
+      # Penalize disagreement
+      unique_verdicts = results.map(&:verdict).uniq
+      disagreement_penalty = if unique_verdicts.one?
+        0
+      elsif unique_verdicts.size == 2
+        0.12
+      else
+        0.2
+      end
+
+      # Pick the best reason from majority group
+      majority_results = verdict_groups[majority_verdict] || results
+      best_reason = majority_results.max_by { |r| r.reason_summary.to_s.length }&.reason_summary
+
+      Result.new(
+        verdict: majority_verdict,
+        confidence_score: [mean_confidence - disagreement_penalty, 0].max.round(2),
+        reason_summary: best_reason
+      )
+    end
 
     def ask_model(model:, claim:, evidence_packet:, prompt_text:, packet_fingerprint:, investigation:, claim_assessment:)
       if investigation && (cached = LlmInteraction.find_cached(evidence_packet_fingerprint: packet_fingerprint, model_id: model))
@@ -70,7 +97,7 @@ module Llm
 
       Result.new(
         verdict: payload.fetch("verdict"),
-        confidence_score: payload.fetch("confidence_score").to_f,
+        confidence_score: payload.fetch("confidence_score").to_f.clamp(0, 0.97),
         reason_summary: payload.fetch("reason_summary")
       )
     rescue StandardError => e
@@ -121,7 +148,7 @@ module Llm
     def parse_response(json)
       Result.new(
         verdict: json.fetch("verdict"),
-        confidence_score: json.fetch("confidence_score").to_f,
+        confidence_score: json.fetch("confidence_score").to_f.clamp(0, 0.97),
         reason_summary: json.fetch("reason_summary")
       )
     end
@@ -129,7 +156,11 @@ module Llm
     def build_prompt(claim:, evidence_packet:)
       {
         claim: claim.canonical_text,
+        claim_kind: claim.claim_kind,
         checkability_status: claim.checkability_status,
+        entities: claim.entities_json,
+        time_scope: claim.time_scope,
+        evidence_count: evidence_packet.size,
         evidence: evidence_packet
       }.to_json
     end

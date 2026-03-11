@@ -10,7 +10,7 @@ module Articles
     end
 
     def call
-      Analyzers::ClaimExtractor.call(@article).each do |result|
+      Analyzers::ClaimExtractor.call(@article, investigation: @investigation).each do |result|
         decomposed_claims = Analyzers::ClaimDecomposer.call(text: result.canonical_text, investigation: @investigation)
 
         decomposed_claims.each do |decomposed|

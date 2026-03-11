@@ -21,6 +21,15 @@ These are not TODO items anymore.
 - authority-specific connectors for government records, scientific papers, company filings, press releases
 - Brazil-specific connectors for legislative pages, court pages, and market filing pages
 - live smoke tasks for OpenRouter and Chromium fetch
+- LLM-powered claim extraction with structured schema (when OpenRouter is available)
+- LLM-powered contradiction analysis between evidence and claims
+- citation-grounded reason summaries referencing specific evidence sources
+- active evidence retrieval: generates search URLs for authority sources and fetches them
+- claim reuse across investigations: prior high-confidence assessments carry over
+- SSRF protection: blocks private IPs, metadata endpoints, numeric addresses
+- rate limiting with Rack::Attack (10 submissions/min, 120 requests/min per IP)
+- URL length limits and job budget limits (50 steps per investigation)
+- real HTML fixtures for regression testing against US and Brazil source shapes
 
 ## Highest-priority product gaps
 

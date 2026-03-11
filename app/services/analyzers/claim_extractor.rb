@@ -2,27 +2,35 @@ module Analyzers
   class ClaimExtractor
     Result = Struct.new(:canonical_text, :surface_text, :role, :checkability_status, :importance_score, keyword_init: true)
 
-    def self.call(article)
-      new(article).call
+    MAX_LLM_INPUT_LENGTH = 3000
+
+    def self.call(article, investigation: nil)
+      new(article, investigation:).call
     end
 
-    def initialize(article)
+    def initialize(article, investigation: nil)
       @article = article
+      @investigation = investigation
     end
 
     def call
-      candidates = []
-      candidates.concat(extract_title_claims)
-      candidates.concat(extract_body_claims)
-
+      candidates = heuristic_candidates
+      llm_claims = extract_with_llm
+      candidates = merge_llm_claims(candidates, llm_claims) if llm_claims.any?
       candidates.uniq { |result| ClaimFingerprint.call(result.canonical_text) }
     end
 
     private
 
+    def heuristic_candidates
+      results = []
+      results.concat(extract_title_claims)
+      results.concat(extract_body_claims)
+      results
+    end
+
     def extract_title_claims
       return [] if @article.title.blank?
-
       result = build_result(@article.title, role: :headline, importance_score: 1.0)
       result ? [result] : []
     end
@@ -31,6 +39,123 @@ module Analyzers
       sentences.first(6).filter_map.with_index do |sentence, index|
         build_result(sentence, role: index.zero? ? :lead : :body, importance_score: index.zero? ? 0.85 : 0.65)
       end
+    end
+
+    def extract_with_llm
+      return [] unless llm_available?
+
+      body_sample = @article.body_text.to_s.truncate(MAX_LLM_INPUT_LENGTH)
+      return [] if body_sample.length < 100
+
+      prompt = build_llm_prompt(body_sample)
+      packet_fingerprint = Digest::SHA256.hexdigest(prompt)
+
+      interaction = record_interaction(prompt, packet_fingerprint)
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+      response = RubyLLM.chat(model: extraction_model, provider: :openrouter, assume_model_exists: true)
+        .with_instructions(EXTRACTION_SYSTEM_PROMPT)
+        .with_schema(extraction_schema)
+        .ask(prompt)
+
+      elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
+      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
+      complete_interaction(interaction, response, payload, elapsed_ms)
+
+      parse_llm_claims(payload)
+    rescue StandardError => e
+      fail_interaction(interaction, e) if interaction
+      Rails.logger.warn("LLM claim extraction failed: #{e.message}")
+      []
+    end
+
+    EXTRACTION_SYSTEM_PROMPT = <<~PROMPT.freeze
+      You are a fact-checking claim extractor. Given a news article, identify the distinct factual claims.
+      Focus on verifiable statements, not opinions or rhetoric.
+      For each claim, provide:
+      - text: the claim as stated
+      - importance: high, medium, or low
+      - checkability: checkable, not_checkable, or ambiguous
+      Return only strict JSON matching the schema.
+    PROMPT
+
+    def build_llm_prompt(body_sample)
+      {
+        title: @article.title,
+        body: body_sample,
+        host: @article.host
+      }.to_json
+    end
+
+    def extraction_schema
+      {
+        name: "claim_extraction",
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            claims: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  text: { type: "string" },
+                  importance: { type: "string", enum: %w[high medium low] },
+                  checkability: { type: "string", enum: %w[checkable not_checkable ambiguous] }
+                },
+                required: %w[text importance checkability]
+              }
+            }
+          },
+          required: %w[claims]
+        }
+      }
+    end
+
+    def parse_llm_claims(payload)
+      Array(payload["claims"]).filter_map do |claim_data|
+        text = claim_data["text"].to_s.squish
+        next if text.blank? || text.length < 30
+
+        importance = case claim_data["importance"]
+        when "high" then 0.95
+        when "medium" then 0.75
+        else 0.55
+        end
+
+        checkability = claim_data["checkability"].to_s
+        checkability = "pending" unless %w[checkable not_checkable ambiguous].include?(checkability)
+
+        Result.new(
+          canonical_text: text,
+          surface_text: text,
+          role: :body,
+          checkability_status: checkability.to_sym,
+          importance_score: importance
+        )
+      end
+    end
+
+    def merge_llm_claims(heuristic, llm_claims)
+      existing_fingerprints = heuristic.map { |r| ClaimFingerprint.call(r.canonical_text) }.to_set
+
+      llm_claims.each do |llm_claim|
+        fp = ClaimFingerprint.call(llm_claim.canonical_text)
+        next if existing_fingerprints.include?(fp)
+
+        # Check if LLM found something that overlaps with heuristic via similarity
+        tokens = TextAnalysis.tokenize(llm_claim.canonical_text)
+        already_covered = heuristic.any? do |h|
+          TextAnalysis.jaccard_similarity(tokens, TextAnalysis.tokenize(h.canonical_text)) > 0.6
+        end
+        next if already_covered
+
+        heuristic << llm_claim
+        existing_fingerprints << fp
+      end
+
+      heuristic
     end
 
     def build_result(sentence, role:, importance_score:)
@@ -49,8 +174,51 @@ module Analyzers
     def sentences
       text = @article.body_text.to_s.squish
       return [] if text.blank?
-
       text.split(/(?<=[.!?])\s+/).map(&:strip)
+    end
+
+    def llm_available?
+      defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present?
+    end
+
+    def extraction_model
+      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-3.7-sonnet"
+    end
+
+    def record_interaction(prompt, fingerprint)
+      return nil unless @investigation
+      LlmInteraction.create!(
+        investigation: @investigation,
+        interaction_type: :claim_decomposition,
+        model_id: extraction_model,
+        prompt_text: prompt,
+        evidence_packet_fingerprint: fingerprint,
+        status: :pending
+      )
+    rescue StandardError
+      nil
+    end
+
+    def complete_interaction(interaction, response, payload, elapsed_ms)
+      return unless interaction
+      interaction.update!(
+        response_text: response.content.to_s,
+        response_json: payload,
+        status: :completed,
+        latency_ms: elapsed_ms,
+        prompt_tokens: response.respond_to?(:input_tokens) ? response.input_tokens : nil,
+        completion_tokens: response.respond_to?(:output_tokens) ? response.output_tokens : nil
+      )
+    rescue StandardError => e
+      Rails.logger.warn("Failed to update LLM interaction: #{e.message}")
+    end
+
+    def fail_interaction(interaction, error)
+      return unless interaction
+      interaction.update!(status: :failed, error_class: error.class.name, error_message: error.message.truncate(500))
+    rescue StandardError
+      nil
     end
   end
 end
+

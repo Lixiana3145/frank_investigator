@@ -1,7 +1,14 @@
 class InvestigationsController < ApplicationController
+  MAX_URL_LENGTH = 2048
+
   def home
     @submitted_url = params[:url].to_s.strip
     return render :home if @submitted_url.blank?
+
+    if @submitted_url.length > MAX_URL_LENGTH
+      @error_message = "URL is too long (maximum #{MAX_URL_LENGTH} characters)"
+      return render :home, status: :unprocessable_entity
+    end
 
     @normalized_url = Investigations::UrlNormalizer.call(@submitted_url)
     return redirect_to(root_path(url: @normalized_url), status: :see_other) if @submitted_url != @normalized_url

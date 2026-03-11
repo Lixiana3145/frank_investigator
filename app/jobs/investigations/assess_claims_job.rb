@@ -7,6 +7,7 @@ module Investigations
 
       Pipeline::StepRunner.call(investigation: @investigation, name: "assess_claims", allow_rerun: true) do
         run_authority_retrieval!
+        run_active_evidence_retrieval!
 
         ApplicationRecord.transaction do
           @investigation.claim_assessments.includes(:claim).find_each do |assessment|
@@ -46,6 +47,24 @@ module Investigations
       end
     rescue StandardError => e
       Rails.logger.warn("Authority retrieval failed: #{e.message}")
+    end
+
+    def run_active_evidence_retrieval!
+      @investigation.claim_assessments.includes(:claim).find_each do |assessment|
+        next unless assessment.claim.checkable?
+
+        # Skip if we already have good evidence
+        existing = Analyzers::EvidencePacketBuilder.call(investigation: @investigation, claim: assessment.claim)
+        primary_count = existing.count { |e| e.authority_tier == "primary" }
+        next if primary_count >= 2
+
+        Analyzers::ActiveEvidenceRetriever.call(
+          investigation: @investigation,
+          claim: assessment.claim
+        )
+      end
+    rescue StandardError => e
+      Rails.logger.warn("Active evidence retrieval failed: #{e.message}")
     end
 
     def sync_evidence_items!(assessment)

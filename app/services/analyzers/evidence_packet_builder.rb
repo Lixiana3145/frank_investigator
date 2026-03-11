@@ -22,7 +22,7 @@ module Analyzers
 
     def call
       supporting_articles.map do |article|
-        relationship = EvidenceRelationshipAnalyzer.call(claim: @claim, article:)
+        relationship = EvidenceRelationshipAnalyzer.call(claim: @claim, article:, investigation: @investigation)
         Entry.new(
           article:,
           stance: relationship.stance,

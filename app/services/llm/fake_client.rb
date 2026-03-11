@@ -10,7 +10,7 @@ module Llm
       self.class.next_result.present?
     end
 
-    def call(claim:, evidence_packet:)
+    def call(claim:, evidence_packet:, investigation: nil, claim_assessment: nil)
       self.class.next_result || Result.new(
         verdict: "needs_more_evidence",
         confidence_score: 0.41,
