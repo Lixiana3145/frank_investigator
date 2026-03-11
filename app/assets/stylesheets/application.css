@@ -238,6 +238,84 @@ p {
   color: var(--slate);
 }
 
+/* Error panel */
+.panel--error {
+  border-left: 4px solid var(--red);
+  background: rgba(159, 45, 40, 0.04);
+}
+
+.panel--error h2 {
+  color: var(--red);
+  font-size: 1.15rem;
+}
+
+.panel--error details {
+  margin: 0.5rem 0;
+}
+
+.panel--error details summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.panel--error details summary:hover {
+  color: var(--ink);
+}
+
+.panel--error .submit-button {
+  display: inline-block;
+  text-decoration: none;
+  margin-top: 0.5rem;
+}
+
+/* Consensus details */
+.consensus-details {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  border: 1px solid rgba(205, 191, 174, 0.4);
+}
+
+.consensus-details summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.consensus-details summary:hover {
+  color: var(--ink);
+}
+
+.consensus-details[open] summary {
+  margin-bottom: 0.4rem;
+}
+
+.llm-verdicts-list {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.llm-verdicts-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(205, 191, 174, 0.3);
+}
+
+.llm-verdicts-list li:last-child {
+  border-bottom: 0;
+}
+
 /* Fact list */
 .fact-list {
   display: grid;
