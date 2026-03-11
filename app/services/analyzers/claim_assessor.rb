@@ -171,6 +171,14 @@ module Analyzers
     def normalized_independence_score(entries)
       groups = entries.map(&:independence_group).reject(&:blank?).uniq.count
       return 0.05 if groups.zero?
+
+      # Run full independence analysis if we have enough articles
+      articles = entries.filter_map(&:article).uniq
+      if articles.size >= 2
+        analysis = IndependenceAnalyzer.call(articles: articles)
+        return analysis.independence_score
+      end
+
       [groups * 0.28, 1.0].min
     end
 
@@ -210,9 +218,18 @@ module Analyzers
       :needs_more_evidence
     end
 
+    SINGLE_CLUSTER_CONFIDENCE_CAP = 0.65
+
     def confidence_for(sufficiency_score:, authority_score:, independence_score:, timeliness_score:, weighted_support:, weighted_dispute:, **)
       conflict_penalty = conflict_score_for(weighted_support, weighted_dispute)
-      ((sufficiency_score * 0.35) + (authority_score * 0.25) + (independence_score * 0.2) + (timeliness_score * 0.2) - (conflict_penalty * 0.25)).clamp(0, 0.97)
+      raw = ((sufficiency_score * 0.35) + (authority_score * 0.25) + (independence_score * 0.2) + (timeliness_score * 0.2) - (conflict_penalty * 0.25)).clamp(0, 0.97)
+
+      # Cap confidence when independence is very low (single editorial cluster)
+      if independence_score <= 0.05
+        raw.clamp(0, SINGLE_CLUSTER_CONFIDENCE_CAP)
+      else
+        raw
+      end
     end
 
     def conflict_score_for(weighted_support, weighted_dispute)
