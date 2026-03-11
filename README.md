@@ -16,6 +16,10 @@ Project docs:
 - [Research summary](docs/research.md)
 - [Technical architecture](docs/architecture.md)
 
+Initial audience focus:
+
+- Brazil-first source profiling and testing for outlets such as UOL Noticias, g1, CartaCapital, Revista Oeste, Gazeta do Povo, VEJA, Folha, Estadao, and Agencia Brasil
+
 ## Stack
 
 - Ruby 4.0.1

@@ -1,4 +1,22 @@
 namespace :frank do
+  desc "List the built-in Brazilian source profiles"
+  task brazil_profiles: :environment do
+    profiles = Sources::ProfileRegistry.all(region: :brazil)
+
+    puts JSON.pretty_generate(
+      profiles.map do |profile|
+        {
+          key: profile.key,
+          name: profile.name,
+          homepage_url: profile.homepage_url,
+          host_patterns: profile.host_patterns,
+          authority_tier: profile.authority_tier,
+          authority_score: profile.authority_score
+        }
+      end
+    )
+  end
+
   desc "Smoke test the OpenRouter-backed RubyLLM client"
   task smoke_openrouter: :environment do
     claim = Struct.new(:canonical_text, :checkability_status).new(
@@ -48,5 +66,13 @@ namespace :frank do
       excerpt: extracted.excerpt,
       links_count: extracted.links.count
     )
+  end
+
+  desc "Start investigations for all built-in Brazilian source homepages"
+  task intake_brazil_profiles: :environment do
+    Sources::ProfileRegistry.all(region: :brazil).each do |profile|
+      investigation = Investigations::EnsureStarted.call(submitted_url: profile.homepage_url)
+      puts "#{profile.name}: #{investigation.normalized_url}"
+    end
   end
 end

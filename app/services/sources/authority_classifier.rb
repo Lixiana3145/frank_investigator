@@ -2,7 +2,7 @@ module Sources
   class AuthorityClassifier
     Result = Struct.new(:source_kind, :authority_tier, :authority_score, :independence_group, keyword_init: true)
 
-    GOVERNMENT_HOST_PATTERNS = [/.gov\z/, /\bparliament\./i, /\bsenate\./i, /\bcourt/i].freeze
+    GOVERNMENT_HOST_PATTERNS = [/.gov\z/, /\.gov\.br\z/i, /\.leg\.br\z/i, /\bparliament\./i, /\bsenate\./i, /\bcourt/i].freeze
     SCIENCE_HOST_PATTERNS = [/\bpubmed\b/i, /\barxiv\b/i, /\bnature\.com\z/i, /\bscience\.org\z/i, /\bdoi\.org\z/i].freeze
     COMPANY_FILING_HOST_PATTERNS = [/\bsec\.gov\z/i, /\binvestor\./i].freeze
     PRESS_RELEASE_HOST_PATTERNS = [/\bprnewswire\.com\z/i, /\bbusinesswire\.com\z/i].freeze
@@ -20,9 +20,18 @@ module Sources
     end
 
     def call
+      if (profile = Sources::ProfileRegistry.match(@host))
+        return Result.new(
+          source_kind: profile.source_kind.to_sym,
+          authority_tier: profile.authority_tier.to_sym,
+          authority_score: profile.authority_score,
+          independence_group: profile.independence_group.presence || independence_group
+        )
+      end
+
+      return Result.new(source_kind: :company_filing, authority_tier: :primary, authority_score: 0.91, independence_group:) if matches?(COMPANY_FILING_HOST_PATTERNS)
       return Result.new(source_kind: :government_record, authority_tier: :primary, authority_score: 0.98, independence_group:) if matches?(GOVERNMENT_HOST_PATTERNS)
       return Result.new(source_kind: :scientific_paper, authority_tier: :primary, authority_score: 0.93, independence_group:) if matches?(SCIENCE_HOST_PATTERNS) || @title.include?("study")
-      return Result.new(source_kind: :company_filing, authority_tier: :primary, authority_score: 0.91, independence_group:) if matches?(COMPANY_FILING_HOST_PATTERNS)
       return Result.new(source_kind: :press_release, authority_tier: :primary, authority_score: 0.76, independence_group:) if matches?(PRESS_RELEASE_HOST_PATTERNS) || press_release_url?
       return Result.new(source_kind: :social_post, authority_tier: :low, authority_score: 0.22, independence_group:) if matches?(SOCIAL_HOST_PATTERNS)
       return Result.new(source_kind: :reference, authority_tier: :secondary, authority_score: 0.42, independence_group:) if matches?(REFERENCE_HOST_PATTERNS)

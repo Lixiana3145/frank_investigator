@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_11_180500) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_11_184500) do
   create_table "article_claims", force: :cascade do |t|
     t.integer "article_id", null: false
     t.integer "claim_id", null: false
@@ -55,6 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_180500) do
     t.string "host", null: false
     t.string "independence_group"
     t.string "main_content_path"
+    t.json "metadata_json", default: {}, null: false
     t.string "normalized_url", null: false
     t.datetime "published_at"
     t.string "source_kind", default: "unknown", null: false

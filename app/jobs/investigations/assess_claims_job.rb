@@ -42,7 +42,7 @@ module Investigations
 
         EvidenceItem.find_or_initialize_by(claim_assessment: assessment, source_url: article.normalized_url).tap do |item|
           item.article = article
-          item.source_type = :article
+          item.source_type = article.evidence_source_type
           item.source_kind = article.source_kind
           item.stance = entry.stance
           item.relevance_score = entry.relevance_score

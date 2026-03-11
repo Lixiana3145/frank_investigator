@@ -13,8 +13,13 @@ module Investigations
 
       investigation = ApplicationRecord.transaction do
         article = Article.find_or_create_by!(normalized_url:) do |record|
+          source_metadata = Sources::AuthorityClassifier.call(url: normalized_url, host: URI.parse(normalized_url).host)
           record.url = normalized_url
           record.host = URI.parse(normalized_url).host
+          record.source_kind = source_metadata.source_kind
+          record.authority_tier = source_metadata.authority_tier
+          record.authority_score = source_metadata.authority_score
+          record.independence_group = source_metadata.independence_group
         end
 
         Investigation.find_or_create_by!(normalized_url:) do |record|

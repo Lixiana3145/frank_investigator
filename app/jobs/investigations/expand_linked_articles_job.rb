@@ -8,7 +8,7 @@ module Investigations
 
       Pipeline::StepRunner.call(investigation:, name: step_name(investigation, source_article_id)) do
         max_depth = Rails.application.config.x.frank_investigator.max_link_depth
-        links = source_article.sourced_links.where(depth: ..max_depth, follow_status: "pending").limit(10)
+        links = prioritized_links(source_article, max_depth)
 
         links.each do |link|
           FetchLinkedArticleJob.perform_later(investigation.id, link.id)
@@ -24,6 +24,12 @@ module Investigations
 
     def step_name(investigation, source_article_id)
       source_article_id == investigation.root_article_id ? "expand_linked_articles_root" : "expand_linked_articles:#{source_article_id}"
+    end
+
+    def prioritized_links(source_article, max_depth)
+      source_article.sourced_links.includes(:target_article).where(depth: ..max_depth, follow_status: "pending").to_a
+        .sort_by { |link| [-link.target_article.authority_score.to_f, link.depth, link.position] }
+        .first(10)
     end
   end
 end

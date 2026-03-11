@@ -1,0 +1,108 @@
+brazil:
+  agencia_brasil:
+    name: "Agencia Brasil"
+    homepage_url: "https://agenciabrasil.ebc.com.br/"
+    host_patterns:
+      - "agenciabrasil.ebc.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.74
+    independence_group: "ebc.com.br"
+    audience_country: "BR"
+    notes: "Veiculo publico nacional util para cobertura institucional e agendas oficiais."
+  uol_noticias:
+    name: "UOL Noticias"
+    homepage_url: "https://noticias.uol.com.br/"
+    host_patterns:
+      - "noticias.uol.com.br"
+      - "uol.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.67
+    independence_group: "uol.com.br"
+    audience_country: "BR"
+    notes: "Portal de grande alcance; importante para cobertura geral e agregacao."
+  folha:
+    name: "Folha de S.Paulo"
+    homepage_url: "https://www.folha.uol.com.br/"
+    host_patterns:
+      - "folha.uol.com.br"
+      - "www.folha.uol.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.71
+    independence_group: "folha.uol.com.br"
+    audience_country: "BR"
+    notes: "Jornal de referencia nacional; util para contraste editorial com outros grupos."
+  g1:
+    name: "g1"
+    homepage_url: "https://g1.globo.com/"
+    host_patterns:
+      - "g1.globo.com"
+      - "globo.com"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.72
+    independence_group: "globo.com"
+    audience_country: "BR"
+    notes: "Portal nacional de noticias com ampla capilaridade regional."
+  estadao:
+    name: "Estadao"
+    homepage_url: "https://www.estadao.com.br/"
+    host_patterns:
+      - "estadao.com.br"
+      - "www.estadao.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.7
+    independence_group: "estadao.com.br"
+    audience_country: "BR"
+    notes: "Jornal tradicional relevante para economia e politica."
+  cartacapital:
+    name: "CartaCapital"
+    homepage_url: "https://www.cartacapital.com.br/"
+    host_patterns:
+      - "cartacapital.com.br"
+      - "www.cartacapital.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.63
+    independence_group: "cartacapital.com.br"
+    audience_country: "BR"
+    notes: "Veiculo de opiniao e reportagem importante para contraste editorial."
+  revista_oeste:
+    name: "Revista Oeste"
+    homepage_url: "https://www.revistaoeste.com/"
+    host_patterns:
+      - "revistaoeste.com"
+      - "www.revistaoeste.com"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.56
+    independence_group: "revistaoeste.com"
+    audience_country: "BR"
+    notes: "Relevante para cobertura de forte linha editorial e comparacao de enquadramento."
+  gazeta_do_povo:
+    name: "Gazeta do Povo"
+    homepage_url: "https://www.gazetadopovo.com.br/"
+    host_patterns:
+      - "gazetadopovo.com.br"
+      - "www.gazetadopovo.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.61
+    independence_group: "gazetadopovo.com.br"
+    audience_country: "BR"
+    notes: "Importante para cobertura conservadora e para medir divergencia editorial."
+  veja:
+    name: "VEJA"
+    homepage_url: "https://veja.abril.com.br/"
+    host_patterns:
+      - "veja.abril.com.br"
+      - "abril.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.66
+    independence_group: "abril.com.br"
+    audience_country: "BR"
+    notes: "Marca de revista nacional relevante em politica, economia e cultura."

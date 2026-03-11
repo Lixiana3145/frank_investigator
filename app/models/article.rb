@@ -37,4 +37,15 @@ class Article < ApplicationRecord
   def primary_source?
     authority_tier_primary?
   end
+
+  def evidence_source_type
+    case source_kind
+    when "government_record" then :government_record
+    when "scientific_paper" then :scientific_paper
+    when "company_filing" then :company_filing
+    when "press_release" then :press_release
+    else
+      :article
+    end
+  end
 end
