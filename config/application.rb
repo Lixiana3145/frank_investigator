@@ -1,0 +1,35 @@
+require_relative "boot"
+
+require "rails/all"
+
+# Require the gems listed in Gemfile, including any gems
+# you've limited to :test, :development, or :production.
+Bundler.require(*Rails.groups)
+
+module FrankInvestigator
+  class Application < Rails::Application
+    # Initialize configuration defaults for originally generated Rails version.
+    config.load_defaults 8.1
+
+    # Please, add to the `ignore` list any other `lib` subdirectories that do
+    # not contain `.rb` files, or that should not be reloaded or eager loaded.
+    # Common ones are `templates`, `generators`, or `middleware`, for example.
+    config.autoload_lib(ignore: %w[assets tasks])
+
+    # Configuration for the application, engines, and railties goes here.
+    #
+    # These settings can be overridden in specific environments using the files
+    # in config/environments, which are processed later.
+    #
+    # config.time_zone = "Central Time (US & Canada)"
+    # config.eager_load_paths << Rails.root.join("extras")
+
+    config.x.frank_investigator = ActiveSupport::OrderedOptions.new
+    config.x.frank_investigator.max_link_depth = ENV.fetch("FRANK_INVESTIGATOR_MAX_LINK_DEPTH", 1).to_i
+    config.x.frank_investigator.fetcher_class = ENV.fetch("FRANK_INVESTIGATOR_FETCHER_CLASS", "Fetchers::ChromiumFetcher")
+    config.x.frank_investigator.openrouter_models = ENV.fetch(
+      "FRANK_INVESTIGATOR_OPENROUTER_MODELS",
+      "openai/gpt-5-mini,anthropic/claude-3.7-sonnet,google/gemini-2.5-pro"
+    ).split(",").map(&:strip).reject(&:blank?)
+  end
+end

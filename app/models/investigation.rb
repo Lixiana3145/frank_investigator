@@ -1,0 +1,29 @@
+class Investigation < ApplicationRecord
+  REQUIRED_STEPS = %w[fetch_root_article extract_claims analyze_headline assess_claims].freeze
+
+  enum :status, {
+    queued: "queued",
+    processing: "processing",
+    completed: "completed",
+    failed: "failed"
+  }, default: :queued, validate: true
+
+  enum :checkability_status, {
+    pending: "pending",
+    checkable: "checkable",
+    partially_checkable: "partially_checkable",
+    not_checkable: "not_checkable"
+  }, default: :pending, validate: true
+
+  belongs_to :root_article, class_name: "Article", optional: true
+
+  has_many :pipeline_steps, dependent: :destroy
+  has_many :claim_assessments, dependent: :destroy
+  has_many :claims, through: :claim_assessments
+
+  validates :submitted_url, :normalized_url, presence: true
+
+  def status_badge
+    status.tr("_", " ")
+  end
+end

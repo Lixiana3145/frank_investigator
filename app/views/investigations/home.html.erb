@@ -1,0 +1,25 @@
+<% content_for :title, "Frank Investigator" %>
+
+<main class="landing-shell">
+  <section class="hero-card">
+    <p class="eyebrow">Frank Investigator</p>
+    <h1>Investigate a news article through claims, linked sources, and evidence gaps.</h1>
+    <p class="hero-copy">
+      Submit a public article URL. Frank Investigator will normalize it, fetch the article, catalog in-body citations,
+      extract canonical claims, and separate what is checkable from what still needs evidence.
+    </p>
+
+    <%= form_with url: root_path, method: :get, class: "investigation-form", local: true do |form| %>
+      <%= form.url_field :url,
+          value: @submitted_url,
+          placeholder: "https://somenews.com/articles/1",
+          required: true,
+          class: "url-input" %>
+      <%= form.submit "Investigate", class: "submit-button" %>
+    <% end %>
+
+    <% if @error_message.present? %>
+      <p class="form-error"><%= @error_message %></p>
+    <% end %>
+  </section>
+</main>
