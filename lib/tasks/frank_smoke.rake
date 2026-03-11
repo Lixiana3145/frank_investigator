@@ -98,6 +98,26 @@ namespace :frank do
     puts "Seeded #{count} media ownership groups."
   end
 
+  desc "Run all smoke checks (Chromium, extraction shape, LLM)"
+  task smoke_all: :environment do
+    results = Monitoring::SmokeCheck.run_all
+
+    results.each do |result|
+      icon = case result.status
+      when :ok then "PASS"
+      when :skip then "SKIP"
+      when :degraded then "WARN"
+      else "FAIL"
+      end
+
+      puts "[#{icon}] #{result.check_name}: #{result.message} (#{result.duration_ms}ms)"
+    end
+
+    failed = results.count { |r| r.status == :fail || r.status == :error }
+    puts "\n#{results.size} checks run, #{failed} failed."
+    exit(1) if failed > 0
+  end
+
   desc "Show authority classification for a URL"
   task :classify_url, [:url] => :environment do |_, args|
     url = args[:url].presence || abort("Provide a URL")
