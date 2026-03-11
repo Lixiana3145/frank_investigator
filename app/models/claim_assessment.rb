@@ -1,4 +1,6 @@
 class ClaimAssessment < ApplicationRecord
+  broadcasts_refreshes_to :investigation
+
   enum :verdict, {
     pending: "pending",
     supported: "supported",

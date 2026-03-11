@@ -1,4 +1,4 @@
-<section class="claim-card">
+<%= tag.section id: dom_id(assessment), class: "claim-card" do %>
   <div class="claim-header">
     <span class="verdict-icon <%= assessment.verdict %>"><%= raw verdict_icon(assessment.verdict) %></span>
     <p class="claim-text"><%= assessment.claim.canonical_text %></p>
@@ -115,4 +115,4 @@
       </ul>
     </details>
   <% end %>
-</section>
+<% end %>

@@ -25,7 +25,7 @@
   <section class="content-grid">
     <%= render "root_article_panel", root_article: @root_article %>
 
-    <article class="panel">
+    <article class="panel" id="checkable_claims">
       <h2>What we checked</h2>
       <% if @checkable_claims.any? %>
         <% @checkable_claims.each do |assessment| %>
@@ -36,7 +36,7 @@
       <% end %>
     </article>
 
-    <article class="panel">
+    <article class="panel" id="uncheckable_claims">
       <h2>What we could not check</h2>
       <% if @uncheckable_claims.any? %>
         <% @uncheckable_claims.each do |assessment| %>

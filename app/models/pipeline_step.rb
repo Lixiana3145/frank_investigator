@@ -1,4 +1,6 @@
 class PipelineStep < ApplicationRecord
+  broadcasts_refreshes_to :investigation
+
   enum :status, {
     queued: "queued",
     running: "running",
