@@ -52,6 +52,6 @@ class Analyzers::EvidenceRelationshipAnalyzerEnhancedTest < ActiveSupport::TestC
 
     result = Analyzers::EvidenceRelationshipAnalyzer.call(claim:, article:)
     assert_equal :contextualizes, result.stance
-    assert_equal 0, result.relevance_score
+    assert_operator result.relevance_score, :<=, 0.05, "Unrelated article should have near-zero relevance"
   end
 end

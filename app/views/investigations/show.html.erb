@@ -16,6 +16,28 @@
     <% end %>
   </header>
 
+  <% if @failure_info.present? %>
+    <section class="panel panel--error">
+      <h2>Investigation failed</h2>
+      <p><%= @failure_info[:user_message] %></p>
+      <details>
+        <summary>Technical details</summary>
+        <p class="muted">
+          Step: <%= @failure_info[:step_name] %><br>
+          <% if @failure_info[:error_class].present? %>
+            Error: <%= @failure_info[:error_class] %><br>
+          <% end %>
+          <% if @failure_info[:error_message].present? %>
+            Message: <%= @failure_info[:error_message].truncate(300) %>
+          <% end %>
+        </p>
+      </details>
+      <p>
+        <%= link_to "Try again", root_path(url: @investigation.normalized_url), class: "submit-button submit-button--small" %>
+      </p>
+    </section>
+  <% end %>
+
   <%= render "summary_cards", investigation: @investigation %>
 
   <% if @investigation.headline_bait_score > 0 %>
@@ -31,6 +53,8 @@
         <% @checkable_claims.each do |assessment| %>
           <%= render "claim_assessment", assessment: %>
         <% end %>
+      <% elsif @investigation.completed? && @investigation.not_checkable? %>
+        <p class="empty-state">This article contains no verifiable factual claims. It may be primarily opinion, analysis, or editorial content.</p>
       <% else %>
         <p class="empty-state">No checkable claims have been extracted yet.</p>
       <% end %>

@@ -1,6 +1,8 @@
 class InvestigationsController < ApplicationController
   MAX_URL_LENGTH = 2048
 
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+
   def home
     @submitted_url = params[:url].to_s.strip
     return render :home if @submitted_url.blank?
@@ -33,6 +35,7 @@ class InvestigationsController < ApplicationController
       .order(created_at: :asc)
     @pipeline_steps = @investigation.pipeline_steps.order(:created_at)
     @links = @root_article&.sourced_links&.includes(:target_article)&.order(:position) || []
+    @failure_info = build_failure_info
   end
 
   def graph_data
@@ -66,6 +69,46 @@ class InvestigationsController < ApplicationController
   end
 
   private
+
+  def build_failure_info
+    return nil unless @investigation.failed?
+
+    failed_steps = @pipeline_steps.select(&:failed?)
+    return nil if failed_steps.empty?
+
+    step = failed_steps.first
+    {
+      step_name: step.name.humanize,
+      error_class: step.error_class,
+      error_message: step.error_message,
+      user_message: failure_user_message(step)
+    }
+  end
+
+  def failure_user_message(step)
+    case step.name
+    when "fetch_root_article"
+      if step.error_class.to_s.include?("InterstitialDetected")
+        "The target website blocked our request with a bot-detection challenge. Try again later or use a different source."
+      elsif step.error_class.to_s.include?("FetchError")
+        "We could not fetch the article. The website may be down, blocking automated access, or the URL may be invalid."
+      elsif step.error_class.to_s.include?("Timeout")
+        "The page took too long to load. This often happens with JavaScript-heavy sites. Try again later."
+      else
+        "Something went wrong while fetching the article. Please check the URL and try again."
+      end
+    when "extract_claims"
+      "We fetched the article but could not extract any claims from it. The content may be too short, behind a paywall, or in an unsupported format."
+    when "assess_claims"
+      "Claim assessment failed. This usually means the evidence retrieval or LLM analysis encountered an error. Try again later."
+    else
+      "An error occurred during the #{step.name.humanize.downcase} step. Please try again."
+    end
+  end
+
+  def render_not_found
+    render file: Rails.root.join("public/404.html"), layout: false, status: :not_found
+  end
 
   def node_hash(article, role)
     {
