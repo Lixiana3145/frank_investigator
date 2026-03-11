@@ -68,26 +68,56 @@ module Analyzers
     private
 
     def find_prior_assessment
+      # Exact claim match in other investigations
       prior = ClaimAssessment
         .where(claim: @claim)
         .where.not(investigation: @investigation)
         .where.not(verdict: "pending")
         .order(confidence_score: :desc)
         .first
+
+      # Similarity-based match against claims from completed investigations
+      prior ||= find_similar_prior_assessment
+
       return nil unless prior
       return nil if prior.confidence_score.to_f < 0.4
+
+      similarity_note = prior.claim_id == @claim.id ? "exact match" : "similar claim match"
 
       Result.new(
         verdict: prior.verdict.to_sym,
         confidence_score: [prior.confidence_score.to_f - 0.05, 0.1].max.round(2),
         checkability_status: prior.checkability_status.to_sym,
-        reason_summary: "#{prior.reason_summary} (Reused from a prior investigation of this claim.)",
+        reason_summary: "#{prior.reason_summary} (Reused from a prior investigation — #{similarity_note}.)",
         missing_evidence_summary: prior.missing_evidence_summary,
         conflict_score: prior.conflict_score.to_f,
         authority_score: prior.authority_score.to_f,
         independence_score: prior.independence_score.to_f,
         timeliness_score: prior.timeliness_score.to_f
       )
+    end
+
+    SIMILARITY_REUSE_THRESHOLD = 0.65
+
+    def find_similar_prior_assessment
+      other_claims = Claim
+        .joins(:claim_assessments)
+        .where.not(claim_assessments: { verdict: "pending" })
+        .where.not(id: @claim.id)
+        .distinct
+
+      matches = ClaimSimilarityMatcher.call(
+        text: @claim.canonical_text,
+        candidates: other_claims
+      )
+
+      best = matches.find { |m| m.similarity_score >= SIMILARITY_REUSE_THRESHOLD }
+      return nil unless best
+
+      best.claim.claim_assessments
+        .where.not(verdict: "pending")
+        .order(confidence_score: :desc)
+        .first
     end
 
     def evidence_entries
