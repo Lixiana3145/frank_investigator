@@ -40,6 +40,30 @@ class ArticleTest < ActiveSupport::TestCase
     assert_equal :article, Article.new(source_kind: :news_article).evidence_source_type
   end
 
+  test "fresh? returns true when recently fetched" do
+    article = Article.create!(
+      url: "https://f.com/1", normalized_url: "https://f.com/1", host: "f.com",
+      fetch_status: :fetched, fetched_at: 10.minutes.ago
+    )
+    assert article.fresh?
+  end
+
+  test "fresh? returns false when fetched_at is older than TTL" do
+    article = Article.create!(
+      url: "https://f.com/2", normalized_url: "https://f.com/2", host: "f.com",
+      fetch_status: :fetched, fetched_at: 2.hours.ago
+    )
+    refute article.fresh?
+  end
+
+  test "fresh? returns false for pending articles" do
+    article = Article.create!(
+      url: "https://f.com/3", normalized_url: "https://f.com/3", host: "f.com",
+      fetch_status: :pending
+    )
+    refute article.fresh?
+  end
+
   test "source_role enum accepts all defined values" do
     %i[unknown official_position authenticated_legal_text neutral_statistics oversight research_discovery news_reporting].each do |role|
       article = Article.new(url: "https://x.com", normalized_url: "https://x.com/#{role}", host: "x.com", source_role: role)

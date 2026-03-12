@@ -12,6 +12,26 @@ class Investigations::FetchLinkedArticleJobTest < ActiveJob::TestCase
     Fetchers::FakeFetcher.clear
   end
 
+  test "skips Chromium fetch for fresh linked article but still syncs claims" do
+    root = Article.create!(url: "https://example.com/root", normalized_url: "https://example.com/root", host: "example.com", fetch_status: :fetched)
+    linked = Article.create!(
+      url: "https://cached.example.com/report", normalized_url: "https://cached.example.com/report",
+      host: "cached.example.com", fetch_status: :fetched, fetched_at: 5.minutes.ago,
+      title: "Cached report", body_text: "This report confirms a 4% tax cut in 2026."
+    )
+    investigation = Investigation.create!(submitted_url: root.url, normalized_url: root.normalized_url, root_article: root, status: :processing)
+    link = ArticleLink.create!(source_article: root, target_article: linked, href: linked.normalized_url, depth: 1)
+
+    # No FakeFetcher registration — if Chromium is called, it will raise
+    assert_enqueued_with(job: Investigations::AssessClaimsJob, args: [investigation.id]) do
+      Investigations::FetchLinkedArticleJob.perform_now(investigation.id, link.id)
+    end
+
+    link.reload
+    assert_equal "crawled", link.follow_status
+    assert investigation.claim_assessments.exists?
+  end
+
   test "fetches a linked article, catalogs its claims, and expands one level deeper" do
     root = Article.create!(url: "https://example.com/news", normalized_url: "https://example.com/news", host: "example.com", fetch_status: :fetched)
     linked = Article.create!(url: "https://source.example.com/report", normalized_url: "https://source.example.com/report", host: "source.example.com")

@@ -7,14 +7,19 @@ module Investigations
 
       Pipeline::StepRunner.call(investigation:, name: "fetch_root_article") do
         article = investigation.root_article || raise("Investigation is missing a root article")
-        snapshot = fetcher.call(article.normalized_url)
-        Articles::PersistFetchedContent.call(article:, html: snapshot.html, fetched_title: snapshot.title, current_depth: 0)
+
+        if article.fresh?
+          Rails.logger.info("[FetchRootArticle] Article #{article.normalized_url} is fresh (fetched #{article.fetched_at}), skipping re-fetch")
+        else
+          snapshot = fetcher.call(article.normalized_url)
+          Articles::PersistFetchedContent.call(article:, html: snapshot.html, fetched_title: snapshot.title, current_depth: 0)
+        end
 
         ExtractClaimsJob.perform_later(investigation.id)
         AnalyzeHeadlineJob.perform_later(investigation.id)
         ExpandLinkedArticlesJob.perform_later(investigation.id, source_article_id: article.id)
 
-        { links_count: article.sourced_links.count }
+        { links_count: article.sourced_links.count, cached: article.fresh? }
       end
     rescue Fetchers::ChromiumFetcher::FetchError => error
       investigation.root_article&.update!(fetch_status: :failed)

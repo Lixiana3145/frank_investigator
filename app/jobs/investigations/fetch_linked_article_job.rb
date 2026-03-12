@@ -11,20 +11,26 @@ module Investigations
         return { skipped: true } if article_link.crawled? && article_link.target_article.fetched?
 
         article = article_link.target_article
-        snapshot = fetcher.call(article.normalized_url)
-        Articles::PersistFetchedContent.call(
-          article:,
-          html: snapshot.html,
-          fetched_title: snapshot.title,
-          current_depth: article_link.depth
-        )
+
+        if article.fresh?
+          Rails.logger.info("[FetchLinkedArticle] Article #{article.normalized_url} is fresh, skipping re-fetch")
+        else
+          snapshot = fetcher.call(article.normalized_url)
+          Articles::PersistFetchedContent.call(
+            article:,
+            html: snapshot.html,
+            fetched_title: snapshot.title,
+            current_depth: article_link.depth
+          )
+        end
+
         Articles::SyncClaims.call(investigation:, article:)
 
         article_link.update!(follow_status: :crawled)
         ExpandLinkedArticlesJob.perform_later(investigation.id, source_article_id: article.id) if article_link.depth < max_depth
         AssessClaimsJob.perform_later(investigation.id)
 
-        { article_id: article.id, discovered_links_count: article.sourced_links.count }
+        { article_id: article.id, discovered_links_count: article.sourced_links.count, cached: article.fresh? }
       end
     rescue Fetchers::ChromiumFetcher::FetchError => error
       article_link&.update!(follow_status: :failed)

@@ -51,6 +51,11 @@ class Article < ApplicationRecord
     authority_tier_primary?
   end
 
+  def fresh?
+    fetched? && fetched_at.present? &&
+      fetched_at > Rails.application.config.x.frank_investigator.article_freshness_ttl.seconds.ago
+  end
+
   def evidence_source_type
     case source_kind
     when "government_record" then :government_record

@@ -26,6 +26,7 @@ module FrankInvestigator
 
     config.x.frank_investigator = ActiveSupport::OrderedOptions.new
     config.x.frank_investigator.max_link_depth = ENV.fetch("FRANK_INVESTIGATOR_MAX_LINK_DEPTH", 1).to_i
+    config.x.frank_investigator.article_freshness_ttl = ENV.fetch("FRANK_INVESTIGATOR_ARTICLE_FRESHNESS_TTL", 3600).to_i # seconds
     config.x.frank_investigator.fetcher_class = ENV.fetch("FRANK_INVESTIGATOR_FETCHER_CLASS", "Fetchers::ChromiumFetcher")
     config.x.frank_investigator.llm_client_class = ENV.fetch("FRANK_INVESTIGATOR_LLM_CLIENT_CLASS", "Llm::RubyLlmClient")
     config.x.frank_investigator.openrouter_models = ENV.fetch(

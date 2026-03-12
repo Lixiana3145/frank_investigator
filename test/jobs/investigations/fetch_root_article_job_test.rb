@@ -12,6 +12,25 @@ class Investigations::FetchRootArticleJobTest < ActiveJob::TestCase
     Fetchers::FakeFetcher.clear
   end
 
+  test "skips Chromium fetch when article is fresh" do
+    article = Article.create!(
+      url: "https://example.com/cached", normalized_url: "https://example.com/cached",
+      host: "example.com", fetch_status: :fetched, fetched_at: 5.minutes.ago,
+      title: "Cached article", body_text: "Already fetched content"
+    )
+    investigation = Investigation.create!(
+      submitted_url: article.url, normalized_url: article.normalized_url,
+      root_article: article, status: :processing
+    )
+
+    # No FakeFetcher registration — if Chromium is called, it will raise
+    Investigations::FetchRootArticleJob.perform_now(investigation.id)
+
+    step = investigation.pipeline_steps.find_by!(name: "fetch_root_article")
+    assert_equal "completed", step.status
+    assert step.result_json["cached"]
+  end
+
   test "fetches and extracts the root article without duplicating links on rerun" do
     investigation = Investigations::EnsureStarted.call(submitted_url: "https://example.com/news")
 

@@ -24,7 +24,7 @@ module Investigations
         end
       end
 
-      Investigations::KickoffJob.perform_later(investigation.id)
+      Investigations::KickoffJob.perform_later(investigation.id) unless investigation.completed?
       investigation
     end
 
