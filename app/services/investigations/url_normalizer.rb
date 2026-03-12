@@ -52,10 +52,55 @@ module Investigations
       (uri.scheme == "http" && uri.port == 80) || (uri.scheme == "https" && uri.port == 443)
     end
 
+    # Tracking, analytics, and campaign parameters that don't affect content
+    JUNK_PARAMS = %r{\A(
+      utm_\w+          |  # Google Analytics campaign tracking
+      fbclid           |  # Facebook click ID
+      gclid            |  # Google Ads click ID
+      gclsrc           |  # Google Ads click source
+      dclid            |  # DoubleClick click ID
+      msclkid          |  # Microsoft Ads click ID
+      twclid           |  # Twitter click ID
+      li_fat_id        |  # LinkedIn first-party ad tracking
+      mc_cid           |  # Mailchimp campaign ID
+      mc_eid           |  # Mailchimp email ID
+      _ga              |  # Google Analytics client ID
+      _gl              |  # Google cross-domain linker
+      _hsenc           |  # HubSpot email tracking
+      _hsmi            |  # HubSpot email tracking
+      hsa_\w+          |  # HubSpot ad tracking
+      ref              |  # Generic referrer
+      referer          |  # Misspelled referrer
+      source           |  # Generic source (not data source)
+      trk              |  # LinkedIn tracking
+      trkCampaign      |  # LinkedIn campaign tracking
+      spm              |  # Alibaba/AliExpress tracking
+      vero_id          |  # Vero email tracking
+      wickedid         |  # Wicked Reports tracking
+      yclid            |  # Yandex click ID
+      __twitter_impression |  # Twitter impression tracking
+      s_cid            |  # Adobe Analytics campaign
+      s_kwcid          |  # Adobe Analytics keyword
+      sa_\w+           |  # ShareASale tracking
+      igshid           |  # Instagram share ID
+      si               |  # Spotify share ID
+      feature          |  # YouTube share feature
+      app              |  # App source tracking
+      sfnsn            |  # Social share tracking
+      wp_.*            |  # WordPress campaign tracking
+      amp              |  # AMP tracking flag
+      __cf_chl_\w+     |  # Cloudflare challenge tokens
+      _openstat           # Openstat tracking
+    )\z}xi
+
     def normalize_query(query)
       return nil if query.blank?
 
-      URI.encode_www_form(URI.decode_www_form(query).sort)
+      cleaned = URI.decode_www_form(query)
+        .reject { |key, _| key.match?(JUNK_PARAMS) }
+        .sort
+
+      cleaned.empty? ? nil : URI.encode_www_form(cleaned)
     end
   end
 end
