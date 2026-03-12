@@ -135,7 +135,9 @@ module Analyzers
         independence_score: normalized_independence_score(entries),
         timeliness_score: normalized_timeliness_score(entries),
         sufficiency_score: normalized_sufficiency_score(entries),
-        conflict_score: conflict_score_for(weighted_support, weighted_dispute)
+        conflict_score: conflict_score_for(weighted_support, weighted_dispute),
+        citation_depth_score: citation_depth_score(entries),
+        unsubstantiated_viral: unsubstantiated_viral?(entries)
       }
     end
 
@@ -246,6 +248,36 @@ module Analyzers
       [ verdict, confidence ]
     end
 
+    # ── Circular citation & unsubstantiated viral detection ──
+
+    def citation_depth_score(entries)
+      articles = entries.filter_map(&:article).uniq
+      return 1.0 if articles.size < 2
+
+      result = CircularCitationDetector.call(articles: articles)
+      result.citation_depth_score
+    end
+
+    # A claim is "unsubstantiated viral" when many secondary outlets support it
+    # but zero primary sources exist. This is the signature of smear campaigns,
+    # viral gossip, and cancel mobs: volume without evidence.
+    VIRAL_SECONDARY_THRESHOLD = 3
+
+    def unsubstantiated_viral?(entries)
+      supporting = entries.select { |e| e.stance == :supports }
+      return false if supporting.size < VIRAL_SECONDARY_THRESHOLD
+
+      primary_support = supporting.any? { |e| e.authority_tier == "primary" }
+      return false if primary_support
+
+      # All supporting evidence is secondary/low tier — flag as viral
+      true
+    end
+
+    # Cap for claims where many outlets repeat an unsubstantiated allegation.
+    # No amount of secondary-only repetition should produce high confidence.
+    UNSUBSTANTIATED_VIRAL_CONFIDENCE_CAP = 0.45
+
     def verdict_for(weighted_support:, weighted_dispute:, sufficiency_score:, **)
       return :needs_more_evidence if sufficiency_score < 0.35
       return :mixed if weighted_support >= 0.55 && weighted_dispute >= 0.55
@@ -256,16 +288,22 @@ module Analyzers
 
     SINGLE_CLUSTER_CONFIDENCE_CAP = 0.65
 
-    def confidence_for(sufficiency_score:, authority_score:, independence_score:, timeliness_score:, weighted_support:, weighted_dispute:, **)
+    def confidence_for(sufficiency_score:, authority_score:, independence_score:, timeliness_score:, weighted_support:, weighted_dispute:, citation_depth_score: 1.0, unsubstantiated_viral: false, **)
       conflict_penalty = conflict_score_for(weighted_support, weighted_dispute)
-      raw = ((sufficiency_score * 0.35) + (authority_score * 0.25) + (independence_score * 0.2) + (timeliness_score * 0.2) - (conflict_penalty * 0.25)).clamp(0, 0.97)
+
+      # Citation depth reduces confidence when evidence articles don't link to
+      # substantive external sources (echo chamber / circular citation pattern)
+      citation_penalty = [(1.0 - citation_depth_score) * 0.2, 0.2].min
+
+      raw = ((sufficiency_score * 0.30) + (authority_score * 0.25) + (independence_score * 0.20) + (timeliness_score * 0.15) + (citation_depth_score * 0.10) - (conflict_penalty * 0.25) - citation_penalty).clamp(0, 0.97)
 
       # Cap confidence when independence is very low (single editorial cluster)
-      if independence_score <= 0.05
-        raw.clamp(0, SINGLE_CLUSTER_CONFIDENCE_CAP)
-      else
-        raw
-      end
+      raw = raw.clamp(0, SINGLE_CLUSTER_CONFIDENCE_CAP) if independence_score <= 0.05
+
+      # Hard cap: unsubstantiated viral — many outlets, zero primary evidence
+      raw = raw.clamp(0, UNSUBSTANTIATED_VIRAL_CONFIDENCE_CAP) if unsubstantiated_viral
+
+      raw
     end
 
     def conflict_score_for(weighted_support, weighted_dispute)
@@ -354,6 +392,7 @@ module Analyzers
       disputing = entries.count { |e| e.stance == :disputes }
       supporting = entries.count { |e| e.stance == :supports }
       gaps << "contradiction checks (all evidence currently #{supporting > 0 ? 'supports' : 'contextualizes'})" if disputing.zero? && supporting > 0
+      gaps << "primary authoritative confirmation (multiple secondary sources repeat the claim but none provide original evidence — possible viral/smear pattern)" if unsubstantiated_viral?(entries) && primary_count.zero?
 
       if gaps.any?
         "Still needed: #{gaps.join('; ')}."

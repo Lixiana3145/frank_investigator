@@ -20,6 +20,12 @@ This is the foundational design constraint of the entire system. Every scoring, 
 
 5. **Verdicts are living, not permanent.** Assessments go stale and get reassessed when new evidence appears. The `VerdictSnapshot` audit trail tracks every change with the evidence state at that point, so we never lose history.
 
+6. **Smear/viral campaign defense.** When 3+ secondary sources support a claim but zero primary sources exist, the system flags this as "unsubstantiated viral" and caps confidence at 0.45. Volume of gossip without original evidence (no confession, no court verdict, no official record) must never produce a high-confidence `:supported` verdict.
+
+7. **Circular citation detection.** Articles that only cite each other (A→B, B→A) or cite sources with no substantive content are flagged as thin citation chains. The `CircularCitationDetector` walks `ArticleLink` relationships to identify echo chambers where outlets reference each other but none have original evidence. Citation depth score penalizes these patterns.
+
+8. **Citation grounding required.** An article is only "grounded" if it links to substantive external sources outside the evidence set. Articles with no outbound citations or that only cite other articles in the same evidence set are treated as ungrounded, reducing the overall citation depth score.
+
 When in doubt, prefer `needs_more_evidence` over a weakly supported verdict. Conservative assessment protects users better than false confidence.
 
 ## Running the App
