@@ -35,6 +35,10 @@ en:
       default_uncheckable_reason: "This claim needs more context before it can be checked."
       uncheckable_pending: "No subjective or ambiguous claims have been classified yet."
 
+    progress:
+      analyzing: "Analysis in progress"
+      steps_done: "steps completed"
+
     summary_cards:
       pipeline_status: "Pipeline status"
       checkability: "Checkability"

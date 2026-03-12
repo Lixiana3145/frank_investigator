@@ -1,5 +1,8 @@
 <li id="<%= dom_id(step) %>">
   <span>
+    <% if step.status.in?(%w[running processing]) %>
+      <span class="progress-pulse"></span>
+    <% end %>
     <%= pipeline_step_name(step.name) %>
     <% if (duration = pipeline_step_duration(step)) %>
       <span class="muted"> &middot; <%= duration %></span>

@@ -40,6 +40,22 @@
 
   <%= render "summary_cards", investigation: @investigation %>
 
+  <% unless @investigation.completed? || @investigation.failed? %>
+    <section class="progress-banner" id="progress_banner">
+      <span class="progress-pulse"></span>
+      <span>
+        <%= t("investigations.progress.analyzing") %>
+        <% if (step = active_step_name(@investigation)) %>
+          &mdash; <%= step %>
+        <% end %>
+      </span>
+      <span class="muted">
+        <%= @investigation.pipeline_steps.where(status: "completed").count %>/<%= @investigation.pipeline_steps.count %>
+        <%= t("investigations.progress.steps_done") %>
+      </span>
+    </section>
+  <% end %>
+
   <% if @investigation.headline_bait_score > 0 %>
     <%= render "headline_bait", investigation: @investigation %>
   <% end %>

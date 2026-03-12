@@ -83,6 +83,16 @@ module InvestigationsHelper
     t("helpers.fallacy_types.#{type}", default: type.to_s.tr("_", " ").capitalize)
   end
 
+  def active_step_name(investigation)
+    running = investigation.pipeline_steps.find_by(status: "running")
+    return pipeline_step_name(running.name) if running
+
+    processing = investigation.pipeline_steps.find_by(status: "processing")
+    return pipeline_step_name(processing.name) if processing
+
+    nil
+  end
+
   def pipeline_step_duration(step)
     return nil unless step.started_at
     finish = step.finished_at || Time.current
