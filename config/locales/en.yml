@@ -87,6 +87,12 @@ en:
       missing_evidence: "Missing evidence:"
       evidence_sources: "Evidence sources"
       headline_bait_label: "Headline bait"
+      citation_depth: "Citation depth"
+      primary_vetoed: "Primary source veto"
+      primary_vetoed_detail: "A primary source disputes this claim. Verdict forced to mixed and confidence capped."
+      unsubstantiated_viral: "Unsubstantiated viral"
+      unsubstantiated_viral_detail: "Multiple secondary sources repeat this claim but no primary source confirms it. Confidence capped."
+      variant_of: "Variant of:"
 
     evidence_timeline:
       heading: "Evidence timeline"

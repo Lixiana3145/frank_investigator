@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_11_202000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_12_030205) do
   create_table "article_claims", force: :cascade do |t|
     t.integer "article_id", null: false
     t.integer "claim_id", null: false
@@ -79,6 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_202000) do
     t.datetime "assessed_at"
     t.decimal "authority_score", precision: 5, scale: 2, default: "0.0", null: false
     t.string "checkability_status", default: "pending", null: false
+    t.decimal "citation_depth_score", precision: 5, scale: 2, default: "1.0", null: false
     t.integer "claim_id", null: false
     t.decimal "confidence_score", precision: 5, scale: 2, default: "0.0", null: false
     t.decimal "conflict_score", precision: 5, scale: 2, default: "0.0", null: false
@@ -87,12 +88,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_202000) do
     t.decimal "independence_score", precision: 5, scale: 2, default: "0.0", null: false
     t.integer "investigation_id", null: false
     t.text "missing_evidence_summary"
+    t.boolean "primary_vetoed", default: false, null: false
     t.text "reason_summary"
     t.integer "reassessment_count", default: 0, null: false
     t.datetime "stale_at"
     t.string "staleness_reason"
     t.decimal "timeliness_score", precision: 5, scale: 2, default: "0.0", null: false
     t.boolean "unanimous", default: false, null: false
+    t.boolean "unsubstantiated_viral", default: false, null: false
     t.datetime "updated_at", null: false
     t.string "verdict", default: "pending", null: false
     t.index ["assessed_at"], name: "index_claim_assessments_on_assessed_at"

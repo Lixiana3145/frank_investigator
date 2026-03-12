@@ -12,6 +12,9 @@ module Analyzers
       :timeliness_score,
       :disagreement_details,
       :unanimous,
+      :citation_depth_score,
+      :primary_vetoed,
+      :unsubstantiated_viral,
       keyword_init: true
     )
 
@@ -49,7 +52,10 @@ module Analyzers
       heuristic_confidence = confidence_for(**scores)
       llm_result = run_llm_assessment(entries)
       final_verdict, final_confidence = merge_with_llm(heuristic_verdict:, heuristic_confidence:, llm_result:)
+      pre_veto_verdict = final_verdict
       final_verdict, final_confidence = apply_primary_veto(final_verdict, final_confidence, entries)
+      vetoed = final_verdict != pre_veto_verdict
+      viral = scores[:unsubstantiated_viral] || false
 
       Result.new(
         verdict: final_verdict,
@@ -62,7 +68,10 @@ module Analyzers
         independence_score: scores[:independence_score].round(2),
         timeliness_score: scores[:timeliness_score].round(2),
         disagreement_details: llm_result&.disagreement_details,
-        unanimous: llm_result&.unanimous
+        unanimous: llm_result&.unanimous,
+        citation_depth_score: (scores[:citation_depth_score] || 1.0).round(2),
+        primary_vetoed: vetoed,
+        unsubstantiated_viral: viral
       )
     end
 

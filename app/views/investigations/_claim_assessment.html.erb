@@ -12,6 +12,18 @@
     <% if assessment.claim.time_scope.present? %>
       <span class="muted"><%= assessment.claim.time_scope %></span>
     <% end %>
+    <% if assessment.primary_vetoed? %>
+      <span class="badge badge--red has-popover">
+        <%= t("investigations.claim_assessment.primary_vetoed") %>
+        <span class="popover-content"><%= t("investigations.claim_assessment.primary_vetoed_detail") %></span>
+      </span>
+    <% end %>
+    <% if assessment.unsubstantiated_viral? %>
+      <span class="badge badge--red has-popover">
+        <%= t("investigations.claim_assessment.unsubstantiated_viral") %>
+        <span class="popover-content"><%= t("investigations.claim_assessment.unsubstantiated_viral_detail") %></span>
+      </span>
+    <% end %>
     <% if assessment.stale_at.present? %>
       <span class="badge badge--amber"><%= t("investigations.claim_assessment.stale") %></span>
       <% if assessment.staleness_reason == "source_corrected" %>
@@ -26,6 +38,10 @@
     <% end %>
   </p>
   <p><%= assessment.reason_summary %></p>
+
+  <% if assessment.claim.canonical_parent.present? %>
+    <p class="muted"><strong><%= t("investigations.claim_assessment.variant_of") %></strong> <%= assessment.claim.canonical_parent.canonical_text.truncate(150) %></p>
+  <% end %>
 
   <dl class="score-grid">
     <div>
@@ -62,6 +78,15 @@
           <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.conflict_score) %>%"></span>
         </span>
         <span><%= score_percent(assessment.conflict_score * 100) %></span>
+      </dd>
+    </div>
+    <div>
+      <dt><%= t("investigations.claim_assessment.citation_depth") %></dt>
+      <dd>
+        <span class="score-bar score-bar--sm <%= score_color_class(assessment.citation_depth_score) %>">
+          <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.citation_depth_score) %>%"></span>
+        </span>
+        <span><%= score_percent(assessment.citation_depth_score * 100) %></span>
       </dd>
     </div>
   </dl>

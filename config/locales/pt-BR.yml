@@ -91,6 +91,12 @@ pt-BR:
       missing_evidence: "Evidência ausente:"
       evidence_sources: "Fontes de evidência"
       headline_bait_label: "Manchete sensacionalista"
+      citation_depth: "Profundidade de citação"
+      primary_vetoed: "Veto de fonte primária"
+      primary_vetoed_detail: "Uma fonte primária contesta esta alegação. Veredito forçado para misto e confiança limitada."
+      unsubstantiated_viral: "Viral sem fundamento"
+      unsubstantiated_viral_detail: "Múltiplas fontes secundárias repetem esta alegação, mas nenhuma fonte primária a confirma. Confiança limitada."
+      variant_of: "Variante de:"
 
     evidence_timeline:
       heading: "Linha do tempo de evidências"

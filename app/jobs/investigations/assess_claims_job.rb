@@ -31,6 +31,9 @@ module Investigations
               timeliness_score: result.timeliness_score,
               disagreement_details: result.disagreement_details,
               unanimous: result.unanimous || false,
+              citation_depth_score: result.citation_depth_score || 1.0,
+              primary_vetoed: result.primary_vetoed || false,
+              unsubstantiated_viral: result.unsubstantiated_viral || false,
               assessed_at: Time.current
             )
 
