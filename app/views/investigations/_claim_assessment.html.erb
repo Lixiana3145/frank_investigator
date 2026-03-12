@@ -81,6 +81,28 @@
     </details>
   <% end %>
 
+  <% if assessment.verdict_snapshots.verdict_changes.any? %>
+    <details class="consensus-details">
+      <summary>
+        Verdict history
+        <span class="badge badge--amber">Changed <%= assessment.verdict_changed_count %>&times;</span>
+      </summary>
+      <ul class="llm-verdicts-list">
+        <% assessment.verdict_snapshots.chronological.each do |snapshot| %>
+          <li>
+            <span class="muted"><%= snapshot.created_at.strftime("%Y-%m-%d %H:%M") %></span>
+            <% if snapshot.previous_verdict.present? %>
+              <span class="<%= badge_class_for(snapshot.previous_verdict) %>"><%= snapshot.previous_verdict.humanize %></span>
+              &rarr;
+            <% end %>
+            <span class="<%= badge_class_for(snapshot.verdict) %>"><%= snapshot.verdict.humanize %></span>
+            <span class="muted"><%= snapshot.trigger.humanize %></span>
+          </li>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+
   <% if assessment.missing_evidence_summary.present? %>
     <p class="muted"><strong>Missing evidence:</strong> <%= assessment.missing_evidence_summary %></p>
   <% end %>

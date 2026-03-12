@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_11_196000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_11_197000) do
   create_table "article_claims", force: :cascade do |t|
     t.integer "article_id", null: false
     t.integer "claim_id", null: false
@@ -244,6 +244,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_196000) do
     t.index ["status"], name: "index_pipeline_steps_on_status"
   end
 
+  create_table "verdict_snapshots", force: :cascade do |t|
+    t.integer "claim_assessment_id", null: false
+    t.decimal "confidence_score", precision: 5, scale: 2
+    t.datetime "created_at", null: false
+    t.string "previous_verdict"
+    t.text "reason_summary"
+    t.string "trigger", null: false
+    t.string "triggered_by"
+    t.string "verdict", null: false
+    t.index ["claim_assessment_id", "created_at"], name: "index_verdict_snapshots_on_claim_assessment_id_and_created_at"
+    t.index ["claim_assessment_id"], name: "index_verdict_snapshots_on_claim_assessment_id"
+  end
+
   add_foreign_key "article_claims", "articles"
   add_foreign_key "article_claims", "claims"
   add_foreign_key "article_links", "articles", column: "source_article_id"
@@ -257,4 +270,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_196000) do
   add_foreign_key "llm_interactions", "claim_assessments"
   add_foreign_key "llm_interactions", "investigations"
   add_foreign_key "pipeline_steps", "investigations"
+  add_foreign_key "verdict_snapshots", "claim_assessments"
 end

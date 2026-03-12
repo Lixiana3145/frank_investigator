@@ -12,11 +12,18 @@ module Investigations
         ApplicationRecord.transaction do
           @investigation.claim_assessments.includes(:claim).find_each do |assessment|
             result = Analyzers::ClaimAssessor.call(investigation: @investigation, claim: assessment.claim)
+
+            is_initial = assessment.verdict_pending?
+            assessment.record_verdict_change!(
+              new_verdict: result.verdict,
+              new_confidence: result.confidence_score,
+              new_reason: result.reason_summary,
+              trigger: is_initial ? "initial_assessment" : "reassessment",
+              triggered_by: self.class.name
+            )
+
             assessment.update!(
-              verdict: result.verdict,
-              confidence_score: result.confidence_score,
               checkability_status: result.checkability_status,
-              reason_summary: result.reason_summary,
               missing_evidence_summary: result.missing_evidence_summary,
               conflict_score: result.conflict_score,
               authority_score: result.authority_score,
