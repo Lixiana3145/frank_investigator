@@ -1,60 +1,104 @@
 # Frank Investigator
 
-Frank Investigator is a Rails 8 news fact-checking system built around canonical claims, evidence graphs, and citation-grounded analysis.
+Frank Investigator is a Rails 8.1 news fact-checking pipeline that assesses claims extracted from news articles through evidence graphs, source authority analysis, and multi-model LLM consensus.
 
-Version 1 goals:
+Submit a public article URL. Frank Investigator normalizes it, fetches the page with headless Chromium, extracts canonical claims, follows in-body citations, retrieves corroborating evidence, and produces a structured verdict for each claim with full provenance.
 
-- accept a public news article URL from a simple homepage form
-- normalize the URL and redirect to a shareable analysis page at `/?url=...`
-- fetch the page with Chromium, extract the main article body, and follow in-article links
-- derive canonical claims from the article and link those claims back to every article that repeats or cites them
-- score what is checkable, what is not checkable, how much evidence supports each conclusion, and how baity the headline is relative to the article body
-- orchestrate the pipeline with Rails-native components, especially Active Job and SQLite-backed queueing
+## Core Principle: Truth Over Consensus
 
-Project docs:
+A fact does not become false because a million sources repeat a falsehood, and a falsehood does not become true because it is popular.
 
-- [Research summary](docs/research.md)
-- [Technical architecture](docs/architecture.md)
-- [U.S. authority map](docs/us_authorities.md)
-- [Implementation TODO](docs/todo.md)
+- Authority trumps volume. A single primary source outweighs any number of secondary sources.
+- Primary source veto. If a primary source disputes a claim, confidence is capped.
+- LLM votes are weighted by confidence, not counted by heads.
+- Independence matters more than quantity. Ten articles from the same wire service count as one voice.
+- Smear and viral campaign defense. Unsubstantiated viral claims are capped at low confidence.
+- Circular citation detection. Echo chambers where outlets only cite each other are penalized.
+- Headline bait detection. Articles with sensational headlines that hedge in the body are discounted.
+- Rhetorical fallacy analysis. Bait-and-pivot, appeal to authority, strawman, and other fallacies are detected and flagged.
 
-Initial audience focus:
+## What It Does
 
-- Brazil-first source profiling and testing for outlets such as UOL Noticias, g1, CartaCapital, Revista Oeste, Gazeta do Povo, VEJA, Folha, Estadao, and Agencia Brasil
+- Fetches articles via headless Chromium with stealth hardening and adaptive timeouts
+- Extracts main content with noise filtering (ads, sidebars, comment sections, trending lists)
+- Handles PDF, DOCX, XLSX, and CSV document evidence
+- Extracts and deduplicates claims using fingerprint, semantic key, and similarity matching
+- Classifies source authority (primary/secondary/low) and source role (government, legal, statistics, oversight, research, news)
+- Detects editorial independence groups to prevent volume-based manipulation
+- Follows in-body links up to configurable depth, building an evidence graph
+- Assesses claims via multi-model LLM consensus with graduated disagreement penalties
+- Tracks claim variants and mutations across articles
+- Detects source corrections and flags stale assessments
+- Provides full verdict history with evidence provenance snapshots
+- Analyzes headline-body divergence and headline citation amplification
+- Detects rhetorical fallacies that undermine the article's own factual claims
+- Live updates via Turbo Streams as the pipeline progresses
 
 ## Stack
 
-- Ruby 4.0.1
-- Rails 8.1
-- SQLite3
-- Solid Queue, Solid Cache, Solid Cable
-- Importmap, Turbo, Stimulus
+- Ruby 4.0.1 / Rails 8.1
+- SQLite3 (WAL mode, tuned pragmas)
+- Solid Queue (background jobs), Solid Cable (WebSockets), Solid Cache
+- Headless Chromium (page fetching)
+- OpenRouter (multi-model LLM consensus via RubyLLM)
+- Propshaft, Importmap, Turbo, Stimulus
+- Server-rendered UI, no JavaScript frameworks
 
-## Product shape
+## Getting Started
 
-The homepage is intentionally simple. A user submits a URL, and Frank Investigator either finds or creates the corresponding investigation and redirects to the canonical analysis URL:
-
-```text
-https://frankinvestigator.com/?url=https%3A%2F%2Fsomenews.com%2Farticles%2F1
+```bash
+bin/setup          # Install deps, create DB, run migrations
+bin/dev            # Start Rails + Solid Queue via Procfile.dev
 ```
 
-The analysis page should clearly separate:
+Required environment variables:
 
-- checkable claims
-- not-checkable claims
-- evidence still missing
-- title bias and bait score
-- overall confidence and why the system reached that confidence level
+```bash
+OPENROUTER_API_KEY=your_key_here           # Required for LLM assessment
+```
 
-## Architecture principles
+Optional configuration:
 
-- canonical claims are first-class records, not transient prompt output
-- articles, claims, evidence, and follow-up links form a graph we can revisit
-- every pipeline step must be idempotent
-- Active Job fan-out is acceptable only when step ownership and deduplication are explicit
-- service objects should stay small, isolated, and unit-testable
-- the LLM is a planner and synthesizer over evidence, not the only source of truth
+```bash
+FRANK_INVESTIGATOR_LOCALE=en               # en or pt-BR (default: en)
+FRANK_INVESTIGATOR_MAX_LINK_DEPTH=1        # How deep to follow links (default: 1)
+FRANK_INVESTIGATOR_ARTICLE_FRESHNESS_TTL=3600  # Cache TTL in seconds (default: 3600)
+FRANK_INVESTIGATOR_OPENROUTER_MODELS=openai/gpt-5-mini,anthropic/claude-3.7-sonnet,google/gemini-2.5-pro
+QUARANTINED_MODELS=                        # Comma-separated models to skip
+```
 
-## Status
+## Testing
 
-This repository was bootstrapped from scratch on March 11, 2026. The next implementation layers are the first schema, pipeline jobs, Chromium fetching adapter, and the initial public submission flow.
+```bash
+bundle exec rails test                    # Full suite
+bundle exec rails test test/path_test.rb  # Single file
+```
+
+## Deployment
+
+Frank Investigator is designed for deployment with Kamal or Docker Compose. Configure locale and API keys via environment variables. Chromium must be available in the container (the default Dockerfile includes it).
+
+## Internationalization
+
+All user-facing text is internationalized via Rails i18n. Currently supported locales:
+
+- **English** (`en`) — default
+- **Brazilian Portuguese** (`pt-BR`)
+
+Set `FRANK_INVESTIGATOR_LOCALE` to switch. LLM analysis results (reason summaries, fallacy explanations) are generated in the configured locale while structured fields remain in English for consistency.
+
+## Architecture
+
+- Canonical claims are first-class records, not transient prompt output
+- Articles, claims, evidence, and follow-up links form a graph that can be revisited
+- Every pipeline step is idempotent
+- Service objects are small, isolated, and unit-testable
+- The LLM is a planner and synthesizer over evidence, not the only source of truth
+
+## Audience
+
+Brazil-first source profiling and testing for outlets such as UOL, G1, CartaCapital, Revista Oeste, Gazeta do Povo, VEJA, Folha, Estadao, and Agencia Brasil. US and international sources are also supported.
+
+## License
+
+Frank Investigator is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0).
