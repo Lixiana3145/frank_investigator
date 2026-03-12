@@ -201,26 +201,6 @@ module Analyzers
       }
     end
 
-    def structured_evidence_packet(entries)
-      entries.map do |entry|
-        {
-          url: entry.article.normalized_url,
-          title: entry.article.title,
-          excerpt: entry.article.excerpt.to_s.truncate(500),
-          body_snippet: entry.article.body_text.to_s.truncate(800),
-          stance: entry.stance,
-          relevance_score: entry.relevance_score,
-          authority_score: entry.authority_score,
-          authority_tier: entry.authority_tier,
-          source_kind: entry.source_kind,
-          independence_group: entry.independence_group,
-          fetched_at: entry.article.fetched_at,
-          published_at: entry.article.published_at,
-          headline_divergence: entry.headline_divergence
-        }
-      end
-    end
-
     # Cap the total contribution of non-primary sources so that sheer volume
     # of secondary/tertiary articles can never outweigh a single primary source.
     # A million articles repeating a falsehood must not drown out one authoritative correction.
