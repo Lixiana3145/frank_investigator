@@ -20,7 +20,7 @@ module Sources
       private
 
       def filing_type
-        [@title, @document.text].join("\n").match(FORM_REGEX)&.to_s&.upcase
+        [ @title, @document.text ].join("\n").match(FORM_REGEX)&.to_s&.upcase
       end
     end
   end

@@ -143,7 +143,7 @@ module Analyzers
 
       # If both agree on stance, boost confidence
       if heuristic[:stance] == llm[:stance]
-        relevance = [heuristic[:relevance], llm[:relevance]].max
+        relevance = [ heuristic[:relevance], llm[:relevance] ].max
         return Result.new(stance: heuristic[:stance], relevance_score: relevance, reasoning: llm[:reasoning])
       end
 
@@ -161,13 +161,13 @@ module Analyzers
       claim_tokens = normalized_tokens(@claim.canonical_text)
       return 0 if claim_tokens.empty?
 
-      article_tokens = normalized_tokens([@article.title, @article.body_text].join(" "))
+      article_tokens = normalized_tokens([ @article.title, @article.body_text ].join(" "))
       matched = claim_tokens & article_tokens
       matched.length.fdiv(claim_tokens.length)
     end
 
     def contradiction_signals?
-      corpus = [@article.title, @article.body_text].join(" ")
+      corpus = [ @article.title, @article.body_text ].join(" ")
       NEGATION_PATTERNS.any? { |pattern| corpus.match?(pattern) }
     end
 

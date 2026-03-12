@@ -77,7 +77,7 @@ module Llm
 
       Result.new(
         verdict: majority_verdict,
-        confidence_score: [mean_confidence - disagreement_penalty, 0].max.round(2),
+        confidence_score: [ mean_confidence - disagreement_penalty, 0 ].max.round(2),
         reason_summary: best_reason,
         model_results: model_results,
         disagreement_details: disagreement_details,

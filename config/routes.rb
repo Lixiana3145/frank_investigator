@@ -3,7 +3,7 @@ Rails.application.routes.draw do
 
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
-  resources :error_reports, only: [:index, :show] do
+  resources :error_reports, only: [ :index, :show ] do
     collection { delete :destroy_all }
   end
 
@@ -15,7 +15,7 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  resources :investigations, only: [:show] do
+  resources :investigations, only: [ :show ] do
     member do
       get :graph_data
     end

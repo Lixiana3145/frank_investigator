@@ -64,7 +64,7 @@ module Analyzers
 
       # Scale penalty: 40% divergence = mild, 80%+ = heavy
       penalty_factor = ((divergence - 0.4) / 0.6) * HEADLINE_DIVERGENCE_AUTHORITY_PENALTY
-      [base_authority - penalty_factor, 0.05].max.round(2)
+      [ base_authority - penalty_factor, 0.05 ].max.round(2)
     end
 
     def supporting_articles

@@ -78,7 +78,7 @@ class HeadlineCitationDetectorTest < ActiveSupport::TestCase
                  "The celebrity has been trending on social media since the revelation."
     )
 
-    result = Analyzers::HeadlineCitationDetector.call(articles: [art_a, art_b])
+    result = Analyzers::HeadlineCitationDetector.call(articles: [ art_a, art_b ])
 
     assert_operator result.headline_citations.size, :>=, 1
     assert_operator result.amplification_score, :>, 0
@@ -102,14 +102,14 @@ class HeadlineCitationDetectorTest < ActiveSupport::TestCase
                  "will affect thousands of schools. The debate lasted months."
     )
 
-    result = Analyzers::HeadlineCitationDetector.call(articles: [art_a, art_b])
+    result = Analyzers::HeadlineCitationDetector.call(articles: [ art_a, art_b ])
     assert_empty result.headline_citations
   end
 
   test "amplification score scales with citation count" do
     result_struct = Analyzers::HeadlineCitationDetector::Result
 
-    single = result_struct.new(headline_citations: [1], amplification_score: 0.25)
+    single = result_struct.new(headline_citations: [ 1 ], amplification_score: 0.25)
     assert_equal 0.25, single.amplification_score
 
     # Score from the detector itself

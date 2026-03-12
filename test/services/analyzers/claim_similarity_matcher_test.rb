@@ -78,7 +78,7 @@ class Analyzers::ClaimSimilarityMatcherTest < ActiveSupport::TestCase
 
     matches = Analyzers::ClaimSimilarityMatcher.call(
       text: "GDP grew by 2.5% in the fourth quarter of 2025",
-      candidates: Claim.where(id: [c1.id, c2.id])
+      candidates: Claim.where(id: [ c1.id, c2.id ])
     )
 
     assert matches.any?, "Expected at least one match for similar GDP claims"
@@ -98,7 +98,7 @@ class Analyzers::ClaimSimilarityMatcherTest < ActiveSupport::TestCase
       canonical_fingerprint: "entity_test_#{SecureRandom.hex(4)}",
       canonical_form: "Brazil unemployment rate was 5% per IBGE",
       semantic_key: "brazil-unemployment-5pct",
-      entities_json: [{ "type" => "organization", "value" => "IBGE" }, { "type" => "named_entity", "value" => "Brazil" }],
+      entities_json: [ { "type" => "organization", "value" => "IBGE" }, { "type" => "named_entity", "value" => "Brazil" } ],
       checkability_status: :checkable,
       first_seen_at: Time.current,
       last_seen_at: Time.current

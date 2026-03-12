@@ -1,0 +1,10 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "9915b8febbe729e2a9b2765a6ef24684a39b866c9b852a2730d95ad71df50f2b",
+      "note": "URL is validated by SsrfValidator and UrlNormalizer before reaching ChromiumFetcher. Open3.capture3 uses array form (no shell interpolation)."
+    }
+  ],
+  "updated": "2026-03-12",
+  "brakeman_version": "8.0.4"
+}

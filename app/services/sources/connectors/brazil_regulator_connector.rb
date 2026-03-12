@@ -86,7 +86,6 @@ module Sources
       def cnpj
         page_text_sample.match(CNPJ_REGEX)&.to_s
       end
-
     end
   end
 end

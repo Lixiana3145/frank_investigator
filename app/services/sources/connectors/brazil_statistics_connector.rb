@@ -53,7 +53,6 @@ module Sources
       def survey_reference
         extract_from_text(SURVEY_REGEX)
       end
-
     end
   end
 end

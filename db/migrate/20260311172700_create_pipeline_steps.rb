@@ -15,7 +15,7 @@ class CreatePipelineSteps < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :pipeline_steps, [:investigation_id, :name], unique: true
+    add_index :pipeline_steps, [ :investigation_id, :name ], unique: true
     add_index :pipeline_steps, :status
   end
 end

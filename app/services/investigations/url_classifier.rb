@@ -53,7 +53,7 @@ module Investigations
       /[?&](?:noticia|materia|artigo)=/i, # Portuguese article params
       /[?&](?:article|story|post)=/i,     # English article params
       /\/(?:noticia|materia|artigo)\//i,  # Portuguese article path segments
-      /\/(?:article|story|post|news)\//i, # English article path segments
+      /\/(?:article|story|post|news)\//i # English article path segments
     ].freeze
 
     def self.call(url)

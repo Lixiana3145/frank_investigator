@@ -69,7 +69,7 @@ module Analyzers
       definitive_claims = DEFINITIVE_HEADLINE_PATTERNS.count { |p| title.to_s.match?(p) }
       hedging_signals = HEDGING_PATTERNS.count { |p| body_text_str.match?(p) }
       escalation = if definitive_claims > 0 && hedging_signals > 0
-        [definitive_claims * 0.15 + hedging_signals * 0.08, 0.5].min
+        [ definitive_claims * 0.15 + hedging_signals * 0.08, 0.5 ].min
       else
         0
       end

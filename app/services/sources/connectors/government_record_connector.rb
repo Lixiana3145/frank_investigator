@@ -20,7 +20,7 @@ module Sources
       private
 
       def document_reference
-        [@title, @document.text].join("\n").match(DOCUMENT_REGEX)&.to_s&.squish
+        [ @title, @document.text ].join("\n").match(DOCUMENT_REGEX)&.to_s&.squish
       end
     end
   end

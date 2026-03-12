@@ -16,7 +16,7 @@ class CreateClaimAssessments < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :claim_assessments, [:investigation_id, :claim_id], unique: true
+    add_index :claim_assessments, [ :investigation_id, :claim_id ], unique: true
     add_index :claim_assessments, :verdict
     add_index :claim_assessments, :checkability_status
   end

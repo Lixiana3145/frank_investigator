@@ -28,7 +28,7 @@ module Investigations
 
     def prioritized_links(source_article, max_depth)
       source_article.sourced_links.includes(:target_article).where(depth: ..max_depth, follow_status: "pending").to_a
-        .sort_by { |link| [source_priority(link.target_article), -link.target_article.authority_score.to_f, link.depth, link.position] }
+        .sort_by { |link| [ source_priority(link.target_article), -link.target_article.authority_score.to_f, link.depth, link.position ] }
         .first(10)
     end
 

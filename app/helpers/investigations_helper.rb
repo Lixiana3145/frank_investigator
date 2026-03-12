@@ -57,7 +57,7 @@ module InvestigationsHelper
   end
 
   def score_bar_width(value)
-    [(value.to_f * 100).round, 100].min
+    [ (value.to_f * 100).round, 100 ].min
   end
 
   def score_color_class(value)

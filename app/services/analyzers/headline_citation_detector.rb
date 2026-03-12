@@ -109,7 +109,7 @@ module Analyzers
 
       # Each headline-only citation amplifies misinformation
       # More citations = worse; cap at 1.0
-      [citations.size * 0.25, 1.0].min.round(2)
+      [ citations.size * 0.25, 1.0 ].min.round(2)
     end
   end
 end

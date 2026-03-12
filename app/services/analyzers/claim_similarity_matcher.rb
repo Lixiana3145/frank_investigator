@@ -88,7 +88,7 @@ module Analyzers
 
     def entity_overlap_score(set_a, set_b)
       intersection = (set_a & set_b).size
-      smaller = [set_a.size, set_b.size].min
+      smaller = [ set_a.size, set_b.size ].min
       return 0.0 if smaller.zero?
       intersection.to_f / smaller
     end

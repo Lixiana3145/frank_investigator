@@ -62,7 +62,6 @@ module Sources
         year = match[3].to_i
         Time.zone.local(year, month, day) rescue nil
       end
-
     end
   end
 end

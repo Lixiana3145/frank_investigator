@@ -28,7 +28,7 @@ class Parsing::DocumentExtractorTest < ActiveSupport::TestCase
 
   test "extracts text from CSV file" do
     csv_content = "Name,Value,Year\nGDP Growth,3.5%,2025\nInflation,4.2%,2025\n"
-    tempfile = Tempfile.new(["data", ".csv"])
+    tempfile = Tempfile.new([ "data", ".csv" ])
     tempfile.write(csv_content)
     tempfile.close
 
@@ -41,7 +41,7 @@ class Parsing::DocumentExtractorTest < ActiveSupport::TestCase
   end
 
   test "returns empty text for unsupported extensions" do
-    tempfile = Tempfile.new(["file", ".xyz"])
+    tempfile = Tempfile.new([ "file", ".xyz" ])
     tempfile.write("some content")
     tempfile.close
 
@@ -55,7 +55,7 @@ class Parsing::DocumentExtractorTest < ActiveSupport::TestCase
     # Create a minimal PDF
     pdf_content = "%PDF-1.0\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Contents 4 0 R>>endobj\n4 0 obj<</Length 44>>stream\nBT /F1 12 Tf 100 700 Td (Test content) Tj ET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000210 00000 n \ntrailer<</Size 5/Root 1 0 R>>\nstartxref\n304\n%%EOF"
 
-    tempfile = Tempfile.new(["test", ".pdf"])
+    tempfile = Tempfile.new([ "test", ".pdf" ])
     tempfile.binmode
     tempfile.write(pdf_content)
     tempfile.close

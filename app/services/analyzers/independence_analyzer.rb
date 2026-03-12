@@ -55,14 +55,14 @@ module Analyzers
 
     def detect_syndication
       pairs = []
-      bodies = @articles.map { |a| [a, tokenize(a.body_text)] }
+      bodies = @articles.map { |a| [ a, tokenize(a.body_text) ] }
 
       bodies.combination(2).each do |(art_a, tokens_a), (art_b, tokens_b)|
         next if tokens_a.empty? || tokens_b.empty?
 
         similarity = jaccard_similarity(tokens_a, tokens_b)
         if similarity >= SYNDICATION_SIMILARITY_THRESHOLD
-          pairs << { articles: [art_a.id, art_b.id], similarity: similarity.round(3) }
+          pairs << { articles: [ art_a.id, art_b.id ], similarity: similarity.round(3) }
         end
       end
 
@@ -125,9 +125,9 @@ module Analyzers
     end
 
     def compute_score(independent_count, penalties)
-      base = [independent_count * 0.28, 1.0].min
+      base = [ independent_count * 0.28, 1.0 ].min
       total_penalty = penalties.sum { |p| p[:severity] }
-      [base - total_penalty, 0.05].max.round(2)
+      [ base - total_penalty, 0.05 ].max.round(2)
     end
 
     def tokenize(text)

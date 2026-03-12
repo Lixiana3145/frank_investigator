@@ -52,7 +52,6 @@ module Sources
       def vote_status
         page_text_sample.match(VOTE_REGEX)&.to_s&.squish
       end
-
     end
   end
 end

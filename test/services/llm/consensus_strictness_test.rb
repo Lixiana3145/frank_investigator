@@ -2,7 +2,7 @@ require "test_helper"
 
 class Llm::ConsensusStrictnessTest < ActiveSupport::TestCase
   test "unanimous models get no penalty" do
-    client = Llm::RubyLlmClient.new(models: ["model-a", "model-b"])
+    client = Llm::RubyLlmClient.new(models: [ "model-a", "model-b" ])
     results = [
       Llm::RubyLlmClient::Result.new(verdict: "supported", confidence_score: 0.85, reason_summary: "Evidence supports."),
       Llm::RubyLlmClient::Result.new(verdict: "supported", confidence_score: 0.90, reason_summary: "Confirmed by data.")
@@ -16,7 +16,7 @@ class Llm::ConsensusStrictnessTest < ActiveSupport::TestCase
   end
 
   test "adjacent verdict pair gets 0.08 penalty" do
-    client = Llm::RubyLlmClient.new(models: ["model-a", "model-b"])
+    client = Llm::RubyLlmClient.new(models: [ "model-a", "model-b" ])
     results = [
       Llm::RubyLlmClient::Result.new(verdict: "supported", confidence_score: 0.80, reason_summary: "Looks supported."),
       Llm::RubyLlmClient::Result.new(verdict: "mixed", confidence_score: 0.70, reason_summary: "Mixed evidence.")
@@ -30,7 +30,7 @@ class Llm::ConsensusStrictnessTest < ActiveSupport::TestCase
   end
 
   test "opposed verdict pair gets 0.15 penalty" do
-    client = Llm::RubyLlmClient.new(models: ["model-a", "model-b"])
+    client = Llm::RubyLlmClient.new(models: [ "model-a", "model-b" ])
     results = [
       Llm::RubyLlmClient::Result.new(verdict: "supported", confidence_score: 0.85, reason_summary: "Confirmed."),
       Llm::RubyLlmClient::Result.new(verdict: "disputed", confidence_score: 0.80, reason_summary: "Contradicted.")
@@ -43,7 +43,7 @@ class Llm::ConsensusStrictnessTest < ActiveSupport::TestCase
   end
 
   test "three different verdicts get 0.25 penalty" do
-    client = Llm::RubyLlmClient.new(models: ["model-a", "model-b", "model-c"])
+    client = Llm::RubyLlmClient.new(models: [ "model-a", "model-b", "model-c" ])
     results = [
       Llm::RubyLlmClient::Result.new(verdict: "supported", confidence_score: 0.80, reason_summary: "Yes."),
       Llm::RubyLlmClient::Result.new(verdict: "mixed", confidence_score: 0.60, reason_summary: "Maybe."),
@@ -58,14 +58,14 @@ class Llm::ConsensusStrictnessTest < ActiveSupport::TestCase
 
   test "quarantined models are excluded" do
     ENV["QUARANTINED_MODELS"] = "bad-model"
-    client = Llm::RubyLlmClient.new(models: ["good-model", "bad-model", "another-good-model"])
-    assert_equal ["good-model", "another-good-model"], client.instance_variable_get(:@models)
+    client = Llm::RubyLlmClient.new(models: [ "good-model", "bad-model", "another-good-model" ])
+    assert_equal [ "good-model", "another-good-model" ], client.instance_variable_get(:@models)
   ensure
     ENV.delete("QUARANTINED_MODELS")
   end
 
   test "disagreement details include per-model verdicts" do
-    client = Llm::RubyLlmClient.new(models: ["model-a", "model-b"])
+    client = Llm::RubyLlmClient.new(models: [ "model-a", "model-b" ])
     results = [
       Llm::RubyLlmClient::Result.new(verdict: "supported", confidence_score: 0.85, reason_summary: "Good."),
       Llm::RubyLlmClient::Result.new(verdict: "disputed", confidence_score: 0.70, reason_summary: "Bad.")
@@ -79,7 +79,7 @@ class Llm::ConsensusStrictnessTest < ActiveSupport::TestCase
   end
 
   test "model_results contains per-model data" do
-    client = Llm::RubyLlmClient.new(models: ["model-a", "model-b"])
+    client = Llm::RubyLlmClient.new(models: [ "model-a", "model-b" ])
     results = [
       Llm::RubyLlmClient::Result.new(verdict: "supported", confidence_score: 0.85, reason_summary: "Good."),
       Llm::RubyLlmClient::Result.new(verdict: "disputed", confidence_score: 0.70, reason_summary: "Bad.")

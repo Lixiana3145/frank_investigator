@@ -3,42 +3,42 @@ module Sources
     Result = Struct.new(:source_kind, :authority_tier, :authority_score, :independence_group, :source_role, keyword_init: true)
 
     # Brazil-specific patterns
-    BRAZIL_LEGISLATIVE_HOST_PATTERNS = [/\bcamara\.leg\.br\z/i, /\bsenado\.leg\.br\z/i, /\bcongressoemfoco\.uol\.com\.br\z/i].freeze
-    BRAZIL_COURT_HOST_PATTERNS = [/\bjus\.br\z/i, /\bstf\.jus\.br\z/i, /\bstj\.jus\.br\z/i, /\btse\.jus\.br\z/i, /\btrf\d?\.jus\.br\z/i, /\btj[a-z]{2}\.jus\.br\z/i].freeze
-    BRAZIL_MARKET_FILING_HOST_PATTERNS = [/\bcvm\.gov\.br\z/i, /\bb3\.com\.br\z/i, /\bri\./i, /\binvestidores\./i, /\bresultados\./i].freeze
-    BRAZIL_GAZETTE_HOST_PATTERNS = [/\bimprensanacional\.gov\.br\z/i, /\bin\.gov\.br\z/i, /\bdiariooficial\b/i, /\bdoe\.\w+\.gov\.br\z/i, /\bioerj\b/i, /\bimesp\b/i, /\bdiariomunicipal\b/i].freeze
-    BRAZIL_REGULATOR_HOST_PATTERNS = [/\bbcb\.gov\.br\z/i, /\banvisa\.gov\.br\z/i, /\btcu\.gov\.br\z/i, /\bcgu\.gov\.br\z/i, /\banatel\.gov\.br\z/i, /\baneel\.gov\.br\z/i, /\bans\.gov\.br\z/i, /\banp\.gov\.br\z/i, /\bantaq\.gov\.br\z/i, /\bantt\.gov\.br\z/i, /\banac\.gov\.br\z/i, /\bana\.gov\.br\z/i, /\bancine\.gov\.br\z/i, /\bcade\.gov\.br\z/i, /\bsusep\.gov\.br\z/i, /\bprevic\.gov\.br\z/i].freeze
-    BRAZIL_STATISTICS_HOST_PATTERNS = [/\bibge\.gov\.br\z/i, /\bsidra\.ibge\.gov\.br\z/i, /\bipea\.gov\.br\z/i, /\bipeadata\.gov\.br\z/i, /\binep\.gov\.br\z/i, /\bdatasus\b/i, /\bdados\.gov\.br\z/i].freeze
-    BRAZIL_RECEITA_HOST_PATTERNS = [/\breceita\.fazenda\.gov\.br\z/i, /\bgov\.br\/receitafederal/i].freeze
+    BRAZIL_LEGISLATIVE_HOST_PATTERNS = [ /\bcamara\.leg\.br\z/i, /\bsenado\.leg\.br\z/i, /\bcongressoemfoco\.uol\.com\.br\z/i ].freeze
+    BRAZIL_COURT_HOST_PATTERNS = [ /\bjus\.br\z/i, /\bstf\.jus\.br\z/i, /\bstj\.jus\.br\z/i, /\btse\.jus\.br\z/i, /\btrf\d?\.jus\.br\z/i, /\btj[a-z]{2}\.jus\.br\z/i ].freeze
+    BRAZIL_MARKET_FILING_HOST_PATTERNS = [ /\bcvm\.gov\.br\z/i, /\bb3\.com\.br\z/i, /\bri\./i, /\binvestidores\./i, /\bresultados\./i ].freeze
+    BRAZIL_GAZETTE_HOST_PATTERNS = [ /\bimprensanacional\.gov\.br\z/i, /\bin\.gov\.br\z/i, /\bdiariooficial\b/i, /\bdoe\.\w+\.gov\.br\z/i, /\bioerj\b/i, /\bimesp\b/i, /\bdiariomunicipal\b/i ].freeze
+    BRAZIL_REGULATOR_HOST_PATTERNS = [ /\bbcb\.gov\.br\z/i, /\banvisa\.gov\.br\z/i, /\btcu\.gov\.br\z/i, /\bcgu\.gov\.br\z/i, /\banatel\.gov\.br\z/i, /\baneel\.gov\.br\z/i, /\bans\.gov\.br\z/i, /\banp\.gov\.br\z/i, /\bantaq\.gov\.br\z/i, /\bantt\.gov\.br\z/i, /\banac\.gov\.br\z/i, /\bana\.gov\.br\z/i, /\bancine\.gov\.br\z/i, /\bcade\.gov\.br\z/i, /\bsusep\.gov\.br\z/i, /\bprevic\.gov\.br\z/i ].freeze
+    BRAZIL_STATISTICS_HOST_PATTERNS = [ /\bibge\.gov\.br\z/i, /\bsidra\.ibge\.gov\.br\z/i, /\bipea\.gov\.br\z/i, /\bipeadata\.gov\.br\z/i, /\binep\.gov\.br\z/i, /\bdatasus\b/i, /\bdados\.gov\.br\z/i ].freeze
+    BRAZIL_RECEITA_HOST_PATTERNS = [ /\breceita\.fazenda\.gov\.br\z/i, /\bgov\.br\/receitafederal/i ].freeze
 
     # U.S. authority patterns — Tier A: authenticated primary
-    US_GOVINFO_HOST_PATTERNS = [/\bgovinfo\.gov\z/i].freeze
-    US_CONGRESS_HOST_PATTERNS = [/\bcongress\.gov\z/i].freeze
-    US_FEDERAL_REGISTER_HOST_PATTERNS = [/\bfederalregister\.gov\z/i].freeze
-    US_FED_HOST_PATTERNS = [/\bfederalreserve\.gov\z/i].freeze
-    US_FRED_HOST_PATTERNS = [/\bfred\.stlouisfed\.org\z/i, /\bstlouisfed\.org\z/i].freeze
-    US_BLS_HOST_PATTERNS = [/\bbls\.gov\z/i].freeze
-    US_CENSUS_HOST_PATTERNS = [/\bcensus\.gov\z/i].freeze
-    US_COURTS_HOST_PATTERNS = [/\buscourts\.gov\z/i, /\bpacer\.gov\z/i, /\bcourtlistener\.com\z/i].freeze
-    US_SEC_HOST_PATTERNS = [/\bsec\.gov\z/i, /\bedgar\b/i].freeze
+    US_GOVINFO_HOST_PATTERNS = [ /\bgovinfo\.gov\z/i ].freeze
+    US_CONGRESS_HOST_PATTERNS = [ /\bcongress\.gov\z/i ].freeze
+    US_FEDERAL_REGISTER_HOST_PATTERNS = [ /\bfederalregister\.gov\z/i ].freeze
+    US_FED_HOST_PATTERNS = [ /\bfederalreserve\.gov\z/i ].freeze
+    US_FRED_HOST_PATTERNS = [ /\bfred\.stlouisfed\.org\z/i, /\bstlouisfed\.org\z/i ].freeze
+    US_BLS_HOST_PATTERNS = [ /\bbls\.gov\z/i ].freeze
+    US_CENSUS_HOST_PATTERNS = [ /\bcensus\.gov\z/i ].freeze
+    US_COURTS_HOST_PATTERNS = [ /\buscourts\.gov\z/i, /\bpacer\.gov\z/i, /\bcourtlistener\.com\z/i ].freeze
+    US_SEC_HOST_PATTERNS = [ /\bsec\.gov\z/i, /\bedgar\b/i ].freeze
 
     # U.S. authority patterns — Tier B: primary but political
-    US_WHITEHOUSE_HOST_PATTERNS = [/\bwhitehouse\.gov\z/i].freeze
+    US_WHITEHOUSE_HOST_PATTERNS = [ /\bwhitehouse\.gov\z/i ].freeze
 
     # U.S. authority patterns — Tier C: independent oversight
-    US_GAO_HOST_PATTERNS = [/\bgao\.gov\z/i].freeze
-    US_CBO_HOST_PATTERNS = [/\bcbo\.gov\z/i].freeze
+    US_GAO_HOST_PATTERNS = [ /\bgao\.gov\z/i ].freeze
+    US_CBO_HOST_PATTERNS = [ /\bcbo\.gov\z/i ].freeze
 
     # U.S. authority patterns — Tier D: research discovery
-    US_NBER_HOST_PATTERNS = [/\bnber\.org\z/i].freeze
+    US_NBER_HOST_PATTERNS = [ /\bnber\.org\z/i ].freeze
 
     # Generic patterns
-    GOVERNMENT_HOST_PATTERNS = [/\.gov\z/, /\.gov\.br\z/i, /\bparliament\./i, /\bsenate\./i, /\bcourt/i].freeze
-    SCIENCE_HOST_PATTERNS = [/\bpubmed\b/i, /\barxiv\b/i, /\bnature\.com\z/i, /\bscience\.org\z/i, /\bdoi\.org\z/i].freeze
-    COMPANY_FILING_HOST_PATTERNS = [/\binvestor\./i].freeze
-    PRESS_RELEASE_HOST_PATTERNS = [/\bprnewswire\.com\z/i, /\bbusinesswire\.com\z/i].freeze
-    SOCIAL_HOST_PATTERNS = [/\bx\.com\z/i, /\btwitter\.com\z/i, /\bfacebook\.com\z/i, /\binstagram\.com\z/i, /\btiktok\.com\z/i, /\byoutube\.com\z/i].freeze
-    REFERENCE_HOST_PATTERNS = [/\bwikipedia\.org\z/i].freeze
+    GOVERNMENT_HOST_PATTERNS = [ /\.gov\z/, /\.gov\.br\z/i, /\bparliament\./i, /\bsenate\./i, /\bcourt/i ].freeze
+    SCIENCE_HOST_PATTERNS = [ /\bpubmed\b/i, /\barxiv\b/i, /\bnature\.com\z/i, /\bscience\.org\z/i, /\bdoi\.org\z/i ].freeze
+    COMPANY_FILING_HOST_PATTERNS = [ /\binvestor\./i ].freeze
+    PRESS_RELEASE_HOST_PATTERNS = [ /\bprnewswire\.com\z/i, /\bbusinesswire\.com\z/i ].freeze
+    SOCIAL_HOST_PATTERNS = [ /\bx\.com\z/i, /\btwitter\.com\z/i, /\bfacebook\.com\z/i, /\binstagram\.com\z/i, /\btiktok\.com\z/i, /\byoutube\.com\z/i ].freeze
+    REFERENCE_HOST_PATTERNS = [ /\bwikipedia\.org\z/i ].freeze
 
     def self.call(url:, host:, title: nil)
       new(url:, host:, title:).call

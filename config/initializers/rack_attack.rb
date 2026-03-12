@@ -23,9 +23,9 @@ Rack::Attack.blocklist("bad-hosts") do |req|
 end
 
 Rack::Attack.throttled_responder = lambda do |req|
-  [429, { "Content-Type" => "text/plain" }, ["Rate limit exceeded. Try again later.\n"]]
+  [ 429, { "Content-Type" => "text/plain" }, [ "Rate limit exceeded. Try again later.\n" ] ]
 end
 
 Rack::Attack.blocklisted_responder = lambda do |req|
-  [403, { "Content-Type" => "text/plain" }, ["This URL is not allowed.\n"]]
+  [ 403, { "Content-Type" => "text/plain" }, [ "This URL is not allowed.\n" ] ]
 end

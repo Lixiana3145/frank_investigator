@@ -31,7 +31,7 @@ module Analyzers
       if compound_claim? && @text.length > 80
         decompose_compound
       else
-        [analyze_single(@text)]
+        [ analyze_single(@text) ]
       end
     end
 
@@ -43,7 +43,7 @@ module Analyzers
 
     def decompose_compound
       parts = @text.split(CONJUNCTION_SPLIT).map(&:strip).reject { |p| p.length < 25 }
-      return [analyze_single(@text)] if parts.length < 2
+      return [ analyze_single(@text) ] if parts.length < 2
 
       parts.map { |part| analyze_single(part) }
     end
@@ -117,10 +117,10 @@ module Analyzers
       "agosto" => 8, "setembro" => 9, "outubro" => 10, "novembro" => 11, "dezembro" => 12
     }.freeze
 
-    QUARTER_MONTH = { "1" => [1, 3], "2" => [4, 6], "3" => [7, 9], "4" => [10, 12] }.freeze
+    QUARTER_MONTH = { "1" => [ 1, 3 ], "2" => [ 4, 6 ], "3" => [ 7, 9 ], "4" => [ 10, 12 ] }.freeze
 
     def extract_claim_timestamp(time_scope)
-      return [nil, nil] if time_scope.blank?
+      return [ nil, nil ] if time_scope.blank?
 
       scope = time_scope.strip
 
@@ -128,7 +128,7 @@ module Analyzers
       if (qm = scope.match(/Q([1-4])\s*(\d{2,4})/i))
         year = normalize_year(qm[2])
         months = QUARTER_MONTH[qm[1]]
-        return [Date.new(year, months[0], 1), Date.new(year, months[1], -1)]
+        return [ Date.new(year, months[0], 1), Date.new(year, months[1], -1) ]
       end
 
       if (qm = scope.match(/(primeiro|segundo|terceiro|quarto)\s+trimestre/i))
@@ -136,24 +136,24 @@ module Analyzers
         year_match = scope.match(/(\d{4})/)
         year = year_match ? year_match[1].to_i : Date.current.year
         months = QUARTER_MONTH[q]
-        return [Date.new(year, months[0], 1), Date.new(year, months[1], -1)]
+        return [ Date.new(year, months[0], 1), Date.new(year, months[1], -1) ]
       end
 
       # "March 2025", "fevereiro 2024", "em março 2025"
       MONTH_MAP.each do |name, num|
         if (mm = scope.match(/#{name}\s+(\d{4})/i))
           year = mm[1].to_i
-          return [Date.new(year, num, 1), Date.new(year, num, -1)]
+          return [ Date.new(year, num, 1), Date.new(year, num, -1) ]
         end
       end
 
       # "in 2024", "em 2024", bare "2024"
       if (ym = scope.match(/\b(\d{4})\b/))
         year = ym[1].to_i
-        return [Date.new(year, 1, 1), Date.new(year, 12, 31)]
+        return [ Date.new(year, 1, 1), Date.new(year, 12, 31) ]
       end
 
-      [nil, nil]
+      [ nil, nil ]
     end
 
     def normalize_year(str)

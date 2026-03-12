@@ -25,20 +25,19 @@ module Sources
       private
 
       def filing_type
-        text = [@title, @url, page_text_sample].join("\n")
+        text = [ @title, @url, page_text_sample ].join("\n")
         text.match(FORM_REGEX)&.to_s&.upcase
       end
 
       def cik
-        text = [@url, page_text_sample].join("\n")
+        text = [ @url, page_text_sample ].join("\n")
         text.match(CIK_REGEX)&.captures&.first
       end
 
       def accession_number
-        text = [@url, page_text_sample].join("\n")
+        text = [ @url, page_text_sample ].join("\n")
         text.match(ACCESSION_REGEX)&.to_s
       end
-
     end
   end
 end

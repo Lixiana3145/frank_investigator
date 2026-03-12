@@ -51,12 +51,12 @@ module Analyzers
         .where(source_article_id: @article_ids, target_article_id: @article_ids)
         .pluck(:source_article_id, :target_article_id)
 
-      link_set = Set.new(internal_links.map { |s, t| [s, t] })
+      link_set = Set.new(internal_links.map { |s, t| [ s, t ] })
       pairs = []
 
       internal_links.each do |source_id, target_id|
-        if link_set.include?([target_id, source_id]) && source_id < target_id
-          pairs << { article_ids: [source_id, target_id] }
+        if link_set.include?([ target_id, source_id ]) && source_id < target_id
+          pairs << { article_ids: [ source_id, target_id ] }
         end
       end
 
@@ -128,7 +128,7 @@ module Analyzers
         end
       end
 
-      [grounded, ungrounded]
+      [ grounded, ungrounded ]
     end
 
     def compute_depth_score(grounded, ungrounded, circular, thin)
@@ -138,12 +138,12 @@ module Analyzers
       base = grounded.to_f / total
 
       # Circular citations are a strong signal of echo chamber
-      circular_penalty = [circular.size * 0.15, 0.4].min
+      circular_penalty = [ circular.size * 0.15, 0.4 ].min
 
       # Thin chains weaken the evidence base
-      thin_penalty = [thin.size * 0.08, 0.3].min
+      thin_penalty = [ thin.size * 0.08, 0.3 ].min
 
-      [base - circular_penalty - thin_penalty, 0.0].max.round(2)
+      [ base - circular_penalty - thin_penalty, 0.0 ].max.round(2)
     end
   end
 end

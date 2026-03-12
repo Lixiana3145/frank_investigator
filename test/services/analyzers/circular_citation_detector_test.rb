@@ -19,7 +19,7 @@ class CircularCitationDetectorTest < ActiveSupport::TestCase
     ArticleLink.create!(source_article: @article_a, target_article: @article_b, href: @article_b.url, follow_status: :crawled)
     ArticleLink.create!(source_article: @article_b, target_article: @article_a, href: @article_a.url, follow_status: :crawled)
 
-    result = Analyzers::CircularCitationDetector.call(articles: [@article_a, @article_b])
+    result = Analyzers::CircularCitationDetector.call(articles: [ @article_a, @article_b ])
 
     assert_equal 1, result.circular_pairs.size
     assert_includes result.circular_pairs.first[:article_ids], @article_a.id
@@ -29,12 +29,12 @@ class CircularCitationDetectorTest < ActiveSupport::TestCase
   test "no circular when links are one-directional" do
     ArticleLink.create!(source_article: @article_a, target_article: @article_b, href: @article_b.url, follow_status: :crawled)
 
-    result = Analyzers::CircularCitationDetector.call(articles: [@article_a, @article_b])
+    result = Analyzers::CircularCitationDetector.call(articles: [ @article_a, @article_b ])
     assert_empty result.circular_pairs
   end
 
   test "detects thin chain when article has no outbound citations" do
-    result = Analyzers::CircularCitationDetector.call(articles: [@article_a])
+    result = Analyzers::CircularCitationDetector.call(articles: [ @article_a ])
 
     assert_equal 1, result.thin_chains.size
     assert_equal "no_outbound_citations", result.thin_chains.first[:reason]
@@ -43,14 +43,14 @@ class CircularCitationDetectorTest < ActiveSupport::TestCase
   test "does not flag primary source as thin chain" do
     @article_a.update!(authority_tier: :primary)
 
-    result = Analyzers::CircularCitationDetector.call(articles: [@article_a])
+    result = Analyzers::CircularCitationDetector.call(articles: [ @article_a ])
     assert_empty result.thin_chains
   end
 
   test "detects thin chain when article only cites evidence set members" do
     ArticleLink.create!(source_article: @article_a, target_article: @article_b, href: @article_b.url, follow_status: :crawled)
 
-    result = Analyzers::CircularCitationDetector.call(articles: [@article_a, @article_b])
+    result = Analyzers::CircularCitationDetector.call(articles: [ @article_a, @article_b ])
 
     # article_a cites article_b (within set), article_b has no outbound links
     thin_a = result.thin_chains.find { |t| t[:article_id] == @article_a.id }
@@ -65,7 +65,7 @@ class CircularCitationDetectorTest < ActiveSupport::TestCase
     )
     ArticleLink.create!(source_article: @article_a, target_article: external, href: external.url, follow_status: :crawled)
 
-    result = Analyzers::CircularCitationDetector.call(articles: [@article_a])
+    result = Analyzers::CircularCitationDetector.call(articles: [ @article_a ])
 
     assert_equal 1, result.grounded_count
     assert_equal 0, result.ungrounded_count
@@ -76,7 +76,7 @@ class CircularCitationDetectorTest < ActiveSupport::TestCase
     ArticleLink.create!(source_article: @article_a, target_article: @article_b, href: @article_b.url, follow_status: :crawled)
     ArticleLink.create!(source_article: @article_b, target_article: @article_a, href: @article_a.url, follow_status: :crawled)
 
-    result = Analyzers::CircularCitationDetector.call(articles: [@article_a, @article_b])
+    result = Analyzers::CircularCitationDetector.call(articles: [ @article_a, @article_b ])
 
     assert_operator result.citation_depth_score, :<, 0.5
   end

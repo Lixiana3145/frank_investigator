@@ -64,7 +64,7 @@ module Articles
       require "tempfile"
 
       ext = File.extname(URI.parse(@article.normalized_url).path)
-      tempfile = Tempfile.new(["document", ext])
+      tempfile = Tempfile.new([ "document", ext ])
       tempfile.binmode
       tempfile.write(@html)
       tempfile.close

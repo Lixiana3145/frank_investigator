@@ -10,7 +10,7 @@ class CreateVerdictSnapshots < ActiveRecord::Migration[8.1]
       t.string :triggered_by
       t.datetime :created_at, null: false
 
-      t.index [:claim_assessment_id, :created_at]
+      t.index [ :claim_assessment_id, :created_at ]
     end
   end
 end

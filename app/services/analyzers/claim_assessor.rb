@@ -105,7 +105,7 @@ module Analyzers
 
       Result.new(
         verdict: prior.verdict.to_sym,
-        confidence_score: [prior.confidence_score.to_f - 0.05, 0.1].max.round(2),
+        confidence_score: [ prior.confidence_score.to_f - 0.05, 0.1 ].max.round(2),
         checkability_status: prior.checkability_status.to_sym,
         reason_summary: "#{prior.reason_summary} (Reused from a prior investigation — #{similarity_note}.)",
         missing_evidence_summary: prior.missing_evidence_summary,
@@ -195,12 +195,12 @@ module Analyzers
         .reject { |e| e.authority_tier == "primary" }
         .sum { |e| e.relevance_score.to_f * e.authority_score.to_f }
 
-      primary_weight + [secondary_weight, SECONDARY_WEIGHT_CAP].min
+      primary_weight + [ secondary_weight, SECONDARY_WEIGHT_CAP ].min
     end
 
     def normalized_authority_score(entries)
       return 0.05 if entries.empty?
-      [entries.sum { |entry| entry.authority_score.to_f * entry.relevance_score.to_f }, 1.0].min
+      [ entries.sum { |entry| entry.authority_score.to_f * entry.relevance_score.to_f }, 1.0 ].min
     end
 
     def normalized_independence_score(entries)
@@ -214,7 +214,7 @@ module Analyzers
         return analysis.independence_score
       end
 
-      [groups * 0.28, 1.0].min
+      [ groups * 0.28, 1.0 ].min
     end
 
     def normalized_timeliness_score(entries)
@@ -229,7 +229,7 @@ module Analyzers
       else
         dated_entries = entries.count { |entry| entry.article.fetched_at.present? }
         return 0.1 if dated_entries.zero?
-        [0.25 + (dated_entries * 0.15), 1.0].min
+        [ 0.25 + (dated_entries * 0.15), 1.0 ].min
       end
     end
 
@@ -242,7 +242,7 @@ module Analyzers
       return 0 if entries.empty?
       primary_entries = entries.count { |entry| entry.authority_tier == "primary" }
       weighted_count = entries.sum { |entry| entry.relevance_score.to_f }
-      [(weighted_count * 0.25) + (primary_entries * 0.2), 1.0].min
+      [ (weighted_count * 0.25) + (primary_entries * 0.2), 1.0 ].min
     end
 
     # If any primary-tier source disputes the claim, cap confidence and force
@@ -256,12 +256,12 @@ module Analyzers
 
       # Veto: primary disputes exist but no primary supports
       if primary_disputing.any? && primary_supporting.empty? && verdict == :supported
-        return [ :mixed, [confidence, PRIMARY_VETO_CONFIDENCE_CAP].min ]
+        return [ :mixed, [ confidence, PRIMARY_VETO_CONFIDENCE_CAP ].min ]
       end
 
       # Opposing primaries: force mixed, cap confidence hard
       if primary_disputing.any? && primary_supporting.any?
-        return [ :mixed, [confidence, PRIMARY_VETO_CONFIDENCE_CAP - 0.10].min ]
+        return [ :mixed, [ confidence, PRIMARY_VETO_CONFIDENCE_CAP - 0.10 ].min ]
       end
 
       [ verdict, confidence ]
@@ -279,7 +279,7 @@ module Analyzers
       # Combine: both circular citations and headline amplification erode evidence quality
       base = circular_result.citation_depth_score
       headline_penalty = headline_result.amplification_score * 0.2
-      [base - headline_penalty, 0.0].max.round(2)
+      [ base - headline_penalty, 0.0 ].max.round(2)
     end
 
     # A claim is "unsubstantiated viral" when many secondary outlets support it
@@ -305,8 +305,8 @@ module Analyzers
     def verdict_for(weighted_support:, weighted_dispute:, sufficiency_score:, **)
       return :needs_more_evidence if sufficiency_score < 0.35
       return :mixed if weighted_support >= 0.55 && weighted_dispute >= 0.55
-      return :supported if weighted_support >= [weighted_dispute * 1.35, 0.7].max
-      return :disputed if weighted_dispute >= [weighted_support * 1.35, 0.7].max
+      return :supported if weighted_support >= [ weighted_dispute * 1.35, 0.7 ].max
+      return :disputed if weighted_dispute >= [ weighted_support * 1.35, 0.7 ].max
       :needs_more_evidence
     end
 
@@ -317,7 +317,7 @@ module Analyzers
 
       # Citation depth reduces confidence when evidence articles don't link to
       # substantive external sources (echo chamber / circular citation pattern)
-      citation_penalty = [(1.0 - citation_depth_score) * 0.2, 0.2].min
+      citation_penalty = [ (1.0 - citation_depth_score) * 0.2, 0.2 ].min
 
       raw = ((sufficiency_score * 0.30) + (authority_score * 0.25) + (independence_score * 0.20) + (timeliness_score * 0.15) + (citation_depth_score * 0.10) - (conflict_penalty * 0.25) - citation_penalty).clamp(0, 0.97)
 
@@ -332,7 +332,7 @@ module Analyzers
 
     def conflict_score_for(weighted_support, weighted_dispute)
       return 0.05 if weighted_support.zero? || weighted_dispute.zero?
-      [[weighted_support, weighted_dispute].min / [weighted_support, weighted_dispute].max, 1.0].min
+      [ [ weighted_support, weighted_dispute ].min / [ weighted_support, weighted_dispute ].max, 1.0 ].min
     end
 
     def run_llm_assessment(entries)
@@ -350,12 +350,12 @@ module Analyzers
     end
 
     def merge_with_llm(heuristic_verdict:, heuristic_confidence:, llm_result:)
-      return [heuristic_verdict, heuristic_confidence] unless llm_result
+      return [ heuristic_verdict, heuristic_confidence ] unless llm_result
 
       llm_verdict = llm_result.verdict.to_sym
-      return [heuristic_verdict, [heuristic_confidence + 0.05, 0.97].min] if llm_verdict == heuristic_verdict
-      return [llm_verdict, llm_result.confidence_score.to_f.clamp(0, 0.97)] if heuristic_verdict == :needs_more_evidence && llm_result.confidence_score.to_f >= 0.8
-      [ :mixed, [heuristic_confidence - 0.12, 0.1].max ]
+      return [ heuristic_verdict, [ heuristic_confidence + 0.05, 0.97 ].min ] if llm_verdict == heuristic_verdict
+      return [ llm_verdict, llm_result.confidence_score.to_f.clamp(0, 0.97) ] if heuristic_verdict == :needs_more_evidence && llm_result.confidence_score.to_f >= 0.8
+      [ :mixed, [ heuristic_confidence - 0.12, 0.1 ].max ]
     end
 
     def build_reason_summary(entries, verdict, scores, llm_result)

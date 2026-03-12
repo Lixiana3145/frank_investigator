@@ -42,7 +42,7 @@ module Parsing
 
     def cluster_adjacent(scored)
       clusters = []
-      current_cluster = [scored.first]
+      current_cluster = [ scored.first ]
 
       scored.each_cons(2) do |prev, curr|
         # Check if nodes are siblings or close in document order
@@ -50,7 +50,7 @@ module Parsing
           current_cluster << curr
         else
           clusters << current_cluster
-          current_cluster = [curr]
+          current_cluster = [ curr ]
         end
       end
       clusters << current_cluster

@@ -19,7 +19,7 @@ module Sources
       end
 
       def extract_from_text(regex)
-        text = [@title, page_text_sample].join("\n")
+        text = [ @title, page_text_sample ].join("\n")
         text.match(regex)&.to_s&.squish
       end
 

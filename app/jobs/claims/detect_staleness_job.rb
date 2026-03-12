@@ -10,7 +10,6 @@ module Claims
         .where(stale_at: nil)
         .includes(:claim)
         .find_each do |assessment|
-
         result = Analyzers::StalenessDetector.call(assessment)
         next unless result.stale
 

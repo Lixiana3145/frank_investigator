@@ -206,7 +206,7 @@ module Analyzers
                   severity: { type: "string", enum: %w[low medium high] },
                   excerpt: { type: "string" },
                   explanation: { type: "string" },
-                  undermined_claim_index: { type: ["integer", "null"] }
+                  undermined_claim_index: { type: [ "integer", "null" ] }
                 },
                 required: %w[type severity excerpt explanation]
               }
@@ -289,7 +289,7 @@ module Analyzers
         end
       end
 
-      bias_score = [fallacies.size * 0.2, 0.6].min
+      bias_score = [ fallacies.size * 0.2, 0.6 ].min
 
       Result.new(
         fallacies: fallacies,

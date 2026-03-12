@@ -31,7 +31,7 @@ class AddProvenanceTables < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :llm_interactions, [:evidence_packet_fingerprint, :model_id], name: "idx_llm_interactions_cache_key"
+    add_index :llm_interactions, [ :evidence_packet_fingerprint, :model_id ], name: "idx_llm_interactions_cache_key"
     add_index :llm_interactions, :interaction_type
     add_index :llm_interactions, :model_id
 

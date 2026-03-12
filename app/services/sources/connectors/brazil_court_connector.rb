@@ -89,7 +89,6 @@ module Sources
 
         parsed_time(match[2])
       end
-
     end
   end
 end

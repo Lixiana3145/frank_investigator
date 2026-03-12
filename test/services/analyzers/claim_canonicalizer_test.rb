@@ -29,7 +29,7 @@ class Analyzers::ClaimCanonicalizerTest < ActiveSupport::TestCase
   test "call with entities and time_scope" do
     result = Analyzers::ClaimCanonicalizer.call(
       text: "Petrobras reported revenue of R$120 billion",
-      entities: [{ type: "organization", value: "Petrobras" }],
+      entities: [ { type: "organization", value: "Petrobras" } ],
       time_scope: "2024"
     )
 

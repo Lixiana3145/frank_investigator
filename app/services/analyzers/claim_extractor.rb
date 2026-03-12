@@ -32,7 +32,7 @@ module Analyzers
     def extract_title_claims
       return [] if @article.title.blank?
       result = build_result(@article.title, role: :headline, importance_score: 1.0)
-      result ? [result] : []
+      result ? [ result ] : []
     end
 
     def extract_body_claims
@@ -228,4 +228,3 @@ module Analyzers
     end
   end
 end
-

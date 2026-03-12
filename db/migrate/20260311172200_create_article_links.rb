@@ -13,7 +13,7 @@ class CreateArticleLinks < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :article_links, [:source_article_id, :href], unique: true
+    add_index :article_links, [ :source_article_id, :href ], unique: true
     add_index :article_links, :follow_status
   end
 end

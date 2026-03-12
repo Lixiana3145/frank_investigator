@@ -12,6 +12,6 @@ class CreateArticleClaims < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :article_claims, [:article_id, :claim_id, :role], unique: true
+    add_index :article_claims, [ :article_id, :claim_id, :role ], unique: true
   end
 end

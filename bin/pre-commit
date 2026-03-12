@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -e
+
+echo "=== Pre-commit checks ==="
+
+echo "[1/5] RuboCop..."
+bundle exec rubocop --parallel --force-exclusion
+
+echo "[2/5] Brakeman..."
+bundle exec brakeman --quiet --no-pager -i config/brakeman.ignore --exit-on-warn --exit-on-error
+
+echo "[3/5] bundler-audit..."
+bundle exec bundler-audit check
+
+echo "[4/5] Test suite..."
+COVERAGE=1 bundle exec rails test
+
+echo "[5/5] Coverage report..."
+if [ -f coverage/.last_run.json ]; then
+  ruby -rjson -e '
+    data = JSON.parse(File.read("coverage/.last_run.json"))
+    line = data.dig("result", "line") || 0
+    branch = data.dig("result", "branch") || 0
+    puts "  Line coverage:   #{line}%"
+    puts "  Branch coverage: #{branch}%"
+    exit 1 if line < 70
+  '
+fi
+
+echo ""
+echo "=== All checks passed ==="

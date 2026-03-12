@@ -16,7 +16,7 @@ class Analyzers::EditorialRiskTest < ActiveSupport::TestCase
     # Create a media ownership group
     group = MediaOwnershipGroup.create!(
       name: "BigMediaCorp",
-      owned_hosts: ["news-a.bigmedia.com", "news-b.bigmedia.com"],
+      owned_hosts: [ "news-a.bigmedia.com", "news-b.bigmedia.com" ],
       parent_company: "BigMediaCorp Inc"
     )
 
@@ -108,7 +108,7 @@ class Analyzers::EditorialRiskTest < ActiveSupport::TestCase
 
   test "independence analyzer detects single ownership cluster penalty" do
     group = MediaOwnershipGroup.find_or_create_by!(name: "TestMediaGroup") do |g|
-      g.owned_hosts = ["outlet-a.com", "outlet-b.com"]
+      g.owned_hosts = [ "outlet-a.com", "outlet-b.com" ]
     end
 
     articles = [

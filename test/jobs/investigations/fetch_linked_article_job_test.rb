@@ -23,7 +23,7 @@ class Investigations::FetchLinkedArticleJobTest < ActiveJob::TestCase
     link = ArticleLink.create!(source_article: root, target_article: linked, href: linked.normalized_url, depth: 1)
 
     # No FakeFetcher registration — if Chromium is called, it will raise
-    assert_enqueued_with(job: Investigations::AssessClaimsJob, args: [investigation.id]) do
+    assert_enqueued_with(job: Investigations::AssessClaimsJob, args: [ investigation.id ]) do
       Investigations::FetchLinkedArticleJob.perform_now(investigation.id, link.id)
     end
 
@@ -53,7 +53,7 @@ class Investigations::FetchLinkedArticleJobTest < ActiveJob::TestCase
       HTML
     )
 
-    assert_enqueued_with(job: Investigations::AssessClaimsJob, args: [investigation.id]) do
+    assert_enqueued_with(job: Investigations::AssessClaimsJob, args: [ investigation.id ]) do
       Investigations::FetchLinkedArticleJob.perform_now(investigation.id, link.id)
     end
 

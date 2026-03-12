@@ -61,21 +61,21 @@ module Parsing
         text = extract_body_text(node)
         next if text.blank?
 
-        [node, selector, text.length]
+        [ node, selector, text.length ]
       end
 
-      match = candidates.max_by { |(_, _, length)| length } || [@document.at_css("body") || @document.root, "body", 0]
+      match = candidates.max_by { |(_, _, length)| length } || [ @document.at_css("body") || @document.root, "body", 0 ]
       node, selector, length = match
 
       # Density-based fallback when selector-based extraction yields too little
       if selector != "body" && length < 200
         density_text = TextDensityAnalyzer.extract(@document)
         if density_text && density_text.length > length
-          return [@document.at_css("body") || @document.root, "body(density)"]
+          return [ @document.at_css("body") || @document.root, "body(density)" ]
         end
       end
 
-      [node, selector]
+      [ node, selector ]
     end
 
     def extract_body_text(node)

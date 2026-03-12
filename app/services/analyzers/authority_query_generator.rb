@@ -75,12 +75,12 @@ module Analyzers
     end
 
     def budget_queries
-      [Query.new(
+      [ Query.new(
         authority_type: :budget_fiscal,
         query_text: @text.truncate(200),
         suggested_hosts: %w[cbo.gov gao.gov tcu.gov.br],
         priority: 2
-      )]
+      ) ]
     end
 
     def statistics_queries
@@ -160,12 +160,12 @@ module Analyzers
     end
 
     def oversight_queries
-      [Query.new(
+      [ Query.new(
         authority_type: :oversight,
         query_text: @text.truncate(200),
         suggested_hosts: %w[gao.gov cbo.gov tcu.gov.br cgu.gov.br],
         priority: 2
-      )]
+      ) ]
     end
 
     def extract_law_reference

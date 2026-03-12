@@ -88,7 +88,7 @@ class ErrorPagesTest < ActionDispatch::IntegrationTest
   test "shows error for invalid URL on home page" do
     get root_path(url: "javascript:alert(1)")
     # Should be blocked by either rack-attack (403) or URL validation (422)
-    assert_includes [403, 422], response.status
+    assert_includes [ 403, 422 ], response.status
   end
 
   test "shows URL too long error" do

@@ -52,7 +52,7 @@ module Fetchers
       timeout_seconds = (budget / 1000) + 30
       ua = USER_AGENTS.sample
 
-      cmd = [browser_path, *BASE_FLAGS, "--virtual-time-budget=#{budget}", "--user-agent=#{ua}"]
+      cmd = [ browser_path, *BASE_FLAGS, "--virtual-time-budget=#{budget}", "--user-agent=#{ua}" ]
 
       html, stderr, status = Timeout.timeout(timeout_seconds) do
         Open3.capture3(*cmd, url)
@@ -61,7 +61,7 @@ module Fetchers
       raise FetchError, stderr.presence || "Chromium failed to fetch #{url}" unless status.success?
 
       document = Nokogiri::HTML(html)
-      [html, document.at("title")&.text.to_s.squish]
+      [ html, document.at("title")&.text.to_s.squish ]
     end
 
     def browser_path

@@ -15,7 +15,7 @@ class Fetchers::ChromiumFetcherTest < ActiveSupport::TestCase
 
     Open3.define_singleton_method(:capture3) do |*args|
       captured_cmd = args
-      [html, "", Struct.new(:success?).new(true)]
+      [ html, "", Struct.new(:success?).new(true) ]
     end
 
     Fetchers::ChromiumFetcher.call("https://g1.globo.com/economia/test")
@@ -30,7 +30,7 @@ class Fetchers::ChromiumFetcherTest < ActiveSupport::TestCase
 
     Open3.define_singleton_method(:capture3) do |*args|
       captured_cmd = args
-      [html, "", Struct.new(:success?).new(true)]
+      [ html, "", Struct.new(:success?).new(true) ]
     end
 
     Fetchers::ChromiumFetcher.call("https://example.com/article")
@@ -45,7 +45,7 @@ class Fetchers::ChromiumFetcherTest < ActiveSupport::TestCase
 
     Open3.define_singleton_method(:capture3) do |*args|
       captured_cmd = args
-      [html, "", Struct.new(:success?).new(true)]
+      [ html, "", Struct.new(:success?).new(true) ]
     end
 
     Fetchers::ChromiumFetcher.call("https://example.com/test")
@@ -64,7 +64,7 @@ class Fetchers::ChromiumFetcherTest < ActiveSupport::TestCase
       budget_flag = args.find { |a| a.to_s.start_with?("--virtual-time-budget=") }
       budgets << budget_flag
       html = call_count == 1 ? interstitial_html : clean_html
-      [html, "", Struct.new(:success?).new(true)]
+      [ html, "", Struct.new(:success?).new(true) ]
     end
 
     result = Fetchers::ChromiumFetcher.call("https://example.com/test")
@@ -78,7 +78,7 @@ class Fetchers::ChromiumFetcherTest < ActiveSupport::TestCase
     interstitial_html = "<html><body>cloudflare challenge-platform</body></html>"
 
     Open3.define_singleton_method(:capture3) do |*args|
-      [interstitial_html, "", Struct.new(:success?).new(true)]
+      [ interstitial_html, "", Struct.new(:success?).new(true) ]
     end
 
     assert_raises(Fetchers::ChromiumFetcher::InterstitialDetectedError) do
@@ -88,7 +88,7 @@ class Fetchers::ChromiumFetcherTest < ActiveSupport::TestCase
 
   test "raises FetchError on chromium failure" do
     Open3.define_singleton_method(:capture3) do |*args|
-      ["", "Process crashed", Struct.new(:success?).new(false)]
+      [ "", "Process crashed", Struct.new(:success?).new(false) ]
     end
 
     assert_raises(Fetchers::ChromiumFetcher::FetchError) do
@@ -103,7 +103,7 @@ class Fetchers::ChromiumFetcherTest < ActiveSupport::TestCase
     Open3.define_singleton_method(:capture3) do |*args|
       ua_flag = args.find { |a| a.to_s.start_with?("--user-agent=") }
       agents << ua_flag
-      [html, "", Struct.new(:success?).new(true)]
+      [ html, "", Struct.new(:success?).new(true) ]
     end
 
     20.times { Fetchers::ChromiumFetcher.call("https://example.com/test") }

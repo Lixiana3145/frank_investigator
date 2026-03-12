@@ -22,11 +22,11 @@ module Sources
       private
 
       def ticker
-        [@title, @document.text].join("\n").match(TICKER_REGEX)&.to_s
+        [ @title, @document.text ].join("\n").match(TICKER_REGEX)&.to_s
       end
 
       def filing_type
-        [@title, @document.text].join("\n").match(FILING_REGEX)&.to_s&.squish
+        [ @title, @document.text ].join("\n").match(FILING_REGEX)&.to_s&.squish
       end
     end
   end
