@@ -1,29 +1,29 @@
-<% content_for :title, "Error Reports — Frank Investigator" %>
+<% content_for :title, t(".title") %>
 
 <main class="page-shell">
   <header class="analysis-header">
     <div>
-      <p class="eyebrow">Admin</p>
-      <h1>Error reports</h1>
+      <p class="eyebrow"><%= t(".eyebrow") %></p>
+      <h1><%= t(".heading") %></h1>
     </div>
     <% if @error_reports.any? %>
-      <%= button_to "Clear all", destroy_all_error_reports_path, method: :delete, class: "submit-button submit-button--small", data: { turbo_confirm: "Delete all error reports?" } %>
+      <%= button_to t(".clear_all"), destroy_all_error_reports_path, method: :delete, class: "submit-button submit-button--small", data: { turbo_confirm: t(".confirm_clear") } %>
     <% end %>
   </header>
 
   <% if @error_reports.empty? %>
     <section class="panel">
-      <p class="empty-state">No errors recorded.</p>
+      <p class="empty-state"><%= t(".empty") %></p>
     </section>
   <% else %>
     <section class="panel panel--wide">
       <table class="error-reports-table">
         <thead>
           <tr>
-            <th>Severity</th>
-            <th>Error</th>
-            <th>Occurrences</th>
-            <th>Last seen</th>
+            <th><%= t(".severity") %></th>
+            <th><%= t(".error") %></th>
+            <th><%= t(".occurrences") %></th>
+            <th><%= t(".last_seen") %></th>
           </tr>
         </thead>
         <tbody>
@@ -32,7 +32,7 @@
               <td><span class="badge <%= report.severity == 'error' ? 'badge--red' : 'badge--amber' %>"><%= report.severity %></span></td>
               <td><%= link_to "#{report.error_class}: #{report.message.truncate(80)}", error_report_path(report) %></td>
               <td class="metric-number"><%= report.occurrences_count %></td>
-              <td class="muted"><%= time_ago_in_words(report.last_occurred_at) %> ago</td>
+              <td class="muted"><%= time_ago_in_words(report.last_occurred_at) %> <%= t(".ago_suffix") %></td>
             </tr>
           <% end %>
         </tbody>

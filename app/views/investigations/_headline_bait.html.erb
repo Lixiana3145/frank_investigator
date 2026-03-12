@@ -1,15 +1,15 @@
 <section class="panel panel--callout <%= investigation.headline_bait_score >= 0.7 ? 'panel--callout-red' : investigation.headline_bait_score >= 0.4 ? 'panel--callout-amber' : 'panel--callout-green' %>">
-  <h3>Headline analysis</h3>
+  <h3><%= t("investigations.headline_bait.heading") %></h3>
   <p><%= headline_bait_explanation(investigation.headline_bait_score) %></p>
   <% if investigation.root_article&.title.present? %>
     <dl class="headline-comparison">
       <div>
-        <dt>Headline</dt>
+        <dt><%= t("investigations.headline_bait.headline") %></dt>
         <dd><strong><%= investigation.root_article.title %></strong></dd>
       </div>
       <% if investigation.root_article.excerpt.present? %>
         <div>
-          <dt>Lead paragraph</dt>
+          <dt><%= t("investigations.headline_bait.lead_paragraph") %></dt>
           <dd class="muted"><%= investigation.root_article.excerpt.truncate(300) %></dd>
         </div>
       <% end %>

@@ -7,13 +7,13 @@
 %>
 
 <article class="panel panel--wide">
-  <h2>Evidence timeline</h2>
+  <h2><%= t("investigations.evidence_timeline.heading") %></h2>
   <% if evidence_items.any? %>
     <div class="timeline">
       <% evidence_items.each do |item| %>
         <% date = item.article.published_at || item.article.fetched_at %>
         <div class="timeline-entry">
-          <div class="timeline-date"><%= date.strftime("%b %d, %Y") %></div>
+          <div class="timeline-date"><%= l(date.to_date, format: :long) %></div>
           <div class="timeline-dot timeline-dot--<%= item.stance %>"></div>
           <div class="timeline-content">
             <p class="timeline-title"><%= item.article.title.presence || item.article.host %></p>
@@ -22,12 +22,12 @@
               <span class="muted"><%= item.source_kind.to_s.humanize %></span>
               <% claim = item.claim_assessment.claim if item.claim_assessment %>
               <% if claim&.claim_timestamp_end.present? && date.present? && date.to_date > claim.claim_timestamp_end %>
-                <span class="badge badge--amber">Post-dates claim</span>
+                <span class="badge badge--amber"><%= t("investigations.evidence_timeline.post_dates_claim") %></span>
               <% end %>
               <% if item.article.authority_tier != "unknown" %>
                 <span class="muted">
                   <span class="has-popover">
-                    <%= item.article.authority_tier.humanize %> authority
+                    <%= item.article.authority_tier.humanize %> <%= t("investigations.evidence_timeline.authority_suffix") %>
                     <span class="popover-content"><%= authority_tier_description(item.article.authority_tier) %></span>
                   </span>
                 </span>
@@ -41,6 +41,6 @@
       <% end %>
     </div>
   <% else %>
-    <p class="empty-state">No dated evidence has been collected yet.</p>
+    <p class="empty-state"><%= t("investigations.evidence_timeline.empty") %></p>
   <% end %>
 </article>

@@ -14,6 +14,6 @@ class ErrorReportsController < ApplicationController
 
   def destroy_all
     ErrorReport.delete_all
-    redirect_to error_reports_path, notice: "All error reports cleared."
+    redirect_to error_reports_path, notice: t("error_reports.notices.cleared")
   end
 end

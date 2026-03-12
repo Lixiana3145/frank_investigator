@@ -1,31 +1,176 @@
-# Files in the config/locales directory are used for internationalization and
-# are automatically loaded by Rails. If you want to use locales other than
-# English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more about the API, please read the Rails Internationalization guide
-# at https://guides.rubyonrails.org/i18n.html.
-#
-# Be aware that YAML interprets the following case-insensitive strings as
-# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
-# must be quoted to be interpreted as strings. For example:
-#
-#     en:
-#       "yes": yup
-#       enabled: "ON"
-
 en:
-  hello: "Hello world"
+  app_name: "Frank Investigator"
+
+  date:
+    formats:
+      long: "%B %d, %Y"
+  time:
+    formats:
+      long: "%Y-%m-%d %H:%M:%S %Z"
+
+  investigations:
+    home:
+      title: "Frank Investigator"
+      eyebrow: "Frank Investigator"
+      heading: "Investigate a news article through claims, linked sources, and evidence gaps."
+      hero_copy: "Submit a public article URL. Frank Investigator will normalize it, fetch the article, catalog in-body citations, extract canonical claims, and separate what is checkable from what still needs evidence."
+      placeholder: "https://somenews.com/articles/1"
+      submit: "Investigate"
+
+    show:
+      title: "Frank Investigator"
+      eyebrow: "Frank Investigator"
+      heading: "Article investigation"
+      rerun: "Re-run"
+      investigation_failed: "Investigation failed"
+      technical_details: "Technical details"
+      step_label: "Step:"
+      error_label: "Error:"
+      message_label: "Message:"
+      try_again: "Try again"
+      what_we_checked: "What we checked"
+      no_checkable_claims: "This article contains no verifiable factual claims. It may be primarily opinion, analysis, or editorial content."
+      claims_pending: "No checkable claims have been extracted yet."
+      what_we_could_not_check: "What we could not check"
+      default_uncheckable_reason: "This claim needs more context before it can be checked."
+      uncheckable_pending: "No subjective or ambiguous claims have been classified yet."
+
+    summary_cards:
+      pipeline_status: "Pipeline status"
+      checkability: "Checkability"
+      headline_bait: "Headline bait"
+      overall_confidence: "Overall confidence"
+
+    headline_bait:
+      heading: "Headline analysis"
+      headline: "Headline"
+      lead_paragraph: "Lead paragraph"
+
+    root_article_panel:
+      heading: "Root article"
+      title: "Title"
+      pending_fetch: "Pending fetch"
+      fetch_status: "Fetch status"
+      source_kind: "Source kind"
+      authority_tier: "Authority tier"
+      source_role: "Source role"
+      linked_sources: "Linked sources"
+
+    source_graph:
+      heading: "Source graph"
+      source: "Source"
+      kind: "Kind"
+      authority: "Authority"
+      role: "Role"
+      status: "Status"
+      unknown_role: "--"
+      empty: "No in-body links have been cataloged yet."
+
+    claim_assessment:
+      confidence: "Confidence"
+      stale: "Stale"
+      source_corrected: "Source corrected"
+      variant_claim: "Variant claim"
+      reassessed: "Reassessed"
+      authority: "Authority"
+      independence: "Independence"
+      timeliness: "Timeliness"
+      conflict: "Conflict"
+      llm_consensus: "LLM consensus"
+      unanimous: "Unanimous"
+      disagreement: "Disagreement"
+      confidence_suffix: "confidence"
+      verdict_history: "Verdict history"
+      changed: "Changed"
+      snapshots: "snapshots"
+      sources: "sources"
+      missing_evidence: "Missing evidence:"
+      evidence_sources: "Evidence sources"
+      headline_bait_label: "Headline bait"
+
+    evidence_timeline:
+      heading: "Evidence timeline"
+      post_dates_claim: "Post-dates claim"
+      authority_suffix: "authority"
+      empty: "No dated evidence has been collected yet."
+
+    rhetorical_analysis:
+      heading: "Rhetorical analysis"
+      narrative_bias: "Narrative bias"
+      detected_fallacies: "Detected fallacies"
+      undermines: "Undermines:"
+
+    pipeline_panel:
+      heading: "Pipeline steps"
+      empty: "Jobs have not started yet."
+
+    failures:
+      interstitial_detected: "The target website blocked our request with a bot-detection challenge. Try again later or use a different source."
+      fetch_error: "We could not fetch the article. The website may be down, blocking automated access, or the URL may be invalid."
+      timeout: "The page took too long to load. This often happens with JavaScript-heavy sites. Try again later."
+      generic_fetch: "Something went wrong while fetching the article. Please check the URL and try again."
+      extract_claims: "We fetched the article but could not extract any claims from it. The content may be too short, behind a paywall, or in an unsupported format."
+      assess_claims: "Claim assessment failed. This usually means the evidence retrieval or LLM analysis encountered an error. Try again later."
+      generic: "An error occurred during the %{step_name} step. Please try again."
+
+    errors:
+      url_too_long: "URL is too long (maximum %{max} characters)"
+
+  error_reports:
+    index:
+      title: "Error Reports — Frank Investigator"
+      eyebrow: "Admin"
+      heading: "Error reports"
+      clear_all: "Clear all"
+      confirm_clear: "Delete all error reports?"
+      empty: "No errors recorded."
+      severity: "Severity"
+      error: "Error"
+      occurrences: "Occurrences"
+      last_seen: "Last seen"
+      ago_suffix: "ago"
+    show:
+      title: "Error Detail — Frank Investigator"
+      error_reports_link: "Error reports"
+      severity: "Severity"
+      message: "Message"
+      source: "Source"
+      unknown_source: "unknown"
+      occurrences: "Occurrences"
+      first_seen: "First seen"
+      last_seen: "Last seen"
+      backtrace: "Backtrace"
+      context: "Context"
+    notices:
+      cleared: "All error reports cleared."
+
+  helpers:
+    authority_tier:
+      primary: "Authenticated primary source (government records, official statistics, legal documents)"
+      secondary: "Established secondary source (major newsrooms, institutional reports)"
+      low: "Lower-authority source (blogs, social media, unverified)"
+      unknown: "Authority not yet classified"
+    source_role:
+      authenticated_legal_text: "Authenticated legal text with official provenance"
+      neutral_statistics: "Statistical data from non-partisan agency"
+      oversight: "Independent oversight or audit body"
+      official_position: "Official government position (may reflect political stance)"
+      research_discovery: "Academic or research publication"
+      news_reporting: "Journalistic reporting"
+      unknown: "Role not classified"
+    headline_bait:
+      high: "High likelihood of sensationalized headline. The title likely exaggerates or misrepresents the article body."
+      moderate: "Moderate headline embellishment. Some claims in the title may not be fully supported by the article."
+      low: "Low headline bait. The title appears reasonably aligned with the article content."
+      none: "Not yet analyzed."
+    fallacy_types:
+      bait_and_pivot: "Bait and pivot"
+      appeal_to_authority: "Appeal to authority"
+      false_cause: "False cause"
+      strawman: "Strawman"
+      anecdote_over_data: "Anecdote over data"
+      loaded_language: "Loaded language"
+      false_dilemma: "False dilemma"
+      slippery_slope: "Slippery slope"
+      ad_hominem: "Ad hominem"
+      cherry_picking: "Cherry picking"

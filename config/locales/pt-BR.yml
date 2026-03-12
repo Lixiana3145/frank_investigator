@@ -1,0 +1,180 @@
+pt-BR:
+  app_name: "Frank Investigator"
+
+  date:
+    formats:
+      long: "%d de %B de %Y"
+    month_names: [~, Janeiro, Fevereiro, Março, Abril, Maio, Junho, Julho, Agosto, Setembro, Outubro, Novembro, Dezembro]
+    abbr_month_names: [~, Jan, Fev, Mar, Abr, Mai, Jun, Jul, Ago, Set, Out, Nov, Dez]
+    day_names: [Domingo, Segunda-feira, Terça-feira, Quarta-feira, Quinta-feira, Sexta-feira, Sábado]
+    abbr_day_names: [Dom, Seg, Ter, Qua, Qui, Sex, Sáb]
+  time:
+    formats:
+      long: "%d/%m/%Y %H:%M:%S %Z"
+
+  investigations:
+    home:
+      title: "Frank Investigator"
+      eyebrow: "Frank Investigator"
+      heading: "Investigue uma notícia por meio de alegações, fontes vinculadas e lacunas de evidência."
+      hero_copy: "Envie a URL de um artigo público. O Frank Investigator vai normalizar, buscar o artigo, catalogar citações no corpo do texto, extrair alegações canônicas e separar o que é verificável do que ainda precisa de evidência."
+      placeholder: "https://algumjornal.com.br/artigos/1"
+      submit: "Investigar"
+
+    show:
+      title: "Frank Investigator"
+      eyebrow: "Frank Investigator"
+      heading: "Investigação do artigo"
+      rerun: "Re-executar"
+      investigation_failed: "Investigação falhou"
+      technical_details: "Detalhes técnicos"
+      step_label: "Etapa:"
+      error_label: "Erro:"
+      message_label: "Mensagem:"
+      try_again: "Tentar novamente"
+      what_we_checked: "O que verificamos"
+      no_checkable_claims: "Este artigo não contém alegações factuais verificáveis. Pode ser predominantemente opinião, análise ou conteúdo editorial."
+      claims_pending: "Nenhuma alegação verificável foi extraída ainda."
+      what_we_could_not_check: "O que não pudemos verificar"
+      default_uncheckable_reason: "Esta alegação precisa de mais contexto antes de poder ser verificada."
+      uncheckable_pending: "Nenhuma alegação subjetiva ou ambígua foi classificada ainda."
+
+    summary_cards:
+      pipeline_status: "Status do pipeline"
+      checkability: "Verificabilidade"
+      headline_bait: "Manchete sensacionalista"
+      overall_confidence: "Confiança geral"
+
+    headline_bait:
+      heading: "Análise da manchete"
+      headline: "Manchete"
+      lead_paragraph: "Parágrafo inicial"
+
+    root_article_panel:
+      heading: "Artigo raiz"
+      title: "Título"
+      pending_fetch: "Busca pendente"
+      fetch_status: "Status da busca"
+      source_kind: "Tipo de fonte"
+      authority_tier: "Nível de autoridade"
+      source_role: "Papel da fonte"
+      linked_sources: "Fontes vinculadas"
+
+    source_graph:
+      heading: "Grafo de fontes"
+      source: "Fonte"
+      kind: "Tipo"
+      authority: "Autoridade"
+      role: "Papel"
+      status: "Status"
+      unknown_role: "--"
+      empty: "Nenhum link interno foi catalogado ainda."
+
+    claim_assessment:
+      confidence: "Confiança"
+      stale: "Desatualizado"
+      source_corrected: "Fonte corrigida"
+      variant_claim: "Variante da alegação"
+      reassessed: "Reavaliado"
+      authority: "Autoridade"
+      independence: "Independência"
+      timeliness: "Atualidade"
+      conflict: "Conflito"
+      llm_consensus: "Consenso LLM"
+      unanimous: "Unânime"
+      disagreement: "Divergência"
+      confidence_suffix: "confiança"
+      verdict_history: "Histórico de vereditos"
+      changed: "Alterado"
+      snapshots: "registros"
+      sources: "fontes"
+      missing_evidence: "Evidência ausente:"
+      evidence_sources: "Fontes de evidência"
+      headline_bait_label: "Manchete sensacionalista"
+
+    evidence_timeline:
+      heading: "Linha do tempo de evidências"
+      post_dates_claim: "Posterior à alegação"
+      authority_suffix: "autoridade"
+      empty: "Nenhuma evidência datada foi coletada ainda."
+
+    rhetorical_analysis:
+      heading: "Análise retórica"
+      narrative_bias: "Viés narrativo"
+      detected_fallacies: "Falácias detectadas"
+      undermines: "Prejudica:"
+
+    pipeline_panel:
+      heading: "Etapas do pipeline"
+      empty: "As tarefas ainda não foram iniciadas."
+
+    failures:
+      interstitial_detected: "O site de destino bloqueou nossa solicitação com um desafio de detecção de bot. Tente novamente mais tarde ou use uma fonte diferente."
+      fetch_error: "Não foi possível buscar o artigo. O site pode estar fora do ar, bloqueando acesso automatizado, ou a URL pode ser inválida."
+      timeout: "A página demorou muito para carregar. Isso geralmente acontece com sites pesados em JavaScript. Tente novamente mais tarde."
+      generic_fetch: "Algo deu errado ao buscar o artigo. Verifique a URL e tente novamente."
+      extract_claims: "Buscamos o artigo, mas não foi possível extrair alegações dele. O conteúdo pode ser muito curto, estar atrás de um paywall ou em formato não suportado."
+      assess_claims: "A avaliação das alegações falhou. Isso geralmente significa que a recuperação de evidências ou a análise por LLM encontrou um erro. Tente novamente mais tarde."
+      generic: "Ocorreu um erro durante a etapa %{step_name}. Tente novamente."
+
+    errors:
+      url_too_long: "A URL é muito longa (máximo de %{max} caracteres)"
+
+  error_reports:
+    index:
+      title: "Relatórios de Erro — Frank Investigator"
+      eyebrow: "Admin"
+      heading: "Relatórios de erro"
+      clear_all: "Limpar todos"
+      confirm_clear: "Excluir todos os relatórios de erro?"
+      empty: "Nenhum erro registrado."
+      severity: "Severidade"
+      error: "Erro"
+      occurrences: "Ocorrências"
+      last_seen: "Visto por último"
+      ago_suffix: "atrás"
+    show:
+      title: "Detalhe do Erro — Frank Investigator"
+      error_reports_link: "Relatórios de erro"
+      severity: "Severidade"
+      message: "Mensagem"
+      source: "Origem"
+      unknown_source: "desconhecida"
+      occurrences: "Ocorrências"
+      first_seen: "Visto pela primeira vez"
+      last_seen: "Visto por último"
+      backtrace: "Rastreamento"
+      context: "Contexto"
+    notices:
+      cleared: "Todos os relatórios de erro foram limpos."
+
+  helpers:
+    authority_tier:
+      primary: "Fonte primária autenticada (registros governamentais, estatísticas oficiais, documentos legais)"
+      secondary: "Fonte secundária estabelecida (grandes redações, relatórios institucionais)"
+      low: "Fonte de menor autoridade (blogs, redes sociais, não verificada)"
+      unknown: "Autoridade ainda não classificada"
+    source_role:
+      authenticated_legal_text: "Texto legal autenticado com procedência oficial"
+      neutral_statistics: "Dados estatísticos de agência apartidária"
+      oversight: "Órgão independente de fiscalização ou auditoria"
+      official_position: "Posição oficial do governo (pode refletir postura política)"
+      research_discovery: "Publicação acadêmica ou de pesquisa"
+      news_reporting: "Reportagem jornalística"
+      unknown: "Papel não classificado"
+    headline_bait:
+      high: "Alta probabilidade de manchete sensacionalista. O título provavelmente exagera ou distorce o conteúdo do artigo."
+      moderate: "Embelezamento moderado da manchete. Algumas alegações no título podem não ser totalmente sustentadas pelo artigo."
+      low: "Baixo sensacionalismo. O título parece razoavelmente alinhado com o conteúdo do artigo."
+      none: "Ainda não analisado."
+    fallacy_types:
+      bait_and_pivot: "Isca e desvio"
+      appeal_to_authority: "Apelo à autoridade"
+      false_cause: "Falsa causa"
+      strawman: "Espantalho"
+      anecdote_over_data: "Anedota sobre dados"
+      loaded_language: "Linguagem carregada"
+      false_dilemma: "Falso dilema"
+      slippery_slope: "Ladeira escorregadia"
+      ad_hominem: "Ad hominem"
+      cherry_picking: "Seleção enviesada"

@@ -1,21 +1,18 @@
-<% content_for :title, "Frank Investigator" %>
+<% content_for :title, t(".title") %>
 
 <main class="landing-shell">
   <section class="hero-card">
-    <p class="eyebrow">Frank Investigator</p>
-    <h1>Investigate a news article through claims, linked sources, and evidence gaps.</h1>
-    <p class="hero-copy">
-      Submit a public article URL. Frank Investigator will normalize it, fetch the article, catalog in-body citations,
-      extract canonical claims, and separate what is checkable from what still needs evidence.
-    </p>
+    <p class="eyebrow"><%= t(".eyebrow") %></p>
+    <h1><%= t(".heading") %></h1>
+    <p class="hero-copy"><%= t(".hero_copy") %></p>
 
     <%= form_with url: root_path, method: :get, class: "investigation-form", local: true do |form| %>
       <%= form.url_field :url,
           value: @submitted_url,
-          placeholder: "https://somenews.com/articles/1",
+          placeholder: t(".placeholder"),
           required: true,
           class: "url-input" %>
-      <%= form.submit "Investigate", class: "submit-button" %>
+      <%= form.submit t(".submit"), class: "submit-button" %>
     <% end %>
 
     <% if @error_message.present? %>

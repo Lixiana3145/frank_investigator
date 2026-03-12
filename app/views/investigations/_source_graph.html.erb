@@ -1,15 +1,15 @@
 <article class="panel panel--wide">
-  <h2>Source graph</h2>
+  <h2><%= t("investigations.source_graph.heading") %></h2>
   <% if links.any? %>
     <div class="source-graph-table">
       <table>
         <thead>
           <tr>
-            <th>Source</th>
-            <th>Kind</th>
-            <th>Authority</th>
-            <th>Role</th>
-            <th>Status</th>
+            <th><%= t("investigations.source_graph.source") %></th>
+            <th><%= t("investigations.source_graph.kind") %></th>
+            <th><%= t("investigations.source_graph.authority") %></th>
+            <th><%= t("investigations.source_graph.role") %></th>
+            <th><%= t("investigations.source_graph.status") %></th>
           </tr>
         </thead>
         <tbody>
@@ -35,7 +35,7 @@
                     <span class="popover-content"><%= source_role_description(target.source_role) %></span>
                   </span>
                 <% else %>
-                  <span class="muted">--</span>
+                  <span class="muted"><%= t("investigations.source_graph.unknown_role") %></span>
                 <% end %>
               </td>
               <td><span class="<%= badge_class_for(link.follow_status) %>"><%= link.follow_status.humanize %></span></td>
@@ -50,6 +50,6 @@
       <%= render "source_graph_svg", links: links, investigation: investigation %>
     <% end %>
   <% else %>
-    <p class="empty-state">No in-body links have been cataloged yet.</p>
+    <p class="empty-state"><%= t("investigations.source_graph.empty") %></p>
   <% end %>
 </article>

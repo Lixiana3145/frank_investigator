@@ -24,6 +24,10 @@ module FrankInvestigator
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
+    config.i18n.default_locale = ENV.fetch("FRANK_INVESTIGATOR_LOCALE", "en").to_sym
+    config.i18n.available_locales = %i[en pt-BR]
+    config.i18n.fallbacks = true
+
     config.x.frank_investigator = ActiveSupport::OrderedOptions.new
     config.x.frank_investigator.max_link_depth = ENV.fetch("FRANK_INVESTIGATOR_MAX_LINK_DEPTH", 1).to_i
     config.x.frank_investigator.article_freshness_ttl = ENV.fetch("FRANK_INVESTIGATOR_ARTICLE_FRESHNESS_TTL", 3600).to_i # seconds

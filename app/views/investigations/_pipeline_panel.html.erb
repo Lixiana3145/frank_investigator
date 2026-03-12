@@ -1,5 +1,5 @@
 <article class="panel">
-  <h2>Pipeline steps</h2>
+  <h2><%= t("investigations.pipeline_panel.heading") %></h2>
   <% if steps.any? %>
     <ul class="steps-list">
       <% steps.each do |step| %>
@@ -7,6 +7,6 @@
       <% end %>
     </ul>
   <% else %>
-    <p class="empty-state">Jobs have not started yet.</p>
+    <p class="empty-state"><%= t("investigations.pipeline_panel.empty") %></p>
   <% end %>
 </article>

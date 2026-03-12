@@ -8,7 +8,7 @@ class InvestigationsController < ApplicationController
     return render :home if @submitted_url.blank?
 
     if @submitted_url.length > MAX_URL_LENGTH
-      @error_message = "URL is too long (maximum #{MAX_URL_LENGTH} characters)"
+      @error_message = t("investigations.errors.url_too_long", max: MAX_URL_LENGTH)
       return render :home, status: :unprocessable_entity
     end
 
@@ -89,20 +89,20 @@ class InvestigationsController < ApplicationController
     case step.name
     when "fetch_root_article"
       if step.error_class.to_s.include?("InterstitialDetected")
-        "The target website blocked our request with a bot-detection challenge. Try again later or use a different source."
+        t("investigations.failures.interstitial_detected")
       elsif step.error_class.to_s.include?("FetchError")
-        "We could not fetch the article. The website may be down, blocking automated access, or the URL may be invalid."
+        t("investigations.failures.fetch_error")
       elsif step.error_class.to_s.include?("Timeout")
-        "The page took too long to load. This often happens with JavaScript-heavy sites. Try again later."
+        t("investigations.failures.timeout")
       else
-        "Something went wrong while fetching the article. Please check the URL and try again."
+        t("investigations.failures.generic_fetch")
       end
     when "extract_claims"
-      "We fetched the article but could not extract any claims from it. The content may be too short, behind a paywall, or in an unsupported format."
+      t("investigations.failures.extract_claims")
     when "assess_claims"
-      "Claim assessment failed. This usually means the evidence retrieval or LLM analysis encountered an error. Try again later."
+      t("investigations.failures.assess_claims")
     else
-      "An error occurred during the #{step.name.humanize.downcase} step. Please try again."
+      t("investigations.failures.generic", step_name: step.name.humanize.downcase)
     end
   end
 

@@ -27,35 +27,22 @@ module InvestigationsHelper
   end
 
   def authority_tier_description(tier)
-    case tier.to_s
-    when "primary" then "Authenticated primary source (government records, official statistics, legal documents)"
-    when "secondary" then "Established secondary source (major newsrooms, institutional reports)"
-    when "low" then "Lower-authority source (blogs, social media, unverified)"
-    else "Authority not yet classified"
-    end
+    t("helpers.authority_tier.#{tier}", default: t("helpers.authority_tier.unknown"))
   end
 
   def source_role_description(role)
-    case role.to_s
-    when "authenticated_legal_text" then "Authenticated legal text with official provenance"
-    when "neutral_statistics" then "Statistical data from non-partisan agency"
-    when "oversight" then "Independent oversight or audit body"
-    when "official_position" then "Official government position (may reflect political stance)"
-    when "research_discovery" then "Academic or research publication"
-    when "news_reporting" then "Journalistic reporting"
-    else "Role not classified"
-    end
+    t("helpers.source_role.#{role}", default: t("helpers.source_role.unknown"))
   end
 
   def headline_bait_explanation(score)
     if score >= 0.7
-      "High likelihood of sensationalized headline. The title likely exaggerates or misrepresents the article body."
+      t("helpers.headline_bait.high")
     elsif score >= 0.4
-      "Moderate headline embellishment. Some claims in the title may not be fully supported by the article."
+      t("helpers.headline_bait.moderate")
     elsif score > 0.0
-      "Low headline bait. The title appears reasonably aligned with the article content."
+      t("helpers.headline_bait.low")
     else
-      "Not yet analyzed."
+      t("helpers.headline_bait.none")
     end
   end
 
@@ -83,7 +70,7 @@ module InvestigationsHelper
   end
 
   def fallacy_type_label(type)
-    type.to_s.tr("_", " ").capitalize
+    t("helpers.fallacy_types.#{type}", default: type.to_s.tr("_", " ").capitalize)
   end
 
   def pipeline_step_duration(step)
