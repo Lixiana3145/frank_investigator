@@ -32,7 +32,7 @@ module Analyzers
         .where.not(body_text: nil)
         .where(body_changed_since_assessment: false)
         .find_each do |article|
-          current_hash = Digest::SHA256.hexdigest(article.body_text)
+          current_hash = Analyzers::TextAnalysis.stable_content_fingerprint(article.body_text)
           if current_hash != article.body_fingerprint
             article.update_columns(body_changed_since_assessment: true)
             changed << article

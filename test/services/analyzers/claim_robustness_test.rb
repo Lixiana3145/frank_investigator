@@ -81,7 +81,7 @@ class EvidenceProvenanceTest < ActiveSupport::TestCase
 
     snapshot = @assessment.verdict_snapshots.first
     assert snapshot.evidence_content_hashes.present?
-    assert_equal Digest::SHA256.hexdigest(article.body_text), snapshot.evidence_content_hashes[article.normalized_url]
+    assert_equal Analyzers::TextAnalysis.stable_content_fingerprint(article.body_text), snapshot.evidence_content_hashes[article.normalized_url]
   end
 end
 
@@ -91,7 +91,7 @@ class SourceCorrectionDetectorTest < ActiveSupport::TestCase
       url: "https://news.com/story", normalized_url: "https://news.com/story-#{SecureRandom.hex(4)}",
       host: "news.com", title: "Original story", fetch_status: :fetched,
       body_text: "Original content here",
-      body_fingerprint: Digest::SHA256.hexdigest("Original content here")
+      body_fingerprint: Analyzers::TextAnalysis.stable_content_fingerprint("Original content here")
     )
 
     # Simulate body change (e.g., correction published)
@@ -114,7 +114,7 @@ class SourceCorrectionDetectorTest < ActiveSupport::TestCase
       url: "https://news.com/corrected", normalized_url: "https://news.com/corrected-#{SecureRandom.hex(4)}",
       host: "news.com", title: "Story to be corrected", fetch_status: :fetched,
       body_text: "Original content",
-      body_fingerprint: Digest::SHA256.hexdigest("Original content")
+      body_fingerprint: Analyzers::TextAnalysis.stable_content_fingerprint("Original content")
     )
     claim = Claim.create!(
       canonical_text: "Test claim for correction detection",
@@ -147,7 +147,7 @@ class SourceCorrectionDetectorTest < ActiveSupport::TestCase
       url: "https://stable.com/data", normalized_url: "https://stable.com/data-#{SecureRandom.hex(4)}",
       host: "stable.com", title: "Stable article", fetch_status: :fetched,
       body_text: "Unchanged content",
-      body_fingerprint: Digest::SHA256.hexdigest("Unchanged content")
+      body_fingerprint: Analyzers::TextAnalysis.stable_content_fingerprint("Unchanged content")
     )
 
     result = Analyzers::SourceCorrectionDetector.call

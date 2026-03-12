@@ -60,6 +60,48 @@ module Analyzers
       text.to_s.downcase.scan(/[a-z0-9]+/)
     end
 
+    # Stable content fingerprint for change detection. Normalizes text so that
+    # insignificant changes (extra whitespace, reordered boilerplate, date
+    # formatting, ad snippets that slipped through extraction) don't produce
+    # a different hash. Only meaningful editorial content changes will alter it.
+    #
+    # Steps:
+    # 1. Unicode NFKC + confusable replacement
+    # 2. Strip common boilerplate patterns (share buttons, copyright, timestamps)
+    # 3. Collapse whitespace
+    # 4. Lowercase
+    # 5. Hash the result
+    BOILERPLATE_PATTERNS = [
+      /share\s+(this|on|via)\s+(facebook|twitter|whatsapp|linkedin|email|x)/i,
+      /follow\s+us\s+on/i,
+      /subscribe\s+(to|for)\s+(our|the)/i,
+      /all\s+rights\s+reserved/i,
+      /copyright\s+\d{4}/i,
+      /\d{1,2}:\d{2}\s*(am|pm|utc|gmt|brt)/i,        # timestamps like "3:45 PM UTC"
+      /updated?\s*:?\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/i,  # "Updated: 03/11/2026"
+      /\d+\s*(min|minutes?)\s*(read|ago)/i,            # "5 min read", "3 minutes ago"
+      /read\s+more\s*:/i,
+      /related\s+(articles?|stories|posts)/i,
+      /tags?\s*:/i,
+      /compartilh(e|ar)\s+(no|via|pelo)/i,             # Portuguese: share on
+      /siga-nos\s+(no|em)/i,                           # Portuguese: follow us
+      /todos\s+os\s+direitos\s+reservados/i,           # Portuguese: all rights reserved
+      /atualizado\s+em/i                               # Portuguese: updated on
+    ].freeze
+
+    def self.stable_content_fingerprint(text)
+      return nil if text.blank?
+
+      cleaned = unicode_normalize(text)
+      # Strip boilerplate
+      BOILERPLATE_PATTERNS.each { |pattern| cleaned = cleaned.gsub(pattern, " ") }
+      # Normalize: lowercase, strip non-alphanumeric, collapse whitespace
+      cleaned = cleaned.downcase.gsub(/[^a-z0-9\s]/, " ").squish
+
+      return nil if cleaned.blank?
+      Digest::SHA256.hexdigest(cleaned)
+    end
+
     def self.jaccard_similarity(set_a, set_b)
       intersection = (set_a & set_b).size
       union = (set_a | set_b).size

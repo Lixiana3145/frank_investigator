@@ -77,7 +77,7 @@ class ClaimAssessment < ApplicationRecord
   def build_evidence_content_hashes
     evidence_items.includes(:article).each_with_object({}) do |item, hashes|
       next unless item.article&.body_text.present?
-      hashes[item.source_url] = Digest::SHA256.hexdigest(item.article.body_text)
+      hashes[item.source_url] = Analyzers::TextAnalysis.stable_content_fingerprint(item.article.body_text)
     end
   end
 end
