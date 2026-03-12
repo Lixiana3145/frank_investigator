@@ -1,22 +1,22 @@
-<article class="panel">
-  <h2><%= t("investigations.root_article_panel.heading") %></h2>
+<article class="border border-line bg-card backdrop-blur-sm rounded-3xl p-5 shadow-lg">
+  <h2 class="text-lg font-bold mb-4"><%= t("investigations.root_article_panel.heading") %></h2>
   <% if root_article.present? %>
-    <dl class="fact-list">
-      <div>
-        <dt><%= t("investigations.root_article_panel.title") %></dt>
-        <dd><%= root_article.title.presence || t("investigations.root_article_panel.pending_fetch") %></dd>
+    <dl class="grid gap-3.5 mb-4">
+      <div class="grid gap-0.5">
+        <dt class="text-muted text-sm"><%= t("investigations.root_article_panel.title") %></dt>
+        <dd class="m-0"><%= root_article.title.presence || t("investigations.root_article_panel.pending_fetch") %></dd>
       </div>
-      <div>
-        <dt><%= t("investigations.root_article_panel.fetch_status") %></dt>
-        <dd><span class="<%= badge_class_for(root_article.fetch_status) %>"><%= te(:fetch_status, root_article.fetch_status) %></span></dd>
+      <div class="grid gap-0.5">
+        <dt class="text-muted text-sm"><%= t("investigations.root_article_panel.fetch_status") %></dt>
+        <dd class="m-0"><span class="<%= badge_class_for(root_article.fetch_status) %>"><%= te(:fetch_status, root_article.fetch_status) %></span></dd>
       </div>
-      <div>
-        <dt><%= t("investigations.root_article_panel.source_kind") %></dt>
-        <dd><%= te(:source_kind, root_article.source_kind) %></dd>
+      <div class="grid gap-0.5">
+        <dt class="text-muted text-sm"><%= t("investigations.root_article_panel.source_kind") %></dt>
+        <dd class="m-0"><%= te(:source_kind, root_article.source_kind) %></dd>
       </div>
-      <div>
-        <dt><%= t("investigations.root_article_panel.authority_tier") %></dt>
-        <dd>
+      <div class="grid gap-0.5">
+        <dt class="text-muted text-sm"><%= t("investigations.root_article_panel.authority_tier") %></dt>
+        <dd class="m-0">
           <span class="has-popover">
             <%= te(:authority_tier, root_article.authority_tier) %> (<%= score_percent(root_article.authority_score * 100) %>)
             <span class="popover-content"><%= authority_tier_description(root_article.authority_tier) %></span>
@@ -24,9 +24,9 @@
         </dd>
       </div>
       <% if root_article.source_role != "unknown" %>
-        <div>
-          <dt><%= t("investigations.root_article_panel.source_role") %></dt>
-          <dd>
+        <div class="grid gap-0.5">
+          <dt class="text-muted text-sm"><%= t("investigations.root_article_panel.source_role") %></dt>
+          <dd class="m-0">
             <span class="has-popover">
               <%= te(:source_role, root_article.source_role) %>
               <span class="popover-content"><%= source_role_description(root_article.source_role) %></span>
@@ -34,14 +34,14 @@
           </dd>
         </div>
       <% end %>
-      <div>
-        <dt><%= t("investigations.root_article_panel.linked_sources") %></dt>
-        <dd><%= root_article.sourced_links.count %></dd>
+      <div class="grid gap-0.5">
+        <dt class="text-muted text-sm"><%= t("investigations.root_article_panel.linked_sources") %></dt>
+        <dd class="m-0"><%= root_article.sourced_links.count %></dd>
       </div>
     </dl>
 
     <% if root_article.excerpt.present? %>
-      <p class="excerpt"><%= root_article.excerpt %></p>
+      <p class="text-muted"><%= root_article.excerpt %></p>
     <% end %>
   <% end %>
 </article>

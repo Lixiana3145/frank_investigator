@@ -1,16 +1,25 @@
-<section class="panel panel--callout <%= investigation.headline_bait_score >= 0.7 ? 'panel--callout-red' : investigation.headline_bait_score >= 0.4 ? 'panel--callout-amber' : 'panel--callout-green' %>">
-  <h3><%= t("investigations.headline_bait.heading") %></h3>
+<%
+  callout_color = if investigation.headline_bait_score >= 0.7
+    "border-l-verdict-red bg-verdict-red/4"
+  elsif investigation.headline_bait_score >= 0.4
+    "border-l-verdict-amber bg-verdict-amber/4"
+  else
+    "border-l-verdict-green bg-verdict-green/4"
+  end
+%>
+<section class="border border-line rounded-3xl p-5 mb-4 border-l-4 <%= callout_color %>">
+  <h3 class="font-bold mb-2"><%= t("investigations.headline_bait.heading") %></h3>
   <p><%= headline_bait_explanation(investigation.headline_bait_score) %></p>
   <% if investigation.root_article&.title.present? %>
-    <dl class="headline-comparison">
-      <div>
-        <dt><%= t("investigations.headline_bait.headline") %></dt>
-        <dd><strong><%= investigation.root_article.title %></strong></dd>
+    <dl class="grid gap-2.5 mt-3">
+      <div class="grid gap-0.5">
+        <dt class="text-muted text-xs uppercase tracking-wide"><%= t("investigations.headline_bait.headline") %></dt>
+        <dd class="m-0"><strong><%= investigation.root_article.title %></strong></dd>
       </div>
       <% if investigation.root_article.excerpt.present? %>
-        <div>
-          <dt><%= t("investigations.headline_bait.lead_paragraph") %></dt>
-          <dd class="muted"><%= investigation.root_article.excerpt.truncate(300) %></dd>
+        <div class="grid gap-0.5">
+          <dt class="text-muted text-xs uppercase tracking-wide"><%= t("investigations.headline_bait.lead_paragraph") %></dt>
+          <dd class="m-0 text-muted"><%= investigation.root_article.excerpt.truncate(300) %></dd>
         </div>
       <% end %>
     </dl>

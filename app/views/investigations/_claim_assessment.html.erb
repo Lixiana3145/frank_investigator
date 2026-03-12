@@ -1,115 +1,100 @@
-<%= tag.section id: dom_id(assessment), class: "claim-card" do %>
-  <div class="claim-header">
-    <span class="verdict-icon <%= assessment.verdict %>"><%= raw verdict_icon(assessment.verdict) %></span>
-    <p class="claim-text"><%= assessment.claim.canonical_text %></p>
+<%= tag.section id: dom_id(assessment), class: "pt-4 border-t border-line/60 first:pt-0 first:border-t-0" do %>
+  <div class="flex gap-2.5 items-start">
+    <%
+      icon_colors = {
+        "supported" => "bg-verdict-green/12 text-verdict-green",
+        "disputed" => "bg-verdict-red/12 text-verdict-red",
+        "mixed" => "bg-verdict-amber/12 text-verdict-amber",
+        "needs_more_evidence" => "bg-verdict-amber/12 text-verdict-amber",
+        "pending" => "bg-verdict-slate/12 text-verdict-slate"
+      }
+    %>
+    <span class="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold mt-0.5 <%= icon_colors[assessment.verdict.to_s] || icon_colors['pending'] %>"><%= raw verdict_icon(assessment.verdict) %></span>
+    <p class="text-base leading-relaxed"><%= assessment.claim.canonical_text %></p>
   </div>
-  <p class="claim-meta">
+
+  <p class="flex flex-wrap gap-3 text-muted mt-1">
     <span class="<%= badge_class_for(assessment.verdict) %>"><%= te(:verdict, assessment.verdict) %></span>
     <span><%= t("investigations.claim_assessment.confidence") %> <%= score_percent(assessment.confidence_score * 100) %></span>
     <% if assessment.claim.claim_kind != "statement" %>
-      <span class="badge badge--slate"><%= te(:claim_kind, assessment.claim.claim_kind) %></span>
+      <span class="<%= badge_class_for("not_checkable") %>"><%= te(:claim_kind, assessment.claim.claim_kind) %></span>
     <% end %>
     <% if assessment.claim.time_scope.present? %>
-      <span class="muted"><%= assessment.claim.time_scope %></span>
+      <span class="text-muted"><%= assessment.claim.time_scope %></span>
     <% end %>
     <% if assessment.primary_vetoed? %>
-      <span class="badge badge--red has-popover">
+      <span class="has-popover <%= badge_class_for("failed") %>">
         <%= t("investigations.claim_assessment.primary_vetoed") %>
         <span class="popover-content"><%= t("investigations.claim_assessment.primary_vetoed_detail") %></span>
       </span>
     <% end %>
     <% if assessment.unsubstantiated_viral? %>
-      <span class="badge badge--red has-popover">
+      <span class="has-popover <%= badge_class_for("failed") %>">
         <%= t("investigations.claim_assessment.unsubstantiated_viral") %>
         <span class="popover-content"><%= t("investigations.claim_assessment.unsubstantiated_viral_detail") %></span>
       </span>
     <% end %>
     <% if assessment.stale_at.present? %>
-      <span class="badge badge--amber"><%= t("investigations.claim_assessment.stale") %></span>
+      <span class="<%= badge_class_for("pending") %>"><%= t("investigations.claim_assessment.stale") %></span>
       <% if assessment.staleness_reason == "source_corrected" %>
-        <span class="badge badge--red"><%= t("investigations.claim_assessment.source_corrected") %></span>
+        <span class="<%= badge_class_for("failed") %>"><%= t("investigations.claim_assessment.source_corrected") %></span>
       <% end %>
     <% end %>
     <% if assessment.claim.canonical_parent_id.present? %>
-      <span class="badge badge--slate"><%= t("investigations.claim_assessment.variant_claim") %></span>
+      <span class="<%= badge_class_for("not_checkable") %>"><%= t("investigations.claim_assessment.variant_claim") %></span>
     <% end %>
     <% if assessment.reassessment_count.to_i > 0 %>
-      <span class="muted"><%= t("investigations.claim_assessment.reassessed") %> <%= assessment.reassessment_count %>&times;</span>
+      <span class="text-muted"><%= t("investigations.claim_assessment.reassessed") %> <%= assessment.reassessment_count %>&times;</span>
     <% end %>
   </p>
-  <p><%= assessment.reason_summary %></p>
+
+  <p class="mt-2"><%= assessment.reason_summary %></p>
 
   <% if assessment.claim.canonical_parent.present? %>
-    <p class="muted"><strong><%= t("investigations.claim_assessment.variant_of") %></strong> <%= assessment.claim.canonical_parent.canonical_text.truncate(150) %></p>
+    <p class="text-muted"><strong><%= t("investigations.claim_assessment.variant_of") %></strong> <%= assessment.claim.canonical_parent.canonical_text.truncate(150) %></p>
   <% end %>
 
-  <dl class="score-grid">
-    <div>
-      <dt><%= t("investigations.claim_assessment.authority") %></dt>
-      <dd>
-        <span class="score-bar score-bar--sm <%= score_color_class(assessment.authority_score) %>">
-          <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.authority_score) %>%"></span>
-        </span>
-        <span><%= score_percent(assessment.authority_score * 100) %></span>
-      </dd>
-    </div>
-    <div>
-      <dt><%= t("investigations.claim_assessment.independence") %></dt>
-      <dd>
-        <span class="score-bar score-bar--sm <%= score_color_class(assessment.independence_score) %>">
-          <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.independence_score) %>%"></span>
-        </span>
-        <span><%= score_percent(assessment.independence_score * 100) %></span>
-      </dd>
-    </div>
-    <div>
-      <dt><%= t("investigations.claim_assessment.timeliness") %></dt>
-      <dd>
-        <span class="score-bar score-bar--sm <%= score_color_class(assessment.timeliness_score) %>">
-          <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.timeliness_score) %>%"></span>
-        </span>
-        <span><%= score_percent(assessment.timeliness_score * 100) %></span>
-      </dd>
-    </div>
-    <div>
-      <dt><%= t("investigations.claim_assessment.conflict") %></dt>
-      <dd>
-        <span class="score-bar score-bar--sm <%= score_color_class(1.0 - assessment.conflict_score) %>">
-          <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.conflict_score) %>%"></span>
-        </span>
-        <span><%= score_percent(assessment.conflict_score * 100) %></span>
-      </dd>
-    </div>
-    <div>
-      <dt><%= t("investigations.claim_assessment.citation_depth") %></dt>
-      <dd>
-        <span class="score-bar score-bar--sm <%= score_color_class(assessment.citation_depth_score) %>">
-          <span class="score-bar__fill" style="width: <%= score_bar_width(assessment.citation_depth_score) %>%"></span>
-        </span>
-        <span><%= score_percent(assessment.citation_depth_score * 100) %></span>
-      </dd>
-    </div>
+  <%# Score grid %>
+  <dl class="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3 my-3">
+    <% [
+      [t("investigations.claim_assessment.authority"), assessment.authority_score],
+      [t("investigations.claim_assessment.independence"), assessment.independence_score],
+      [t("investigations.claim_assessment.timeliness"), assessment.timeliness_score],
+      [t("investigations.claim_assessment.conflict"), assessment.conflict_score, 1.0 - assessment.conflict_score],
+      [t("investigations.claim_assessment.citation_depth"), assessment.citation_depth_score]
+    ].each do |label, score, color_score| %>
+      <div>
+        <dt class="text-muted text-xs"><%= label %></dt>
+        <dd class="mt-0.5 font-bold flex items-center gap-1.5">
+          <span class="inline-block w-12 h-1.5 bg-black/8 rounded-full overflow-hidden">
+            <span class="block h-full rounded-full score-fill <%= score_color_class(color_score || score) %>" style="width: <%= score_bar_width(score) %>%"></span>
+          </span>
+          <span><%= score_percent(score * 100) %></span>
+        </dd>
+      </div>
+    <% end %>
   </dl>
 
+  <%# LLM consensus %>
   <% if assessment.disagreement_details.present? %>
-    <details class="consensus-details">
-      <summary>
+    <details class="mt-2 p-3 bg-black/2 rounded-xl border border-line/40">
+      <summary class="cursor-pointer text-sm text-muted hover:text-ink flex items-center gap-2">
         <%= t("investigations.claim_assessment.llm_consensus") %>
         <% if assessment.unanimous? %>
-          <span class="badge badge--green"><%= t("investigations.claim_assessment.unanimous") %></span>
+          <span class="<%= badge_class_for("supported") %>"><%= t("investigations.claim_assessment.unanimous") %></span>
         <% else %>
-          <span class="badge badge--amber"><%= t("investigations.claim_assessment.disagreement") %></span>
+          <span class="<%= badge_class_for("pending") %>"><%= t("investigations.claim_assessment.disagreement") %></span>
         <% end %>
       </summary>
-      <p class="muted"><%= assessment.disagreement_details %></p>
+      <p class="text-muted mt-2"><%= assessment.disagreement_details %></p>
       <% if assessment.llm_interactions.any? %>
-        <ul class="llm-verdicts-list">
+        <ul class="mt-2 grid gap-1 list-none p-0 m-0">
           <% assessment.llm_interactions.where(interaction_type: :assessment, status: :completed).each do |interaction| %>
-            <li>
+            <li class="flex items-center gap-2 text-sm py-1 border-b border-line/30 last:border-b-0">
               <strong><%= interaction.model_id %></strong>:
               <% if interaction.response_json.present? %>
                 <span class="<%= badge_class_for(interaction.response_json['verdict'] || 'pending') %>"><%= te(:verdict, interaction.response_json['verdict'] || 'pending') %></span>
-                <span class="muted"><%= score_percent((interaction.response_json['confidence_score'].to_f * 100)) %> <%= t("investigations.claim_assessment.confidence_suffix") %></span>
+                <span class="text-muted"><%= score_percent((interaction.response_json['confidence_score'].to_f * 100)) %> <%= t("investigations.claim_assessment.confidence_suffix") %></span>
               <% end %>
             </li>
           <% end %>
@@ -118,50 +103,53 @@
     </details>
   <% end %>
 
+  <%# Verdict history %>
   <% if assessment.verdict_snapshots.count > 1 %>
-    <details class="consensus-details">
-      <summary>
+    <details class="mt-2 p-3 bg-black/2 rounded-xl border border-line/40">
+      <summary class="cursor-pointer text-sm text-muted hover:text-ink flex items-center gap-2">
         <%= t("investigations.claim_assessment.verdict_history") %>
         <% changes = assessment.verdict_changed_count %>
         <% if changes > 0 %>
-          <span class="badge badge--amber"><%= t("investigations.claim_assessment.changed") %> <%= changes %>&times;</span>
+          <span class="<%= badge_class_for("pending") %>"><%= t("investigations.claim_assessment.changed") %> <%= changes %>&times;</span>
         <% else %>
-          <span class="badge badge--slate"><%= assessment.verdict_snapshots.count %> <%= t("investigations.claim_assessment.snapshots") %></span>
+          <span class="<%= badge_class_for("not_checkable") %>"><%= assessment.verdict_snapshots.count %> <%= t("investigations.claim_assessment.snapshots") %></span>
         <% end %>
       </summary>
-      <ul class="llm-verdicts-list">
+      <ul class="mt-2 grid gap-1 list-none p-0 m-0">
         <% assessment.verdict_snapshots.chronological.each do |snapshot| %>
-          <li>
-            <span class="muted"><%= snapshot.created_at.strftime("%Y-%m-%d %H:%M") %></span>
+          <li class="flex items-center gap-2 text-sm py-1 border-b border-line/30 last:border-b-0">
+            <span class="text-muted"><%= snapshot.created_at.strftime("%Y-%m-%d %H:%M") %></span>
             <% if snapshot.previous_verdict.present? %>
               <span class="<%= badge_class_for(snapshot.previous_verdict) %>"><%= te(:verdict, snapshot.previous_verdict) %></span>
               &rarr;
             <% end %>
             <span class="<%= badge_class_for(snapshot.verdict) %>"><%= te(:verdict, snapshot.verdict) %></span>
-            <span class="muted"><%= score_percent(snapshot.confidence_score.to_f * 100) %></span>
+            <span class="text-muted"><%= score_percent(snapshot.confidence_score.to_f * 100) %></span>
             <% if snapshot.previous_confidence_score.present? && snapshot.previous_confidence_score != snapshot.confidence_score %>
-              <span class="muted">(was <%= score_percent(snapshot.previous_confidence_score.to_f * 100) %>)</span>
+              <span class="text-muted">(was <%= score_percent(snapshot.previous_confidence_score.to_f * 100) %>)</span>
             <% end %>
-            <span class="muted">&middot; <%= snapshot.evidence_count %> <%= t("investigations.claim_assessment.sources") %> &middot; <%= snapshot.trigger.humanize %></span>
+            <span class="text-muted">&middot; <%= snapshot.evidence_count %> <%= t("investigations.claim_assessment.sources") %> &middot; <%= snapshot.trigger.humanize %></span>
           </li>
         <% end %>
       </ul>
     </details>
   <% end %>
 
+  <%# Missing evidence %>
   <% if assessment.missing_evidence_summary.present? %>
-    <p class="muted"><strong><%= t("investigations.claim_assessment.missing_evidence") %></strong> <%= assessment.missing_evidence_summary %></p>
+    <p class="text-muted mt-2"><strong><%= t("investigations.claim_assessment.missing_evidence") %></strong> <%= assessment.missing_evidence_summary %></p>
   <% end %>
 
+  <%# Evidence sources %>
   <% if assessment.evidence_items.any? %>
-    <details class="evidence-details">
-      <summary><%= t("investigations.claim_assessment.evidence_sources") %> (<%= assessment.evidence_items.size %>)</summary>
-      <ul class="evidence-list">
+    <details class="mt-2">
+      <summary class="cursor-pointer text-muted text-sm py-1 hover:text-ink"><%= t("investigations.claim_assessment.evidence_sources") %> (<%= assessment.evidence_items.size %>)</summary>
+      <ul class="grid gap-3 m-0 p-0 list-none">
         <% assessment.evidence_items.order(authority_score: :desc, relevance_score: :desc).each do |item| %>
-          <li>
+          <li class="flex justify-between gap-4 pt-3 border-t border-line/60">
             <span>
               <strong><%= item.article&.title.presence || item.source_url %></strong><br>
-              <span class="muted">
+              <span class="text-muted text-sm">
                 <%= te(:source_kind, item.source_kind) %>
                 <% if item.article&.source_role.present? && item.article.source_role != "unknown" %>
                   &middot;
@@ -173,11 +161,11 @@
                 &middot; relevance <%= score_percent(item.relevance_score * 100) %>
                 &middot; authority <%= score_percent(item.authority_score * 100) %>
                 <% if item.article&.headline_divergence_score.to_f >= 0.4 %>
-                  &middot; <span class="badge badge--red"><%= t("investigations.claim_assessment.headline_bait_label") %> <%= score_percent(item.article.headline_divergence_score * 100) %></span>
+                  &middot; <span class="<%= badge_class_for("failed") %>"><%= t("investigations.claim_assessment.headline_bait_label") %> <%= score_percent(item.article.headline_divergence_score * 100) %></span>
                 <% end %>
               </span>
               <% if item.excerpt.present? %>
-                <br><span class="evidence-excerpt"><%= item.excerpt.truncate(200) %></span>
+                <br><span class="text-sm italic text-muted"><%= item.excerpt.truncate(200) %></span>
               <% end %>
             </span>
             <span class="<%= badge_class_for(item.stance) %>"><%= te(:stance, item.stance) %></span>

@@ -1,11 +1,11 @@
-<li id="<%= dom_id(step) %>">
+<li id="<%= dom_id(step) %>" class="flex justify-between gap-4 pb-3 border-b border-line/60">
   <span>
     <% if step.status.in?(%w[running processing]) %>
-      <span class="progress-pulse"></span>
+      <span class="inline-block w-2.5 h-2.5 rounded-full bg-verdict-amber animate-pulse-dot"></span>
     <% end %>
     <%= pipeline_step_name(step.name) %>
     <% if (duration = pipeline_step_duration(step)) %>
-      <span class="muted"> &middot; <%= duration %></span>
+      <span class="text-muted"> &middot; <%= duration %></span>
     <% end %>
   </span>
   <span class="<%= badge_class_for(step.status) %>"><%= te(:pipeline_status, step.status) %></span>

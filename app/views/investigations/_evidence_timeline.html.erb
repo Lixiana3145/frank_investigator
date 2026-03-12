@@ -6,26 +6,33 @@
     .sort_by { |ei| ei.article.published_at || ei.article.fetched_at }
 %>
 
-<article class="panel panel--wide">
-  <h2><%= t("investigations.evidence_timeline.heading") %></h2>
+<article class="border border-line bg-card backdrop-blur-sm rounded-3xl p-5 shadow-lg col-span-full">
+  <h2 class="text-lg font-bold mb-4"><%= t("investigations.evidence_timeline.heading") %></h2>
   <% if evidence_items.any? %>
-    <div class="timeline">
+    <div class="pl-6 timeline-line">
       <% evidence_items.each do |item| %>
         <% date = item.article.published_at || item.article.fetched_at %>
-        <div class="timeline-entry">
-          <div class="timeline-date"><%= l(date.to_date, format: :long) %></div>
-          <div class="timeline-dot timeline-dot--<%= item.stance %>"></div>
-          <div class="timeline-content">
-            <p class="timeline-title"><%= item.article.title.presence || item.article.host %></p>
-            <p class="timeline-meta">
+        <%
+          dot_color = case item.stance.to_s
+                      when "supports" then "border-verdict-green bg-verdict-green/20"
+                      when "disputes" then "border-verdict-red bg-verdict-red/20"
+                      else "border-verdict-amber bg-verdict-amber/20"
+                      end
+        %>
+        <div class="grid grid-cols-[auto_auto_1fr] md:grid-cols-[auto_auto_1fr] gap-2.5 items-start pb-4 relative max-md:grid-cols-[auto_1fr]">
+          <div class="text-xs text-muted min-w-[90px] text-right max-md:col-span-full max-md:text-left"><%= l(date.to_date, format: :long) %></div>
+          <div class="w-3 h-3 rounded-full mt-1 border-2 relative z-10 <%= dot_color %>"></div>
+          <div>
+            <p class="mb-0.5 text-[0.95rem]"><%= item.article.title.presence || item.article.host %></p>
+            <p class="flex flex-wrap gap-2 text-sm mb-0.5">
               <span class="<%= badge_class_for(item.stance) %>"><%= te(:stance, item.stance) %></span>
-              <span class="muted"><%= te(:source_kind, item.source_kind) %></span>
+              <span class="text-muted"><%= te(:source_kind, item.source_kind) %></span>
               <% claim = item.claim_assessment.claim if item.claim_assessment %>
               <% if claim&.claim_timestamp_end.present? && date.present? && date.to_date > claim.claim_timestamp_end %>
-                <span class="badge badge--amber"><%= t("investigations.evidence_timeline.post_dates_claim") %></span>
+                <span class="<%= badge_class_for("pending") %>"><%= t("investigations.evidence_timeline.post_dates_claim") %></span>
               <% end %>
               <% if item.article.authority_tier != "unknown" %>
-                <span class="muted">
+                <span class="text-muted">
                   <span class="has-popover">
                     <%= te(:authority_tier, item.article.authority_tier) %> <%= t("investigations.evidence_timeline.authority_suffix") %>
                     <span class="popover-content"><%= authority_tier_description(item.article.authority_tier) %></span>
@@ -34,13 +41,13 @@
               <% end %>
             </p>
             <% if item.excerpt.present? %>
-              <p class="timeline-excerpt muted"><%= item.excerpt.truncate(180) %></p>
+              <p class="text-xs text-muted leading-snug"><%= item.excerpt.truncate(180) %></p>
             <% end %>
           </div>
         </div>
       <% end %>
     </div>
   <% else %>
-    <p class="empty-state"><%= t("investigations.evidence_timeline.empty") %></p>
+    <p class="text-muted"><%= t("investigations.evidence_timeline.empty") %></p>
   <% end %>
 </article>

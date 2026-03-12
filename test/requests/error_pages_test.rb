@@ -20,7 +20,7 @@ class ErrorPagesTest < ActionDispatch::IntegrationTest
 
     get investigation_path(investigation)
     assert_response :success
-    assert_select "section.panel--error"
+    assert_select "section.border-l-verdict-red"
     assert_match(/could not fetch/, response.body)
     assert_match(/Try again/, response.body)
   end

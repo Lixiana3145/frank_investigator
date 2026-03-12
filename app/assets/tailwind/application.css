@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f5efe4;
+  --color-paper-strong: #efe5d6;
+  --color-ink: #1f1c18;
+  --color-muted: #6d655c;
+  --color-line: #cdbfae;
+  --color-card: rgba(255, 252, 247, 0.9);
+  --color-verdict-green: #205f3b;
+  --color-verdict-red: #9f2d28;
+  --color-verdict-amber: #915d09;
+  --color-verdict-slate: #5b646f;
+
+  --font-serif: Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+}
+
+/* Base resets and background */
+body {
+  min-height: 100vh;
+  color: var(--color-ink);
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 35%),
+    linear-gradient(180deg, #e9deca 0%, var(--color-paper) 100%);
+  font-family: var(--font-serif);
+}
+
+/* Pulse animation for progress indicators */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* Score bar fill transitions */
+.score-fill {
+  transition: width 0.3s ease;
+}
+
+/* Timeline vertical line */
+.timeline-line {
+  position: relative;
+}
+
+.timeline-line::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--color-line);
+}
+
+/* CSS-only popover tooltips */
+.has-popover {
+  position: relative;
+  cursor: help;
+  border-bottom: 1px dotted var(--color-muted);
+}
+
+.has-popover .popover-content {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 280px;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-ink);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 400;
+  border-radius: 8px;
+  z-index: 10;
+  pointer-events: none;
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.has-popover:hover .popover-content,
+.has-popover:focus .popover-content {
+  display: block;
+}
+
+/* SVG graph */
+.source-graph-svg {
+  width: 100%;
+  max-height: 300px;
+  margin-top: 0.5rem;
+}

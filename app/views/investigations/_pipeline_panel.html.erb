@@ -1,12 +1,12 @@
-<article class="panel">
-  <h2><%= t("investigations.pipeline_panel.heading") %></h2>
+<article class="border border-line bg-card backdrop-blur-sm rounded-3xl p-5 shadow-lg">
+  <h2 class="text-lg font-bold mb-4"><%= t("investigations.pipeline_panel.heading") %></h2>
   <% if steps.any? %>
-    <ul class="steps-list">
+    <ul class="grid gap-3 m-0 p-0 list-none">
       <% steps.each do |step| %>
         <%= render "pipeline_step", step: step %>
       <% end %>
     </ul>
   <% else %>
-    <p class="empty-state"><%= t("investigations.pipeline_panel.empty") %></p>
+    <p class="text-muted"><%= t("investigations.pipeline_panel.empty") %></p>
   <% end %>
 </article>

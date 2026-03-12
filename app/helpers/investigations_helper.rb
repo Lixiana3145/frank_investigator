@@ -14,15 +14,16 @@ module InvestigationsHelper
   end
 
   def badge_class_for(status)
+    base = "inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-bold"
     case status.to_s
     when "completed", "supported", "checkable", "crawled"
-      "badge badge--green"
+      "#{base} bg-verdict-green/12 text-verdict-green"
     when "failed", "disputed"
-      "badge badge--red"
+      "#{base} bg-verdict-red/12 text-verdict-red"
     when "not_checkable", "ambiguous", "skipped"
-      "badge badge--slate"
+      "#{base} bg-verdict-slate/12 text-verdict-slate"
     else
-      "badge badge--amber"
+      "#{base} bg-verdict-amber/12 text-verdict-amber"
     end
   end
 
@@ -63,19 +64,20 @@ module InvestigationsHelper
   def score_color_class(value)
     v = value.to_f
     if v >= 0.7
-      "score-bar--green"
+      "bg-verdict-green"
     elsif v >= 0.4
-      "score-bar--amber"
+      "bg-verdict-amber"
     else
-      "score-bar--red"
+      "bg-verdict-red"
     end
   end
 
   def fallacy_severity_badge(severity)
+    base = "inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-bold"
     case severity.to_s
-    when "high" then "badge badge--red"
-    when "medium" then "badge badge--amber"
-    else "badge badge--slate"
+    when "high" then "#{base} bg-verdict-red/12 text-verdict-red"
+    when "medium" then "#{base} bg-verdict-amber/12 text-verdict-amber"
+    else "#{base} bg-verdict-slate/12 text-verdict-slate"
     end
   end
 

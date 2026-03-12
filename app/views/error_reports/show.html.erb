@@ -1,54 +1,54 @@
 <% content_for :title, t(".title") %>
 
-<main class="page-shell">
-  <header class="analysis-header">
+<main class="w-full max-w-[1120px] mx-auto px-4 py-8 pb-16">
+  <header class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-6">
     <div>
-      <p class="eyebrow"><%= link_to t(".error_reports_link"), error_reports_path %></p>
-      <h1><%= @error_report.error_class %></h1>
+      <p class="mb-3 text-muted text-xs tracking-[0.14em] uppercase"><%= link_to t(".error_reports_link"), error_reports_path %></p>
+      <h1 class="font-serif text-[clamp(2.2rem,5vw,4rem)] leading-[0.95]"><%= @error_report.error_class %></h1>
     </div>
   </header>
 
-  <section class="content-grid">
-    <article class="panel panel--wide">
-      <dl class="fact-list">
-        <div>
-          <dt><%= t(".severity") %></dt>
-          <dd><span class="badge <%= @error_report.severity == 'error' ? 'badge--red' : 'badge--amber' %>"><%= @error_report.severity %></span></dd>
+  <section class="grid grid-cols-1 gap-4">
+    <article class="border border-line bg-card backdrop-blur-sm rounded-3xl p-5 shadow-lg col-span-full">
+      <dl class="grid gap-3.5">
+        <div class="grid gap-0.5">
+          <dt class="text-muted text-sm"><%= t(".severity") %></dt>
+          <dd class="m-0"><span class="<%= @error_report.severity == 'error' ? badge_class_for('failed') : badge_class_for('pending') %>"><%= @error_report.severity %></span></dd>
         </div>
-        <div>
-          <dt><%= t(".message") %></dt>
-          <dd><%= @error_report.message %></dd>
+        <div class="grid gap-0.5">
+          <dt class="text-muted text-sm"><%= t(".message") %></dt>
+          <dd class="m-0"><%= @error_report.message %></dd>
         </div>
-        <div>
-          <dt><%= t(".source") %></dt>
-          <dd><%= @error_report.source.presence || t(".unknown_source") %></dd>
+        <div class="grid gap-0.5">
+          <dt class="text-muted text-sm"><%= t(".source") %></dt>
+          <dd class="m-0"><%= @error_report.source.presence || t(".unknown_source") %></dd>
         </div>
-        <div>
-          <dt><%= t(".occurrences") %></dt>
-          <dd class="metric-number"><%= @error_report.occurrences_count %></dd>
+        <div class="grid gap-0.5">
+          <dt class="text-muted text-sm"><%= t(".occurrences") %></dt>
+          <dd class="m-0 text-base font-bold"><%= @error_report.occurrences_count %></dd>
         </div>
-        <div>
-          <dt><%= t(".first_seen") %></dt>
-          <dd><%= l(@error_report.first_occurred_at, format: :long) %></dd>
+        <div class="grid gap-0.5">
+          <dt class="text-muted text-sm"><%= t(".first_seen") %></dt>
+          <dd class="m-0"><%= l(@error_report.first_occurred_at, format: :long) %></dd>
         </div>
-        <div>
-          <dt><%= t(".last_seen") %></dt>
-          <dd><%= l(@error_report.last_occurred_at, format: :long) %></dd>
+        <div class="grid gap-0.5">
+          <dt class="text-muted text-sm"><%= t(".last_seen") %></dt>
+          <dd class="m-0"><%= l(@error_report.last_occurred_at, format: :long) %></dd>
         </div>
       </dl>
     </article>
 
     <% if @error_report.backtrace.present? %>
-      <article class="panel panel--wide">
-        <h2><%= t(".backtrace") %></h2>
-        <pre class="error-backtrace"><%= @error_report.backtrace %></pre>
+      <article class="border border-line bg-card backdrop-blur-sm rounded-3xl p-5 shadow-lg col-span-full">
+        <h2 class="text-lg font-bold mb-4"><%= t(".backtrace") %></h2>
+        <pre class="font-mono text-xs leading-relaxed p-4 bg-black/3 rounded-lg overflow-x-auto whitespace-pre-wrap break-all"><%= @error_report.backtrace %></pre>
       </article>
     <% end %>
 
     <% if @error_report.context.present? && @error_report.context != {} %>
-      <article class="panel panel--wide">
-        <h2><%= t(".context") %></h2>
-        <pre class="error-backtrace"><%= JSON.pretty_generate(@error_report.context) %></pre>
+      <article class="border border-line bg-card backdrop-blur-sm rounded-3xl p-5 shadow-lg col-span-full">
+        <h2 class="text-lg font-bold mb-4"><%= t(".context") %></h2>
+        <pre class="font-mono text-xs leading-relaxed p-4 bg-black/3 rounded-lg overflow-x-auto whitespace-pre-wrap break-all"><%= JSON.pretty_generate(@error_report.context) %></pre>
       </article>
     <% end %>
   </section>

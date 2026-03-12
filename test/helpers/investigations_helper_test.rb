@@ -22,14 +22,14 @@ class InvestigationsHelperTest < ActionView::TestCase
     assert_equal I18n.t("enums.pipeline_steps.fetch_root_article"), pipeline_step_name("fetch_root_article:123")
   end
 
-  test "badge_class_for maps statuses to CSS classes" do
-    assert_equal "badge badge--green", badge_class_for("completed")
-    assert_equal "badge badge--green", badge_class_for("supported")
-    assert_equal "badge badge--red", badge_class_for("failed")
-    assert_equal "badge badge--red", badge_class_for("disputed")
-    assert_equal "badge badge--slate", badge_class_for("not_checkable")
-    assert_equal "badge badge--amber", badge_class_for("pending")
-    assert_equal "badge badge--amber", badge_class_for("mixed")
+  test "badge_class_for maps statuses to Tailwind classes" do
+    assert_includes badge_class_for("completed"), "text-verdict-green"
+    assert_includes badge_class_for("supported"), "text-verdict-green"
+    assert_includes badge_class_for("failed"), "text-verdict-red"
+    assert_includes badge_class_for("disputed"), "text-verdict-red"
+    assert_includes badge_class_for("not_checkable"), "text-verdict-slate"
+    assert_includes badge_class_for("pending"), "text-verdict-amber"
+    assert_includes badge_class_for("mixed"), "text-verdict-amber"
   end
 
   test "verdict_icon returns correct symbols" do
@@ -52,10 +52,10 @@ class InvestigationsHelperTest < ActionView::TestCase
     assert_equal 0, score_bar_width(0)
   end
 
-  test "score_color_class returns correct class" do
-    assert_equal "score-bar--green", score_color_class(0.8)
-    assert_equal "score-bar--amber", score_color_class(0.5)
-    assert_equal "score-bar--red", score_color_class(0.2)
+  test "score_color_class returns Tailwind color class" do
+    assert_equal "bg-verdict-green", score_color_class(0.8)
+    assert_equal "bg-verdict-amber", score_color_class(0.5)
+    assert_equal "bg-verdict-red", score_color_class(0.2)
   end
 
   test "authority_tier_description returns translated descriptions" do
@@ -74,10 +74,10 @@ class InvestigationsHelperTest < ActionView::TestCase
     assert_equal I18n.t("helpers.headline_bait.none"), headline_bait_explanation(0.0)
   end
 
-  test "fallacy_severity_badge returns correct badge" do
-    assert_equal "badge badge--red", fallacy_severity_badge("high")
-    assert_equal "badge badge--amber", fallacy_severity_badge("medium")
-    assert_equal "badge badge--slate", fallacy_severity_badge("low")
+  test "fallacy_severity_badge returns Tailwind badge classes" do
+    assert_includes fallacy_severity_badge("high"), "text-verdict-red"
+    assert_includes fallacy_severity_badge("medium"), "text-verdict-amber"
+    assert_includes fallacy_severity_badge("low"), "text-verdict-slate"
   end
 
   test "pipeline_step_duration formats seconds" do

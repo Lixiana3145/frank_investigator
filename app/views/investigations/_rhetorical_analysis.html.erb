@@ -4,16 +4,26 @@
 <% fallacies = analysis["fallacies"] %>
 <% bias_score = analysis["narrative_bias_score"].to_f %>
 
-<section class="panel panel--callout <%= bias_score >= 0.5 ? 'panel--callout-red' : bias_score >= 0.25 ? 'panel--callout-amber' : 'panel--callout-green' %>">
-  <h3><%= t("investigations.rhetorical_analysis.heading") %></h3>
+<%
+  callout_color = if bias_score >= 0.5
+    "border-l-verdict-red bg-verdict-red/4"
+  elsif bias_score >= 0.25
+    "border-l-verdict-amber bg-verdict-amber/4"
+  else
+    "border-l-verdict-green bg-verdict-green/4"
+  end
+%>
+
+<section class="border border-line rounded-3xl p-5 mb-4 border-l-4 <%= callout_color %>">
+  <h3 class="font-bold mb-2"><%= t("investigations.rhetorical_analysis.heading") %></h3>
   <p><%= analysis["summary"] %></p>
 
-  <dl class="score-grid">
+  <dl class="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3 my-3">
     <div>
-      <dt><%= t("investigations.rhetorical_analysis.narrative_bias") %></dt>
-      <dd>
-        <span class="score-bar score-bar--sm <%= score_color_class(1.0 - bias_score) %>">
-          <span class="score-bar__fill" style="width: <%= score_bar_width(bias_score) %>%"></span>
+      <dt class="text-muted text-xs"><%= t("investigations.rhetorical_analysis.narrative_bias") %></dt>
+      <dd class="mt-0.5 font-bold flex items-center gap-1.5">
+        <span class="inline-block w-12 h-1.5 bg-black/8 rounded-full overflow-hidden">
+          <span class="block h-full rounded-full score-fill <%= score_color_class(1.0 - bias_score) %>" style="width: <%= score_bar_width(bias_score) %>%"></span>
         </span>
         <span><%= score_percent(bias_score * 100) %></span>
       </dd>
@@ -21,19 +31,19 @@
   </dl>
 
   <% if fallacies.any? %>
-    <details class="consensus-details" open>
-      <summary><%= t("investigations.rhetorical_analysis.detected_fallacies") %> (<%= fallacies.size %>)</summary>
-      <ul class="llm-verdicts-list">
+    <details class="mt-2 p-3 bg-black/2 rounded-xl border border-line/40" open>
+      <summary class="cursor-pointer text-sm text-muted hover:text-ink flex items-center gap-2"><%= t("investigations.rhetorical_analysis.detected_fallacies") %> (<%= fallacies.size %>)</summary>
+      <ul class="mt-2 grid gap-1 list-none p-0 m-0">
         <% fallacies.each do |fallacy| %>
-          <li>
-            <div>
+          <li class="flex flex-col gap-1 py-2 border-b border-line/30 last:border-b-0">
+            <div class="flex gap-2">
               <span class="<%= fallacy_severity_badge(fallacy['severity']) %>"><%= fallacy_type_label(fallacy["type"]) %></span>
               <span class="<%= fallacy_severity_badge(fallacy['severity']) %>"><%= fallacy["severity"].capitalize %></span>
             </div>
-            <blockquote class="evidence-excerpt"><%= fallacy["excerpt"] %></blockquote>
-            <p class="muted"><%= fallacy["explanation"] %></p>
+            <blockquote class="text-sm italic text-muted"><%= fallacy["excerpt"] %></blockquote>
+            <p class="text-muted text-sm"><%= fallacy["explanation"] %></p>
             <% if fallacy["undermined_claim"].present? %>
-              <p class="muted"><strong><%= t("investigations.rhetorical_analysis.undermines") %></strong> <%= fallacy["undermined_claim"].truncate(150) %></p>
+              <p class="text-muted text-sm"><strong><%= t("investigations.rhetorical_analysis.undermines") %></strong> <%= fallacy["undermined_claim"].truncate(150) %></p>
             <% end %>
           </li>
         <% end %>

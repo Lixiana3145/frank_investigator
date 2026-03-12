@@ -2,27 +2,27 @@
 
 <%= turbo_stream_from @investigation %>
 
-<main class="page-shell">
-  <header class="analysis-header">
+<main class="w-full max-w-[1120px] mx-auto px-4 py-8 pb-16">
+  <header class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-6">
     <div>
-      <p class="eyebrow"><%= t(".eyebrow") %></p>
-      <h1><%= t(".heading") %></h1>
-      <p class="analysis-url"><%= @investigation.normalized_url %></p>
+      <p class="mb-3 text-muted text-xs tracking-[0.14em] uppercase"><%= t(".eyebrow") %></p>
+      <h1 class="font-serif text-[clamp(2.2rem,5vw,4rem)] leading-[0.95]"><%= t(".heading") %></h1>
+      <p class="text-muted"><%= @investigation.normalized_url %></p>
     </div>
 
-    <%= form_with url: root_path, method: :get, class: "analysis-form", local: true do |form| %>
-      <%= form.url_field :url, value: @investigation.normalized_url, class: "url-input", required: true %>
-      <%= form.submit t(".rerun"), class: "submit-button submit-button--small" %>
+    <%= form_with url: root_path, method: :get, class: "flex flex-wrap gap-3", local: true do |form| %>
+      <%= form.url_field :url, value: @investigation.normalized_url, class: "flex-1 basis-[420px] min-h-12 px-4 py-3 border border-line rounded-full bg-white/85 text-ink font-serif", required: true %>
+      <%= form.submit t(".rerun"), class: "min-h-12 px-5 py-3 border-0 rounded-full bg-ink text-white cursor-pointer font-serif" %>
     <% end %>
   </header>
 
   <% if @failure_info.present? %>
-    <section class="panel panel--error">
-      <h2><%= t(".investigation_failed") %></h2>
+    <section class="border border-line bg-verdict-red/4 rounded-3xl p-5 mb-4 border-l-4 border-l-verdict-red">
+      <h2 class="text-verdict-red text-lg font-bold"><%= t(".investigation_failed") %></h2>
       <p><%= @failure_info[:user_message] %></p>
-      <details>
-        <summary><%= t(".technical_details") %></summary>
-        <p class="muted">
+      <details class="my-2">
+        <summary class="cursor-pointer text-muted text-sm hover:text-ink"><%= t(".technical_details") %></summary>
+        <p class="text-muted">
           <%= t(".step_label") %> <%= @failure_info[:step_name] %><br>
           <% if @failure_info[:error_class].present? %>
             <%= t(".error_label") %> <%= @failure_info[:error_class] %><br>
@@ -33,7 +33,7 @@
         </p>
       </details>
       <p>
-        <%= link_to t(".try_again"), root_path(url: @investigation.normalized_url), class: "submit-button submit-button--small" %>
+        <%= link_to t(".try_again"), root_path(url: @investigation.normalized_url), class: "inline-block min-h-12 px-5 py-3 rounded-full bg-ink text-white no-underline font-serif" %>
       </p>
     </section>
   <% end %>
@@ -41,15 +41,15 @@
   <%= render "summary_cards", investigation: @investigation %>
 
   <% unless @investigation.completed? || @investigation.failed? %>
-    <section class="progress-banner" id="progress_banner">
-      <span class="progress-pulse"></span>
+    <section class="flex items-center gap-3 mb-4 px-5 py-3 border border-verdict-amber/25 rounded-xl bg-verdict-amber/6 text-sm" id="progress_banner">
+      <span class="inline-block w-2.5 h-2.5 rounded-full bg-verdict-amber shrink-0 animate-pulse-dot"></span>
       <span>
         <%= t("investigations.progress.analyzing") %>
         <% if (step = active_step_name(@investigation)) %>
           &mdash; <%= step %>
         <% end %>
       </span>
-      <span class="muted">
+      <span class="text-muted">
         <%= @investigation.pipeline_steps.where(status: "completed").count %>/<%= @investigation.pipeline_steps.count %>
         <%= t("investigations.progress.steps_done") %>
       </span>
@@ -62,39 +62,39 @@
 
   <%= render "rhetorical_analysis", investigation: @investigation %>
 
-  <section class="content-grid">
+  <section class="grid grid-cols-1 lg:grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4">
     <%= render "root_article_panel", root_article: @root_article %>
 
-    <article class="panel" id="checkable_claims">
-      <h2><%= t(".what_we_checked") %></h2>
+    <article class="border border-line bg-card backdrop-blur-sm rounded-3xl p-5 shadow-lg" id="checkable_claims">
+      <h2 class="text-lg font-bold mb-4"><%= t(".what_we_checked") %></h2>
       <% if @checkable_claims.any? %>
         <% @checkable_claims.each do |assessment| %>
           <%= render "claim_assessment", assessment: %>
         <% end %>
       <% elsif @investigation.completed? && @investigation.not_checkable? %>
-        <p class="empty-state"><%= t(".no_checkable_claims") %></p>
+        <p class="text-muted"><%= t(".no_checkable_claims") %></p>
       <% else %>
-        <p class="empty-state"><%= t(".claims_pending") %></p>
+        <p class="text-muted"><%= t(".claims_pending") %></p>
       <% end %>
     </article>
 
-    <article class="panel" id="uncheckable_claims">
-      <h2><%= t(".what_we_could_not_check") %></h2>
+    <article class="border border-line bg-card backdrop-blur-sm rounded-3xl p-5 shadow-lg" id="uncheckable_claims">
+      <h2 class="text-lg font-bold mb-4"><%= t(".what_we_could_not_check") %></h2>
       <% if @uncheckable_claims.any? %>
         <% @uncheckable_claims.each do |assessment| %>
-          <section class="claim-card">
-            <p class="claim-text"><%= assessment.claim.canonical_text %></p>
-            <p class="claim-meta">
+          <section class="pt-4 border-t border-line/60 first:pt-0 first:border-t-0">
+            <p class="text-base leading-relaxed"><%= assessment.claim.canonical_text %></p>
+            <p class="flex flex-wrap gap-3 text-muted">
               <span class="<%= badge_class_for(assessment.checkability_status) %>"><%= te(:checkability_status, assessment.checkability_status) %></span>
               <% if assessment.claim.claim_kind != "statement" %>
-                <span class="badge badge--slate"><%= te(:claim_kind, assessment.claim.claim_kind) %></span>
+                <span class="<%= badge_class_for("not_checkable") %>"><%= te(:claim_kind, assessment.claim.claim_kind) %></span>
               <% end %>
             </p>
-            <p class="muted"><%= assessment.reason_summary.presence || t(".default_uncheckable_reason") %></p>
+            <p class="text-muted"><%= assessment.reason_summary.presence || t(".default_uncheckable_reason") %></p>
           </section>
         <% end %>
       <% else %>
-        <p class="empty-state"><%= t(".uncheckable_pending") %></p>
+        <p class="text-muted"><%= t(".uncheckable_pending") %></p>
       <% end %>
     </article>
 

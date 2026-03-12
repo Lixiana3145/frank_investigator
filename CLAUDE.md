@@ -53,7 +53,7 @@ All tests must pass before committing. Current count: 338+.
 ## Key Architecture Decisions
 
 - **No JavaScript frameworks.** UI is server-rendered with Turbo Streams. No React, no Vue, no Stimulus controllers beyond what Rails provides.
-- **Custom CSS only.** Propshaft pipeline, no Tailwind, no Bootstrap. CSS variables in `application.css`.
+- **Tailwind CSS v4.** Propshaft pipeline with `tailwindcss-rails`. Custom theme in `app/assets/tailwind/application.css` with warm cream/brown palette. Utility-first classes in templates, minimal custom CSS for popovers and timeline.
 - **SQLite in production.** WAL mode, tuned pragmas. No Postgres dependency.
 - **LLM via OpenRouter.** Multi-model consensus through `RubyLLM` gem. Models configurable via `OPENROUTER_MODELS` env var.
 - **Background jobs via Solid Queue.** Recurring jobs in `config/recurring.yml`.

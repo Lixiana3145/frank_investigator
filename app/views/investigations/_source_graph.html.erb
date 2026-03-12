@@ -1,44 +1,44 @@
-<article class="panel panel--wide">
-  <h2><%= t("investigations.source_graph.heading") %></h2>
+<article class="border border-line bg-card backdrop-blur-sm rounded-3xl p-5 shadow-lg col-span-full">
+  <h2 class="text-lg font-bold mb-4"><%= t("investigations.source_graph.heading") %></h2>
   <% if links.any? %>
-    <div class="source-graph-table">
-      <table>
+    <div class="overflow-x-auto mb-4">
+      <table class="w-full border-collapse text-sm">
         <thead>
           <tr>
-            <th><%= t("investigations.source_graph.source") %></th>
-            <th><%= t("investigations.source_graph.kind") %></th>
-            <th><%= t("investigations.source_graph.authority") %></th>
-            <th><%= t("investigations.source_graph.role") %></th>
-            <th><%= t("investigations.source_graph.status") %></th>
+            <th class="text-left px-3 py-2 border-b-2 border-line text-muted text-xs uppercase tracking-wide"><%= t("investigations.source_graph.source") %></th>
+            <th class="text-left px-3 py-2 border-b-2 border-line text-muted text-xs uppercase tracking-wide"><%= t("investigations.source_graph.kind") %></th>
+            <th class="text-left px-3 py-2 border-b-2 border-line text-muted text-xs uppercase tracking-wide"><%= t("investigations.source_graph.authority") %></th>
+            <th class="text-left px-3 py-2 border-b-2 border-line text-muted text-xs uppercase tracking-wide"><%= t("investigations.source_graph.role") %></th>
+            <th class="text-left px-3 py-2 border-b-2 border-line text-muted text-xs uppercase tracking-wide"><%= t("investigations.source_graph.status") %></th>
           </tr>
         </thead>
         <tbody>
           <% links.each do |link| %>
             <% target = link.target_article %>
             <tr>
-              <td>
+              <td class="px-3 py-2.5 border-b border-line/40 align-top">
                 <strong><%= link.anchor_text.presence || target.host %></strong>
-                <br><span class="muted"><%= link.href.truncate(80) %></span>
+                <br><span class="text-muted text-xs"><%= link.href.truncate(80) %></span>
               </td>
-              <td><%= te(:source_kind, target.source_kind) %></td>
-              <td>
+              <td class="px-3 py-2.5 border-b border-line/40 align-top"><%= te(:source_kind, target.source_kind) %></td>
+              <td class="px-3 py-2.5 border-b border-line/40 align-top">
                 <span class="has-popover">
                   <%= te(:authority_tier, target.authority_tier) %>
                   (<%= score_percent(target.authority_score * 100) %>)
                   <span class="popover-content"><%= authority_tier_description(target.authority_tier) %></span>
                 </span>
               </td>
-              <td>
+              <td class="px-3 py-2.5 border-b border-line/40 align-top">
                 <% if target.source_role != "unknown" %>
                   <span class="has-popover">
                     <%= te(:source_role, target.source_role) %>
                     <span class="popover-content"><%= source_role_description(target.source_role) %></span>
                   </span>
                 <% else %>
-                  <span class="muted"><%= t("investigations.source_graph.unknown_role") %></span>
+                  <span class="text-muted"><%= t("investigations.source_graph.unknown_role") %></span>
                 <% end %>
               </td>
-              <td><span class="<%= badge_class_for(link.follow_status) %>"><%= te(:follow_status, link.follow_status) %></span></td>
+              <td class="px-3 py-2.5 border-b border-line/40 align-top"><span class="<%= badge_class_for(link.follow_status) %>"><%= te(:follow_status, link.follow_status) %></span></td>
             </tr>
           <% end %>
         </tbody>
@@ -50,6 +50,6 @@
       <%= render "source_graph_svg", links: links, investigation: investigation %>
     <% end %>
   <% else %>
-    <p class="empty-state"><%= t("investigations.source_graph.empty") %></p>
+    <p class="text-muted"><%= t("investigations.source_graph.empty") %></p>
   <% end %>
 </article>

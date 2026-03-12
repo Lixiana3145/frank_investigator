@@ -69,3 +69,5 @@ group :test do
   # Code coverage [https://github.com/simplecov-ruby/simplecov]
   gem "simplecov", require: false
 end
+
+gem "tailwindcss-rails", "~> 4.4"
