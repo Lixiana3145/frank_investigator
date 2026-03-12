@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_11_194000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_11_195000) do
   create_table "article_claims", force: :cascade do |t|
     t.integer "article_id", null: false
     t.integer "claim_id", null: false
@@ -111,6 +111,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_194000) do
     t.datetime "updated_at", null: false
     t.index ["canonical_fingerprint"], name: "index_claims_on_canonical_fingerprint", unique: true
     t.index ["checkability_status"], name: "index_claims_on_checkability_status"
+  end
+
+  create_table "error_reports", force: :cascade do |t|
+    t.text "backtrace"
+    t.json "context", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.string "error_class", null: false
+    t.string "fingerprint", null: false
+    t.datetime "first_occurred_at", null: false
+    t.datetime "last_occurred_at", null: false
+    t.text "message", null: false
+    t.integer "occurrences_count", default: 1, null: false
+    t.string "severity", default: "error", null: false
+    t.string "source"
+    t.datetime "updated_at", null: false
+    t.index ["fingerprint"], name: "index_error_reports_on_fingerprint", unique: true
+    t.index ["last_occurred_at"], name: "index_error_reports_on_last_occurred_at"
+    t.index ["severity"], name: "index_error_reports_on_severity"
   end
 
   create_table "evidence_items", force: :cascade do |t|

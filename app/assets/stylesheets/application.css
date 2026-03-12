@@ -658,6 +658,45 @@ p {
   margin-top: 0.5rem;
 }
 
+/* Error reports */
+.error-reports-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.error-reports-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.error-reports-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(205, 191, 174, 0.4);
+  vertical-align: top;
+}
+
+.error-reports-table a {
+  color: var(--ink);
+}
+
+.error-backtrace {
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 @media (max-width: 720px) {
   .analysis-header {
     align-items: stretch;

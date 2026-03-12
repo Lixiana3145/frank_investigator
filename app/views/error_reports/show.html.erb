@@ -1,0 +1,55 @@
+<% content_for :title, "Error Detail — Frank Investigator" %>
+
+<main class="page-shell">
+  <header class="analysis-header">
+    <div>
+      <p class="eyebrow"><%= link_to "Error reports", error_reports_path %></p>
+      <h1><%= @error_report.error_class %></h1>
+    </div>
+  </header>
+
+  <section class="content-grid">
+    <article class="panel panel--wide">
+      <dl class="fact-list">
+        <div>
+          <dt>Severity</dt>
+          <dd><span class="badge <%= @error_report.severity == 'error' ? 'badge--red' : 'badge--amber' %>"><%= @error_report.severity %></span></dd>
+        </div>
+        <div>
+          <dt>Message</dt>
+          <dd><%= @error_report.message %></dd>
+        </div>
+        <div>
+          <dt>Source</dt>
+          <dd><%= @error_report.source.presence || "unknown" %></dd>
+        </div>
+        <div>
+          <dt>Occurrences</dt>
+          <dd class="metric-number"><%= @error_report.occurrences_count %></dd>
+        </div>
+        <div>
+          <dt>First seen</dt>
+          <dd><%= @error_report.first_occurred_at.strftime("%Y-%m-%d %H:%M:%S UTC") %></dd>
+        </div>
+        <div>
+          <dt>Last seen</dt>
+          <dd><%= @error_report.last_occurred_at.strftime("%Y-%m-%d %H:%M:%S UTC") %></dd>
+        </div>
+      </dl>
+    </article>
+
+    <% if @error_report.backtrace.present? %>
+      <article class="panel panel--wide">
+        <h2>Backtrace</h2>
+        <pre class="error-backtrace"><%= @error_report.backtrace %></pre>
+      </article>
+    <% end %>
+
+    <% if @error_report.context.present? && @error_report.context != {} %>
+      <article class="panel panel--wide">
+        <h2>Context</h2>
+        <pre class="error-backtrace"><%= JSON.pretty_generate(@error_report.context) %></pre>
+      </article>
+    <% end %>
+  </section>
+</main>

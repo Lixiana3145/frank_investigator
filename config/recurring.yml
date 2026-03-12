@@ -17,3 +17,6 @@ production:
     class: Monitoring::SmokeCheckJob
     queue: default
     schedule: every 6 hours
+  purge_old_errors:
+    command: "ErrorReport.purge_old"
+    schedule: at 3am every day
