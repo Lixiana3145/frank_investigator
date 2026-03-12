@@ -49,6 +49,44 @@ module Llm
       aggregate_results(results)
     end
 
+    # Batch-assess multiple claims in a single LLM call per model.
+    # Returns a Hash mapping claim_id => Result (same as #call returns).
+    # Items are batched in groups of BATCH_SIZE to stay within context limits.
+    BATCH_SIZE = 10
+
+    def call_batch(items:, investigation: nil)
+      return {} unless available?
+      return {} if items.empty?
+
+      all_results = {}
+
+      items.each_slice(BATCH_SIZE) do |batch|
+        batch_prompt = build_batch_prompt(batch)
+        batch_fingerprint = Digest::SHA256.hexdigest(batch_prompt)
+
+        per_model_results = @models.filter_map do |model|
+          ask_model_batch(model:, batch:, batch_prompt:, batch_fingerprint:, investigation:)
+        rescue StandardError => e
+          Rails.logger.warn("[LLM Batch] Model #{model} failed: #{e.message}")
+          nil
+        end
+
+        next if per_model_results.empty?
+
+        # per_model_results is an array of hashes: { claim_id => Result }
+        # Aggregate per-claim across models
+        batch.each do |item|
+          claim_id = item[:claim].id
+          model_results_for_claim = per_model_results.filter_map { |mr| mr[claim_id] }
+          next if model_results_for_claim.empty?
+
+          all_results[claim_id] = aggregate_results(model_results_for_claim)
+        end
+      end
+
+      all_results
+    end
+
     def available?
       defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present? && @models.any?
     end
@@ -137,7 +175,7 @@ module Llm
       Result.new(
         verdict: payload.fetch("verdict"),
         confidence_score: payload.fetch("confidence_score").to_f.clamp(0, 0.97),
-        reason_summary: payload.fetch("reason_summary")
+        reason_summary: sanitize_text(payload.fetch("reason_summary"))
       )
     rescue StandardError => e
       fail_interaction(interaction, e) if interaction
@@ -163,7 +201,7 @@ module Llm
 
     def complete_interaction(interaction, response:, payload:, elapsed_ms:)
       interaction.update!(
-        response_text: response.content.to_s,
+        response_text: sanitize_text(response.content.to_s),
         response_json: payload,
         status: :completed,
         latency_ms: elapsed_ms,
@@ -188,8 +226,131 @@ module Llm
       Result.new(
         verdict: json.fetch("verdict"),
         confidence_score: json.fetch("confidence_score").to_f.clamp(0, 0.97),
-        reason_summary: json.fetch("reason_summary")
+        reason_summary: sanitize_text(json.fetch("reason_summary"))
       )
+    end
+
+    # Strip NUL bytes that can break SQLite string handling when persisted
+    def sanitize_text(text)
+      text.to_s.delete("\x00")
+    end
+
+    def ask_model_batch(model:, batch:, batch_prompt:, batch_fingerprint:, investigation:)
+      # Check cache: if ALL items in this batch are cached for this model, skip the call
+      if investigation
+        cached = LlmInteraction.find_cached(evidence_packet_fingerprint: batch_fingerprint, model_id: model)
+        if cached&.response_json.is_a?(Array)
+          return parse_batch_response(cached.response_json, batch)
+        end
+      end
+
+      interaction = create_interaction(
+        investigation:, claim_assessment: nil, model:, prompt_text: batch_prompt, packet_fingerprint: batch_fingerprint
+      )
+
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      response = Timeout.timeout(LLM_TIMEOUT_SECONDS * 2) do
+        RubyLLM.chat(model:, provider: :openrouter, assume_model_exists: true)
+          .with_instructions(batch_system_prompt)
+          .with_schema(batch_response_schema(batch.size))
+          .ask(batch_prompt)
+      end
+      elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
+
+      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
+      assessments_array = payload.fetch("assessments")
+
+      complete_interaction(interaction, response:, payload:, elapsed_ms:) if interaction
+
+      parse_batch_response(assessments_array, batch)
+    rescue StandardError => e
+      fail_interaction(interaction, e) if interaction
+      raise
+    end
+
+    def parse_batch_response(assessments_array, batch)
+      results = {}
+      batch.each_with_index do |item, idx|
+        assessment = assessments_array[idx]
+        next unless assessment.is_a?(Hash)
+
+        claim_id = item[:claim].id
+        results[claim_id] = Result.new(
+          verdict: assessment.fetch("verdict", "needs_more_evidence"),
+          confidence_score: assessment.fetch("confidence_score", 0.1).to_f.clamp(0, 0.97),
+          reason_summary: sanitize_text(assessment.fetch("reason_summary", ""))
+        )
+      end
+      results
+    end
+
+    def build_batch_prompt(batch)
+      claims = batch.map.with_index do |item, idx|
+        {
+          index: idx,
+          claim: item[:claim].canonical_text,
+          claim_kind: item[:claim].claim_kind,
+          checkability_status: item[:claim].checkability_status,
+          entities: item[:claim].entities_json,
+          time_scope: item[:claim].time_scope,
+          evidence_count: item[:evidence_packet].size,
+          evidence: item[:evidence_packet]
+        }
+      end
+      { claims: claims }.to_json
+    end
+
+    BATCH_SYSTEM_PROMPT_TEMPLATE = <<~PROMPT.freeze
+      You are part of a news fact-checking pipeline. You will receive MULTIPLE claims to assess, each with its own evidence.
+
+      Rules:
+      - Base each assessment ONLY on the evidence provided for THAT claim.
+      - Cite specific evidence items by their source URL or title.
+      - If evidence is insufficient, say so explicitly.
+      - If sources disagree, note which are more authoritative.
+      - Be conservative: prefer "needs_more_evidence" over weak verdicts.
+
+      Return a JSON object with an "assessments" array. Each element must have:
+        - verdict: one of supported, disputed, mixed, needs_more_evidence, not_checkable
+        - confidence_score: between 0.0 and 0.97
+        - reason_summary: text referencing specific evidence sources
+
+      The assessments array MUST have exactly the same number of elements as the claims array, in the same order.
+
+      IMPORTANT: verdict must always use the English enum values above.
+      However, write reason_summary text in %{locale_name}.
+    PROMPT
+
+    def batch_system_prompt
+      BATCH_SYSTEM_PROMPT_TEMPLATE % { locale_name: LOCALE_NAMES.fetch(I18n.locale, "English") }
+    end
+
+    def batch_response_schema(count)
+      {
+        name: "batch_claim_assessment",
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            assessments: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  verdict: { type: "string", enum: %w[supported disputed mixed needs_more_evidence not_checkable] },
+                  confidence_score: { type: "number" },
+                  reason_summary: { type: "string" }
+                },
+                required: %w[verdict confidence_score reason_summary]
+              },
+              minItems: count,
+              maxItems: count
+            }
+          },
+          required: %w[assessments]
+        }
+      }
     end
 
     def build_prompt(claim:, evidence_packet:)

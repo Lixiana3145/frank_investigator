@@ -453,3 +453,196 @@ brazil:
     independence_group: "abril.com.br"
     audience_country: "BR"
     notes: "Marca de revista nacional relevante em politica, economia e cultura."
+  o_globo:
+    name: "O Globo"
+    homepage_url: "https://oglobo.globo.com/"
+    host_patterns:
+      - "oglobo.globo.com"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.71
+    independence_group: "globo.com"
+    audience_country: "BR"
+    notes: "Jornal carioca do Grupo Globo. Mesma independencia editorial que g1."
+  valor_economico:
+    name: "Valor Economico"
+    homepage_url: "https://valor.globo.com/"
+    host_patterns:
+      - "valor.globo.com"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.72
+    independence_group: "globo.com"
+    audience_country: "BR"
+    notes: "Referencia em jornalismo economico e financeiro. Grupo Globo."
+  cnn_brasil:
+    name: "CNN Brasil"
+    homepage_url: "https://www.cnnbrasil.com.br/"
+    host_patterns:
+      - "cnnbrasil.com.br"
+      - "www.cnnbrasil.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.65
+    independence_group: "cnnbrasil.com.br"
+    audience_country: "BR"
+    notes: "Canal de noticias 24h. Licenciamento da marca CNN; grupo editorial independente."
+  r7:
+    name: "R7"
+    homepage_url: "https://www.r7.com/"
+    host_patterns:
+      - "r7.com"
+      - "www.r7.com"
+      - "noticias.r7.com"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.6
+    independence_group: "recordtv.com.br"
+    audience_country: "BR"
+    notes: "Portal do Grupo Record. Grande alcance popular."
+  bbc_brasil:
+    name: "BBC Brasil"
+    homepage_url: "https://www.bbc.com/portuguese"
+    host_patterns:
+      - "bbc.com/portuguese"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.75
+    independence_group: "bbc.com"
+    audience_country: "BR"
+    notes: "Servico em portugues da BBC. Independencia editorial forte; perspectiva internacional."
+  poder360:
+    name: "Poder360"
+    homepage_url: "https://www.poder360.com.br/"
+    host_patterns:
+      - "poder360.com.br"
+      - "www.poder360.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.68
+    independence_group: "poder360.com.br"
+    audience_country: "BR"
+    notes: "Jornalismo politico digital com cobertura de Brasilia e dados electorais."
+  nexo_jornal:
+    name: "Nexo Jornal"
+    homepage_url: "https://www.nexojornal.com.br/"
+    host_patterns:
+      - "nexojornal.com.br"
+      - "www.nexojornal.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.7
+    independence_group: "nexojornal.com.br"
+    audience_country: "BR"
+    notes: "Jornalismo explicativo e contextual. Independente de grandes grupos."
+  infomoney:
+    name: "InfoMoney"
+    homepage_url: "https://www.infomoney.com.br/"
+    host_patterns:
+      - "infomoney.com.br"
+      - "www.infomoney.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.66
+    independence_group: "infomoney.com.br"
+    audience_country: "BR"
+    notes: "Portal de financas e investimentos. Grupo XP."
+  correio_braziliense:
+    name: "Correio Braziliense"
+    homepage_url: "https://www.correiobraziliense.com.br/"
+    host_patterns:
+      - "correiobraziliense.com.br"
+      - "www.correiobraziliense.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.65
+    independence_group: "diariosassociados.com.br"
+    audience_country: "BR"
+    notes: "Principal jornal de Brasilia. Grupo Diarios Associados."
+  metropoles:
+    name: "Metropoles"
+    homepage_url: "https://www.metropoles.com/"
+    host_patterns:
+      - "metropoles.com"
+      - "www.metropoles.com"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.63
+    independence_group: "metropoles.com"
+    audience_country: "BR"
+    notes: "Portal de Brasilia com forte presenca digital. Independente."
+  intercept_brasil:
+    name: "The Intercept Brasil"
+    homepage_url: "https://www.intercept.com.br/"
+    host_patterns:
+      - "intercept.com.br"
+      - "www.intercept.com.br"
+      - "theintercept.com/brasil"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.64
+    independence_group: "theintercept.com"
+    audience_country: "BR"
+    notes: "Jornalismo investigativo. Util para contraste e reportagens exclusivas."
+  band:
+    name: "Band"
+    homepage_url: "https://www.band.uol.com.br/"
+    host_patterns:
+      - "band.uol.com.br"
+      - "www.band.uol.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.6
+    independence_group: "band.com.br"
+    audience_country: "BR"
+    notes: "Portal do Grupo Bandeirantes. TV e radio com presenca digital."
+  terra:
+    name: "Terra"
+    homepage_url: "https://www.terra.com.br/"
+    host_patterns:
+      - "terra.com.br"
+      - "www.terra.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.58
+    independence_group: "terra.com.br"
+    audience_country: "BR"
+    notes: "Portal de grande alcance. Agregador com conteudo proprio e licenciado."
+  sbt_news:
+    name: "SBT News"
+    homepage_url: "https://www.sbtnews.com.br/"
+    host_patterns:
+      - "sbtnews.com.br"
+      - "www.sbtnews.com.br"
+    source_kind: "news_article"
+    authority_tier: "secondary"
+    authority_score: 0.58
+    independence_group: "sbt.com.br"
+    audience_country: "BR"
+    notes: "Portal de noticias do SBT. Grupo Silvio Santos."
+  conjur:
+    name: "Consultor Juridico (ConJur)"
+    homepage_url: "https://www.conjur.com.br/"
+    host_patterns:
+      - "conjur.com.br"
+      - "www.conjur.com.br"
+    source_kind: "news_article"
+    source_role: "legal_analysis"
+    authority_tier: "secondary"
+    authority_score: 0.72
+    independence_group: "conjur.com.br"
+    audience_country: "BR"
+    notes: "Referencia em jornalismo juridico. Alta autoridade para analise de decisoes judiciais."
+  jota:
+    name: "JOTA"
+    homepage_url: "https://www.jota.info/"
+    host_patterns:
+      - "jota.info"
+      - "www.jota.info"
+    source_kind: "news_article"
+    source_role: "legal_analysis"
+    authority_tier: "secondary"
+    authority_score: 0.7
+    independence_group: "jota.info"
+    audience_country: "BR"
+    notes: "Jornalismo juridico e regulatorio. Forte em STF, tributario e compliance."

@@ -26,7 +26,12 @@ module Fetchers
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
     ].freeze
 
-    INTERSTITIAL_PATTERN = /challenge-platform|cloudflare|captcha|checking your browser|aguarde.*verificando/i
+    # Patterns that appear only in actual challenge/interstitial pages, not in CDN URLs or passive scripts
+    INTERSTITIAL_PATTERN = /challenge-platform|cf-challenge|cf_chl_opt|challenges\.cloudflare\.com|just a moment.*cloudflare|checking your browser|checking if the site connection is secure|aguarde.*verificando/i
+
+    # Minimum visible text length (chars) to consider a page as having real content.
+    # Pages with real article content won't be flagged even if they embed reCAPTCHA iframes or CDN refs.
+    MIN_CONTENT_LENGTH = 500
 
     def self.call(url)
       new.call(url)
@@ -38,9 +43,9 @@ module Fetchers
 
       html, title = fetch_with_budget(url, budget)
 
-      if html.match?(INTERSTITIAL_PATTERN)
+      if interstitial?(html)
         html, title = fetch_with_budget(url, budget * 2)
-        raise InterstitialDetectedError, "Interstitial/challenge page detected for #{url}" if html.match?(INTERSTITIAL_PATTERN)
+        raise InterstitialDetectedError, "Interstitial/challenge page detected for #{url}" if interstitial?(html)
       end
 
       Snapshot.new(html:, title:)
@@ -62,6 +67,16 @@ module Fetchers
 
       document = Nokogiri::HTML(html)
       [ html, document.at("title")&.text.to_s.squish ]
+    end
+
+    def interstitial?(html)
+      return false unless html.match?(INTERSTITIAL_PATTERN)
+
+      # If the page has substantial visible text, it's real content with embedded scripts (reCAPTCHA, ads)
+      doc = Nokogiri::HTML(html)
+      doc.css("script, style, noscript, iframe").each(&:remove)
+      visible_text = doc.at("body")&.text.to_s.gsub(/\s+/, " ").strip
+      visible_text.length < MIN_CONTENT_LENGTH
     end
 
     def browser_path

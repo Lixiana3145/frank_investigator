@@ -31,13 +31,15 @@ class ClaimAssessment < ApplicationRecord
     verdict_changed = verdict.to_s != new_verdict.to_s
     confidence_shifted = (confidence_score.to_f - new_confidence.to_f).abs >= CONFIDENCE_CHANGE_THRESHOLD
 
+    sanitized_reason = sanitize_for_db(new_reason.to_s)
+
     if is_first || verdict_changed || confidence_shifted
       verdict_snapshots.create!(
         verdict: new_verdict,
         previous_verdict: is_first ? nil : verdict,
         confidence_score: new_confidence,
         previous_confidence_score: is_first ? nil : confidence_score,
-        reason_summary: new_reason.to_s,
+        reason_summary: sanitized_reason,
         trigger: trigger,
         triggered_by: triggered_by,
         evidence_count: evidence_items.count,
@@ -49,7 +51,7 @@ class ClaimAssessment < ApplicationRecord
     update!(
       verdict: new_verdict,
       confidence_score: new_confidence,
-      reason_summary: new_reason
+      reason_summary: sanitized_reason
     )
   end
 
@@ -58,6 +60,11 @@ class ClaimAssessment < ApplicationRecord
   end
 
   private
+
+  # Strip NUL bytes and other problematic characters that can break SQLite string handling
+  def sanitize_for_db(text)
+    text.delete("\x00")
+  end
 
   def build_evidence_snapshot
     evidence_items.includes(:article).map do |item|

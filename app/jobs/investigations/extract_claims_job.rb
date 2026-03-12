@@ -9,7 +9,7 @@ module Investigations
         article = investigation.root_article || raise("Investigation is missing a root article")
         Articles::SyncClaims.call(investigation:, article:)
 
-        AssessClaimsJob.perform_later(investigation.id)
+        Investigations::AssessClaimsJob.perform_later(investigation.id)
         { claims_count: investigation.claim_assessments.count }
       end
     ensure

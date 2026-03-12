@@ -7,7 +7,7 @@ module Investigations
 
       Pipeline::StepRunner.call(investigation:, name: "kickoff") do
         investigation.update!(status: :processing)
-        FetchRootArticleJob.perform_later(investigation.id)
+        Investigations::FetchRootArticleJob.perform_later(investigation.id)
         {}
       end
     ensure

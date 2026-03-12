@@ -51,6 +51,50 @@ module Analyzers
       heuristic_verdict = verdict_for(**scores)
       heuristic_confidence = confidence_for(**scores)
       llm_result = run_llm_assessment(entries)
+      finalize_result(entries, scores, heuristic_verdict, heuristic_confidence, llm_result)
+    end
+
+    # Assess using a pre-computed LLM result (from batch assessment).
+    # Falls back to individual LLM call if llm_result is nil and evidence exists.
+    def call_with_llm_result(entries, llm_result)
+      return call if @claim.not_checkable?
+
+      prior = find_prior_assessment
+      return prior if prior
+
+      scores = compute_scores(entries)
+      heuristic_verdict = verdict_for(**scores)
+      heuristic_confidence = confidence_for(**scores)
+
+      # Fall back to individual call if batch didn't return a result for this claim
+      llm_result ||= run_llm_assessment(entries)
+
+      finalize_result(entries, scores, heuristic_verdict, heuristic_confidence, llm_result)
+    end
+
+    def structured_evidence_packet(entries)
+      entries.map do |entry|
+        {
+          url: entry.article.normalized_url,
+          title: entry.article.title,
+          excerpt: entry.article.excerpt.to_s.truncate(500),
+          body_snippet: entry.article.body_text.to_s.truncate(800),
+          stance: entry.stance,
+          relevance_score: entry.relevance_score,
+          authority_score: entry.authority_score,
+          authority_tier: entry.authority_tier,
+          source_kind: entry.source_kind,
+          independence_group: entry.independence_group,
+          fetched_at: entry.article.fetched_at,
+          published_at: entry.article.published_at,
+          headline_divergence: entry.headline_divergence
+        }
+      end
+    end
+
+    private
+
+    def finalize_result(entries, scores, heuristic_verdict, heuristic_confidence, llm_result)
       final_verdict, final_confidence = merge_with_llm(heuristic_verdict:, heuristic_confidence:, llm_result:)
       pre_veto_verdict = final_verdict
       final_verdict, final_confidence = apply_primary_veto(final_verdict, final_confidence, entries)
@@ -74,8 +118,6 @@ module Analyzers
         unsubstantiated_viral: viral
       )
     end
-
-    private
 
     def find_prior_assessment
       # Exact claim match in other investigations

@@ -27,8 +27,8 @@ module Investigations
         Articles::SyncClaims.call(investigation:, article:)
 
         article_link.update!(follow_status: :crawled)
-        ExpandLinkedArticlesJob.perform_later(investigation.id, source_article_id: article.id) if article_link.depth < max_depth
-        AssessClaimsJob.perform_later(investigation.id)
+        Investigations::ExpandLinkedArticlesJob.perform_later(investigation.id, source_article_id: article.id) if article_link.depth < max_depth
+        Investigations::AssessClaimsJob.perform_later(investigation.id)
 
         { article_id: article.id, discovered_links_count: article.sourced_links.count, cached: article.fresh? }
       end

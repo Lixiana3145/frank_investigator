@@ -49,7 +49,7 @@ class Analyzers::ClaimAssessorVerdictsTest < ActiveSupport::TestCase
         url: "https://dispute#{i}.com/d", normalized_url: "https://dispute#{i}.com/d",
         host: "dispute#{i}.com", fetch_status: :fetched, fetched_at: 1.day.ago,
         authority_tier: :primary, authority_score: 0.95, source_kind: :government_record,
-        body_text: "GDP actually fell 1%", title: "Correction #{i}"
+        body_text: "GDP did not grow 3% in 2025, it actually fell. This is false and misleading.", title: "GDP Correction #{i}"
       )
       ArticleClaim.create!(article: art, claim: @claim, stance: :disputes, importance_score: 0.9, surface_text: @claim.canonical_text)
     end

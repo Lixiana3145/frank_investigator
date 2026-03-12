@@ -15,9 +15,9 @@ module Investigations
           Articles::PersistFetchedContent.call(article:, html: snapshot.html, fetched_title: snapshot.title, current_depth: 0)
         end
 
-        ExtractClaimsJob.perform_later(investigation.id)
-        AnalyzeHeadlineJob.perform_later(investigation.id)
-        ExpandLinkedArticlesJob.perform_later(investigation.id, source_article_id: article.id)
+        Investigations::ExtractClaimsJob.perform_later(investigation.id)
+        Investigations::AnalyzeHeadlineJob.perform_later(investigation.id)
+        Investigations::ExpandLinkedArticlesJob.perform_later(investigation.id, source_article_id: article.id)
 
         { links_count: article.sourced_links.count, cached: article.fresh? }
       end

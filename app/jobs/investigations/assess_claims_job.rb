@@ -9,9 +9,24 @@ module Investigations
         run_authority_retrieval!
         run_active_evidence_retrieval!
 
+        assessments = @investigation.claim_assessments.includes(:claim).to_a
+        checkable = assessments.select { |a| a.claim.checkable? || a.claim.pending? }
+
+        # Pre-compute evidence packets and heuristic scores for all checkable claims
+        claim_data = checkable.filter_map do |assessment|
+          entries = Analyzers::EvidencePacketBuilder.call(investigation: @investigation, claim: assessment.claim)
+          assessor = Analyzers::ClaimAssessor.new(investigation: @investigation, claim: assessment.claim)
+          { assessment:, entries:, assessor: }
+        end
+
+        # Batch LLM assessment: send all claims with evidence in grouped calls
+        llm_results = run_batch_llm_assessment(claim_data)
+
         ApplicationRecord.transaction do
-          @investigation.claim_assessments.includes(:claim).find_each do |assessment|
-            result = Analyzers::ClaimAssessor.call(investigation: @investigation, claim: assessment.claim)
+          claim_data.each do |data|
+            assessment = data[:assessment]
+            llm_result = llm_results[assessment.claim.id]
+            result = data[:assessor].call_with_llm_result(data[:entries], llm_result)
 
             is_initial = assessment.verdict_pending?
             assessment.record_verdict_change!(
@@ -40,9 +55,23 @@ module Investigations
             assessment.claim.update!(evidence_article_count: assessment.claim.article_claims.count)
             sync_evidence_items!(assessment)
           end
+
+          # Handle non-checkable claims
+          (assessments - checkable).each do |assessment|
+            next unless assessment.claim.not_checkable?
+            result = Analyzers::ClaimAssessor.call(investigation: @investigation, claim: assessment.claim)
+            assessment.record_verdict_change!(
+              new_verdict: result.verdict,
+              new_confidence: result.confidence_score,
+              new_reason: result.reason_summary,
+              trigger: "initial_assessment",
+              triggered_by: self.class.name
+            )
+            assessment.update!(checkability_status: result.checkability_status, assessed_at: Time.current)
+          end
         end
 
-        AnalyzeRhetoricalStructureJob.perform_later(@investigation.id)
+        Investigations::AnalyzeRhetoricalStructureJob.perform_later(@investigation.id)
 
         { assessed_claims_count: @investigation.claim_assessments.count }
       end
@@ -51,6 +80,26 @@ module Investigations
     end
 
     private
+
+    def run_batch_llm_assessment(claim_data)
+      client = Llm::ClientFactory.build
+      return {} unless client.respond_to?(:call_batch) && client.respond_to?(:available?) && client.available?
+
+      items_with_evidence = claim_data.filter_map do |data|
+        next if data[:entries].empty?
+        {
+          claim: data[:assessment].claim,
+          evidence_packet: data[:assessor].structured_evidence_packet(data[:entries])
+        }
+      end
+
+      return {} if items_with_evidence.empty?
+
+      client.call_batch(items: items_with_evidence, investigation: @investigation)
+    rescue StandardError => e
+      Rails.logger.warn("[AssessClaimsJob] Batch LLM assessment failed, falling back to individual: #{e.message}")
+      {}
+    end
 
     def run_authority_retrieval!
       @investigation.claim_assessments.includes(:claim).find_each do |assessment|

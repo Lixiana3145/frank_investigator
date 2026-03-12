@@ -11,7 +11,7 @@ module Investigations
         links = prioritized_links(source_article, max_depth)
 
         links.each do |link|
-          FetchLinkedArticleJob.perform_later(investigation.id, link.id)
+          Investigations::FetchLinkedArticleJob.perform_later(investigation.id, link.id)
         end
 
         { enqueued_links_count: links.count }
