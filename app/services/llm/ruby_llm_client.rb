@@ -160,14 +160,10 @@ module Llm
       )
 
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      response = Timeout.timeout(LLM_TIMEOUT_SECONDS) do
-        RubyLLM.chat(model:, provider: :openrouter, assume_model_exists: true)
-          .with_instructions(system_prompt)
-          .with_schema(response_schema)
-          .ask(prompt_text)
-      end
+      response = llm_call_with_retry(model:, system_prompt: system_prompt, schema: response_schema, prompt: prompt_text)
       elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
 
+      raise "Empty LLM response from #{model}" if response.content.blank?
       payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
 
       complete_interaction(interaction, response:, payload:, elapsed_ms:) if interaction
@@ -180,6 +176,27 @@ module Llm
     rescue StandardError => e
       fail_interaction(interaction, e) if interaction
       raise
+    end
+
+    def llm_call_with_retry(model:, system_prompt:, schema:, prompt:, timeout: LLM_TIMEOUT_SECONDS)
+      response = Timeout.timeout(timeout) do
+        RubyLLM.chat(model:, provider: :openrouter, assume_model_exists: true)
+          .with_instructions(system_prompt)
+          .with_schema(schema)
+          .ask(prompt)
+      end
+
+      if response.content.blank?
+        Rails.logger.warn("[LLM Retry] Empty response from #{model}, retrying once")
+        response = Timeout.timeout(timeout) do
+          RubyLLM.chat(model:, provider: :openrouter, assume_model_exists: true)
+            .with_instructions(system_prompt)
+            .with_schema(schema)
+            .ask(prompt)
+        end
+      end
+
+      response
     end
 
     def create_interaction(investigation:, claim_assessment:, model:, prompt_text:, packet_fingerprint:)
@@ -249,14 +266,10 @@ module Llm
       )
 
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      response = Timeout.timeout(LLM_TIMEOUT_SECONDS * 2) do
-        RubyLLM.chat(model:, provider: :openrouter, assume_model_exists: true)
-          .with_instructions(batch_system_prompt)
-          .with_schema(batch_response_schema(batch.size))
-          .ask(batch_prompt)
-      end
+      response = llm_call_with_retry(model:, system_prompt: batch_system_prompt, schema: batch_response_schema(batch.size), prompt: batch_prompt, timeout: LLM_TIMEOUT_SECONDS * 2)
       elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
 
+      raise "Empty LLM response from #{model}" if response.content.blank?
       payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
       assessments_array = payload.fetch("assessments")
 

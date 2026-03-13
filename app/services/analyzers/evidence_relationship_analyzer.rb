@@ -151,6 +151,7 @@ module Analyzers
         .ask(prompt)
 
       elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
+      raise "Empty LLM response" if response.content.blank?
       payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
       complete_interaction(interaction, response, payload, elapsed_ms)
 
@@ -383,6 +384,20 @@ module Analyzers
       end
 
       elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
+
+      if response.content.blank?
+        Rails.logger.warn("[EvidenceRelationshipAnalyzer] Empty batch response from #{model}, retrying once")
+        start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        response = Timeout.timeout(timeout) do
+          RubyLLM.chat(model:, provider: :openrouter, assume_model_exists: true)
+            .with_instructions(BATCH_CONTRADICTION_SYSTEM_PROMPT)
+            .with_schema(schema)
+            .ask(prompt_text)
+        end
+        elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
+      end
+
+      raise "Empty LLM response from #{model}" if response.content.blank?
       payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
 
       if interaction
