@@ -50,6 +50,17 @@ module Analyzers
       "Política de Privacidade"
     ].freeze
 
+    PRICING_PATTERNS = [
+      /R\$\s*\d+[.,]\d{2}/,                            # "R$ 49,90" or "R$1,90"
+      /\b\d+[.,]\d{2}\s*\/\s*m[eê]s\b/i,               # "49,90/mês"
+      /\btelevendas\b/i,
+      /\bSAC\b.*\b\d{4}/,                               # "SAC Capitais: 4003-..."
+      /\b0800\s+\d{3}\s+\d{4}\b/,                       # "0800 770 2166"
+      /\bsorteio\b/i,                                    # "Detalhes do sorteio"
+      /\bcartão\s+presente\b/i,                          # "cartão presente"
+      /\bvoucher\b/i
+    ].freeze
+
     NAVIGATION_PATTERNS = [
       /\A(?:Home|Início|Principal)\s*[>›»]/i,       # Breadcrumb
       /\A(?:Editorias?|Seções?|Cadernos?):/i,        # Section labels
@@ -68,6 +79,7 @@ module Analyzers
       return true if ui_boilerplate?
       return true if metadata?
       return true if portal_boilerplate?
+      return true if pricing?
       return true if navigation?
       return true if concatenated_headlines?
       return true if fragment_too_short?
@@ -86,6 +98,10 @@ module Analyzers
 
     def portal_boilerplate?
       PORTAL_BOILERPLATE.any? { |phrase| @text.include?(phrase) }
+    end
+
+    def pricing?
+      PRICING_PATTERNS.any? { |p| @text.match?(p) }
     end
 
     def navigation?

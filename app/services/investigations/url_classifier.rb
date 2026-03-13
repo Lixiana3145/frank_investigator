@@ -75,13 +75,16 @@ module Investigations
 
     NON_ARTICLE_HOSTS = %w[
       falabr.cgu.gov.br acesso.gov.br
-      api.whatsapp.com wa.me
+      api.whatsapp.com web.whatsapp.com wa.me
     ].freeze
 
     NON_ARTICLE_HOST_PATTERNS = [
       /\Asidra\./i,
       /\Alps\./i,
-      /\Astatic\./i
+      /\Astatic\./i,
+      /\Aofertas\./i,
+      /\Aassinatura\./i,
+      /\Aassine\./i
     ].freeze
 
     def call
