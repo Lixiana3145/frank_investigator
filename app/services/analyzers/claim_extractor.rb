@@ -36,7 +36,7 @@ module Analyzers
     end
 
     def extract_body_claims
-      sentences.first(6).filter_map.with_index do |sentence, index|
+      sentences.first(3).filter_map.with_index do |sentence, index|
         build_result(sentence, role: index.zero? ? :lead : :body, importance_score: index.zero? ? 0.85 : 0.65)
       end
     end
@@ -71,8 +71,23 @@ module Analyzers
     end
 
     EXTRACTION_SYSTEM_PROMPT = <<~PROMPT.freeze
-      You are a fact-checking claim extractor. Given a news article, identify the distinct factual claims.
-      Focus on verifiable statements, not opinions or rhetoric.
+      You are a fact-checking claim extractor. Given a news article, identify ONLY the core newsworthy factual claims.
+
+      EXTRACT only claims that are:
+      - Verifiable against official records, data, or documents
+      - Central to the article's news value (not background or filler)
+      - Specific enough to check (names, dates, numbers, official actions)
+
+      DO NOT extract:
+      - Opinions, rhetoric, or editorial commentary
+      - Generic background context ("Brazil is the largest country in South America")
+      - Website UI text, navigation, cookie notices, social share prompts
+      - Author bylines, publication dates, or metadata
+      - Vague or hedged statements ("some analysts believe")
+      - Duplicate or near-duplicate claims (pick the most specific version)
+
+      Aim for 3-8 high-quality claims per article. Fewer precise claims are better than many vague ones.
+
       For each claim, provide:
       - text: the claim as stated in the article
       - canonical_form: the claim rewritten as a clear Subject-Verb-Object sentence with proper nouns,

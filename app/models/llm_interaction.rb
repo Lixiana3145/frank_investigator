@@ -20,6 +20,8 @@ class LlmInteraction < ApplicationRecord
 
   validates :model_id, :prompt_text, presence: true
 
+  after_save :compute_cost!, if: -> { saved_change_to_status? && completed? }
+
   scope :for_model, ->(model_id) { where(model_id:) }
   scope :successful, -> { where(status: "completed") }
   scope :recent, -> { order(created_at: :desc) }
@@ -32,5 +34,11 @@ class LlmInteraction < ApplicationRecord
 
   def total_tokens
     (prompt_tokens || 0) + (completion_tokens || 0)
+  end
+
+  private
+
+  def compute_cost!
+    Llm::CostCalculator.compute_for_interaction!(self)
   end
 end
