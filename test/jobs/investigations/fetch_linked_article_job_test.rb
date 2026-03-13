@@ -46,7 +46,9 @@ class Investigations::FetchLinkedArticleJobTest < ActiveJob::TestCase
           <body>
             <article>
               <p>The budget report confirms a 4 percent tax reduction in 2026.</p>
-              <p><a href="https://records.example.net/appendix">Appendix</a></p>
+              <p>According to the treasury, the policy will reduce the federal tax burden by an estimated twelve billion dollars over the next fiscal year.</p>
+              <p>Economists at the central bank project a positive impact on consumer spending and employment across all sectors.</p>
+              <p><a href="https://records.example.net/appendix/fiscal-data-2026">Appendix</a></p>
             </article>
           </body>
         </html>
@@ -62,7 +64,7 @@ class Investigations::FetchLinkedArticleJobTest < ActiveJob::TestCase
 
     assert_equal "crawled", link.follow_status
     assert_equal "fetched", linked.fetch_status
-    assert linked.sourced_links.exists?(href: "https://records.example.net/appendix")
+    assert linked.sourced_links.exists?(href: "https://records.example.net/appendix/fiscal-data-2026")
     assert linked.article_claims.exists?
     assert investigation.claim_assessments.exists?
   end

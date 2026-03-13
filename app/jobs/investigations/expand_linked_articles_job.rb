@@ -27,9 +27,31 @@ module Investigations
     end
 
     def prioritized_links(source_article, max_depth)
-      source_article.sourced_links.includes(:target_article).where(depth: ..max_depth, follow_status: "pending").to_a
+      candidates = source_article.sourced_links
+        .includes(:target_article)
+        .where(depth: ..max_depth, follow_status: "pending")
+        .to_a
+        .reject { |link| url_rejected?(link.target_article.normalized_url) }
         .sort_by { |link| [ source_priority(link.target_article), -link.target_article.authority_score.to_f, link.depth, link.position ] }
-        .first(10)
+
+      # Enforce host diversity: max 3 per host
+      selected = []
+      host_counts = Hash.new(0)
+      candidates.each do |link|
+        host = link.target_article.host
+        next if host_counts[host] >= 3
+        selected << link
+        host_counts[host] += 1
+        break if selected.size >= 10
+      end
+      selected
+    end
+
+    def url_rejected?(url)
+      Investigations::UrlClassifier.call(url)
+      false
+    rescue Investigations::UrlClassifier::RejectedUrlError
+      true
     end
 
     def source_priority(article)

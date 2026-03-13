@@ -157,6 +157,62 @@ class Investigations::UrlClassifierTest < ActiveSupport::TestCase
     assert_rejected "https://example.com/media/video.mp4", :non_content
   end
 
+  # --- Rejected: listing pages ---
+
+  test "rejects tag page" do
+    assert_rejected "https://g1.globo.com/tag/economia/", :listing_page
+  end
+
+  test "rejects author page" do
+    assert_rejected "https://www.folha.uol.com.br/author/joao-silva/", :listing_page
+  end
+
+  test "rejects category page with deep path" do
+    assert_rejected "https://news.example.com/brasil/category/politica/", :listing_page
+  end
+
+  test "rejects archive page" do
+    assert_rejected "https://example.com/blog/archive/2025/", :listing_page
+  end
+
+  test "rejects paginated listing" do
+    assert_rejected "https://example.com/noticias/page/3/", :listing_page
+  end
+
+  test "rejects autor page in Portuguese" do
+    assert_rejected "https://example.com/autor/maria-silva/artigos", :listing_page
+  end
+
+  test "rejects topics page" do
+    assert_rejected "https://example.com/topics/climate-change/", :listing_page
+  end
+
+  # --- Rejected: non-article hosts ---
+
+  test "rejects falabr.cgu.gov.br" do
+    assert_rejected "https://falabr.cgu.gov.br/publico/Manifestacao/SelecionarTipoManifestacao.aspx", :non_article_host
+  end
+
+  test "rejects sidra subdomain" do
+    assert_rejected "https://sidra.ibge.gov.br/tabela/1621", :non_article_host
+  end
+
+  test "rejects landing page subdomain" do
+    assert_rejected "https://lps.marketing.com/promo", :non_article_host
+  end
+
+  test "rejects static CDN subdomain" do
+    assert_rejected "https://static.example.com/assets/image.jpg", :non_article_host
+  end
+
+  test "rejects acesso.gov.br" do
+    assert_rejected "https://acesso.gov.br/login", :non_article_host
+  end
+
+  test "rejects wa.me link" do
+    assert_rejected "https://wa.me/5511999999999", :non_article_host
+  end
+
   # --- Edge cases ---
 
   test "accepts two segments when one is a long slug" do

@@ -43,8 +43,9 @@ class Investigations::FetchRootArticleJobTest < ActiveJob::TestCase
             <header><a href="https://ignore.example.com">Ignore me</a></header>
             <article>
               <p>City Hall announced taxes will fall by 4 percent in 2026.</p>
-              <p>The article cites the full budget document.</p>
-              <p><a href="https://example.com/budget">Budget document</a></p>
+              <p>The article cites the full budget document published by the treasury department.</p>
+              <p>Officials expect the reduction to benefit over 30 million residents across the metropolitan area and surrounding regions.</p>
+              <p><a href="https://example.com/budget/2026-fiscal-year-report">Budget document</a></p>
             </article>
           </body>
         </html>
@@ -59,7 +60,7 @@ class Investigations::FetchRootArticleJobTest < ActiveJob::TestCase
 
     assert_equal "fetched", investigation.root_article.fetch_status
     assert_equal 1, investigation.root_article.sourced_links.count
-    assert_equal "https://example.com/budget", investigation.root_article.sourced_links.first.href
+    assert_equal "https://example.com/budget/2026-fiscal-year-report", investigation.root_article.sourced_links.first.href
     assert_equal "completed", investigation.pipeline_steps.find_by!(name: "fetch_root_article").status
     assert_enqueued_with(job: Investigations::FetchLinkedArticleJob, args: [ investigation.id, investigation.root_article.sourced_links.first.id ]) do
       Investigations::ExpandLinkedArticlesJob.perform_now(investigation.id, source_article_id: investigation.root_article.id)

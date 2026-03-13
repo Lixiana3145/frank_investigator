@@ -52,8 +52,8 @@ module Investigations
       /[?&]id=\d+/,                      # query param ID: ?id=123
       /[?&](?:noticia|materia|artigo)=/i, # Portuguese article params
       /[?&](?:article|story|post)=/i,     # English article params
-      /\/(?:noticia|materia|artigo)\//i,  # Portuguese article path segments
-      /\/(?:article|story|post|news)\//i # English article path segments
+      /\/(?:noticias?|materias?|artigos?)\//i,  # Portuguese article path segments
+      /\/(?:articles?|stories|story|posts?|news)\//i # English article path segments
     ].freeze
 
     def self.call(url)
@@ -68,11 +68,29 @@ module Investigations
       @query = @uri.query.to_s
     end
 
+    LISTING_PATH_PATTERNS = %r{
+      /(?:tag|tags|autor|author|authors|category|categories|
+         arquivo|archive|archives|page/\d+|label|topic|topics)/
+    }ix
+
+    NON_ARTICLE_HOSTS = %w[
+      falabr.cgu.gov.br acesso.gov.br
+      api.whatsapp.com wa.me
+    ].freeze
+
+    NON_ARTICLE_HOST_PATTERNS = [
+      /\Asidra\./i,
+      /\Alps\./i,
+      /\Astatic\./i
+    ].freeze
+
     def call
       reject_social_media!
       reject_ecommerce!
       reject_search_engine!
       reject_non_content!
+      reject_listing_page!
+      reject_non_article_host!
       reject_index_page!
       true
     end
@@ -102,6 +120,24 @@ module Investigations
       non_content_extensions = /\.(?:zip|rar|tar|gz|7z|exe|dmg|apk|ipa|mp3|mp4|avi|mkv|mov|wav|flac|iso|img|bin)\z/i
       if @path.match?(non_content_extensions)
         raise RejectedUrlError.new(:non_content, I18n.t("investigations.url_rejected.non_content"))
+      end
+    end
+
+    def reject_listing_page!
+      return unless @path.match?(LISTING_PATH_PATTERNS)
+
+      raise RejectedUrlError.new(:listing_page, I18n.t("investigations.url_rejected.listing_page"))
+    end
+
+    def reject_non_article_host!
+      return unless @host
+
+      if NON_ARTICLE_HOSTS.any? { |h| @host == h || @host.end_with?(".#{h}") }
+        raise RejectedUrlError.new(:non_article_host, I18n.t("investigations.url_rejected.non_article_host"))
+      end
+
+      if NON_ARTICLE_HOST_PATTERNS.any? { |p| @host.match?(p) }
+        raise RejectedUrlError.new(:non_article_host, I18n.t("investigations.url_rejected.non_article_host"))
       end
     end
 

@@ -19,7 +19,9 @@ class Articles::PersistFetchedContentTest < ActiveSupport::TestCase
           </head>
           <body>
             <article>
-              <p>Lei 123 reduz imposto e altera regras fiscais.</p>
+              <p>Lei 123 reduz imposto e altera regras fiscais para empresas de todos os portes no território nacional.</p>
+              <p>A medida foi aprovada pelo Congresso Nacional e entrará em vigor a partir do próximo semestre fiscal.</p>
+              <p>Especialistas estimam que a mudança beneficiará mais de dez milhões de contribuintes em todas as regiões do país.</p>
               <p><a href="https://www12.senado.leg.br/noticias/exemplo">Fonte legislativa</a></p>
             </article>
           </body>

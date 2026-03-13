@@ -18,6 +18,19 @@ module Articles
         Parsing::MainContentExtractor.call(html: @html, url: @article.normalized_url)
       end
 
+      unless Parsing::DocumentExtractor.document_url?(@article.normalized_url)
+        gate = Parsing::ContentQualityGate.call(
+          body_text: extracted.body_text,
+          title: extracted.title || @fetched_title,
+          url: @article.normalized_url
+        )
+
+        unless gate.pass
+          @article.update!(fetch_status: :rejected, rejection_reason: gate.reason.to_s)
+          return extracted
+        end
+      end
+
       source_metadata = Sources::AuthorityClassifier.call(url: @article.normalized_url, host: @article.host, title: extracted.title || @fetched_title)
       connector_result = Sources::ConnectorRouter.call(
         url: @article.normalized_url,
@@ -90,9 +103,17 @@ module Articles
 
     def upsert_links!(links)
       links.each do |link|
+        next unless classifiable_link?(link[:href])
         target_article = find_or_create_target_article!(link)
         upsert_article_link!(link, target_article)
       end
+    end
+
+    def classifiable_link?(url)
+      Investigations::UrlClassifier.call(url)
+      true
+    rescue Investigations::UrlClassifier::RejectedUrlError
+      false
     end
 
     def find_or_create_target_article!(link)

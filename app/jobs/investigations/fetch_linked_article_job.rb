@@ -12,6 +12,11 @@ module Investigations
 
         article = article_link.target_article
 
+        unless Fetchers::HostCircuitBreaker.allow?(article.host)
+          article_link.update!(follow_status: :skipped)
+          next { skipped: true, reason: "circuit_breaker" }
+        end
+
         if article.fresh?
           Rails.logger.info("[FetchLinkedArticle] Article #{article.normalized_url} is fresh, skipping re-fetch")
         else
@@ -22,6 +27,7 @@ module Investigations
             fetched_title: snapshot.title,
             current_depth: article_link.depth
           )
+          Fetchers::HostCircuitBreaker.record_success!(article.host)
         end
 
         Articles::SyncClaims.call(investigation:, article:)
@@ -33,6 +39,7 @@ module Investigations
         { article_id: article.id, discovered_links_count: article.sourced_links.count, cached: article.fresh? }
       end
     rescue Fetchers::ChromiumFetcher::FetchError => error
+      Fetchers::HostCircuitBreaker.record_failure!(article_link&.target_article&.host)
       article_link&.update!(follow_status: :failed)
       article_link&.target_article&.update!(fetch_status: :failed)
       raise error
