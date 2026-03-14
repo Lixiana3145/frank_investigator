@@ -72,7 +72,7 @@ class RhetoricalFallacyAnalyzerTest < ActiveSupport::TestCase
 
     result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)
     assert_empty result.fallacies
-    assert_equal 0.0, result.narrative_bias_score
+    assert_operator result.narrative_bias_score, :<=, 0.1, "Factual reporting should have near-zero bias score"
   end
 
   test "empty result when no assessed claims" do

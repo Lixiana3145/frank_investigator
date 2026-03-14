@@ -132,8 +132,9 @@ module Parsing
 
     SHARE_TEXT_PATTERN = /\A\s*(?:copiar\s+link|copy\s+link|compartilhar|share\s+this)\s*\z/i
 
-    # Short lines that look like tags, labels, or single proper nouns (no sentence structure)
-    TAG_LINE_PATTERN = /\A(?:[A-ZÁÉÍÓÚÃÕÇ0-9][a-záéíóúãõç0-9]*(?:\s+(?:de|do|da|dos|das|e|em|para)\s+[A-Za-záéíóúãõç0-9]+)?)\z/
+    # Short lines that look like tags, labels, or author names (no sentence structure)
+    # Matches: single words, proper noun pairs, tag-like phrases without periods/verbs
+    TAG_LINE_PATTERN = /\A[\p{L}\p{N}]+(?:\s+[\p{L}\p{N}]+){0,4}\z/
 
     # Section headers like "Tópicos relacionados", "Leia também", etc.
     SECTION_HEADER_PATTERN = /\A(?:Tópicos?\s+relacionados?|Tags?|Leia\s+(?:também|mais)|Veja\s+(?:também|mais)|Related\s+(?:topics?|articles?)|Continua\s+depois\s+da\s+publicidade)\z/i
@@ -150,7 +151,7 @@ module Parsing
 
     def strip_trailing_tags(text)
       lines = text.split("\n\n")
-      # Remove trailing short lines that look like tag labels (no sentence structure)
+      # Remove trailing short lines that look like tag labels or bylines (no sentence structure)
       while lines.size > 1 && lines.last.length < 60 && lines.last.match?(TAG_LINE_PATTERN)
         lines.pop
       end
@@ -162,7 +163,7 @@ module Parsing
       # Remove leading lines that look like bylines: "Name Name" followed by "date time"
       while lines.size > 1 && lines.first.length < 80
         first = lines.first
-        break unless first.match?(/\A[A-ZÁÉÍÓÚÃÕÇ][a-záéíóúãõç]+(?:\s+[A-Za-záéíóúãõç]+){1,3}\z/) || # "Élida Oliveira"
+        break unless first.match?(/\A\p{Lu}\p{Ll}+(?:\s+\p{L}+){1,3}\z/) || # "Élida Oliveira"
                      first.match?(/\A\d{1,2}\/\d{1,2}\/\d{2,4}\s/) ||                                  # "02/01/2026 05h00..."
                      first.match?(/\A(?:Atualizado|Updated)\b/i)                                          # "Atualizado 3 meses..."
         lines.shift
