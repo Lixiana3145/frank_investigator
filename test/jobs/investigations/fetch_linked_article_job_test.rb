@@ -12,7 +12,7 @@ class Investigations::FetchLinkedArticleJobTest < ActiveJob::TestCase
     Fetchers::FakeFetcher.clear
   end
 
-  test "skips Chromium fetch for fresh linked article but still syncs claims" do
+  test "skips Chromium fetch for fresh linked article" do
     root = Article.create!(url: "https://example.com/root", normalized_url: "https://example.com/root", host: "example.com", fetch_status: :fetched)
     linked = Article.create!(
       url: "https://cached.example.com/report", normalized_url: "https://cached.example.com/report",
@@ -29,10 +29,9 @@ class Investigations::FetchLinkedArticleJobTest < ActiveJob::TestCase
 
     link.reload
     assert_equal "crawled", link.follow_status
-    assert investigation.claim_assessments.exists?
   end
 
-  test "fetches a linked article, catalogs its claims, and expands one level deeper" do
+  test "fetches a linked article and marks it crawled without extracting claims" do
     root = Article.create!(url: "https://example.com/news", normalized_url: "https://example.com/news", host: "example.com", fetch_status: :fetched)
     linked = Article.create!(url: "https://source.example.com/report", normalized_url: "https://source.example.com/report", host: "source.example.com")
     investigation = Investigation.create!(submitted_url: root.url, normalized_url: root.normalized_url, root_article: root)
@@ -65,7 +64,7 @@ class Investigations::FetchLinkedArticleJobTest < ActiveJob::TestCase
     assert_equal "crawled", link.follow_status
     assert_equal "fetched", linked.fetch_status
     assert linked.sourced_links.exists?(href: "https://records.example.net/appendix/fiscal-data-2026")
-    assert linked.article_claims.exists?
-    assert investigation.claim_assessments.exists?
+    # Linked articles should NOT have claims extracted — they serve as evidence only
+    assert_not linked.article_claims.exists?
   end
 end

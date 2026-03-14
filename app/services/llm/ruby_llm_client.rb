@@ -164,14 +164,14 @@ module Llm
       elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
 
       raise "Empty LLM response from #{model}" if response.content.blank?
-      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
+      content = response.content.is_a?(Hash) ? response.content : JSON.parse(unwrap_json(response.content))
 
-      complete_interaction(interaction, response:, payload:, elapsed_ms:) if interaction
+      complete_interaction(interaction, response:, payload: content, elapsed_ms:) if interaction
 
       Result.new(
-        verdict: payload.fetch("verdict"),
-        confidence_score: payload.fetch("confidence_score").to_f.clamp(0, 0.97),
-        reason_summary: sanitize_text(payload.fetch("reason_summary"))
+        verdict: content.fetch("verdict"),
+        confidence_score: content.fetch("confidence_score").to_f.clamp(0, 0.97),
+        reason_summary: sanitize_text(content.fetch("reason_summary"))
       )
     rescue StandardError => e
       fail_interaction(interaction, e) if interaction
@@ -252,6 +252,15 @@ module Llm
       text.to_s.delete("\x00")
     end
 
+    # Strip markdown code block wrappers that some models (e.g. Claude 3.7 Sonnet) add
+    def unwrap_json(content)
+      text = content.to_s.strip
+      if text.start_with?("```")
+        text = text.sub(/\A```(?:json)?\s*\n?/, "").sub(/\n?\s*```\z/, "")
+      end
+      text
+    end
+
     def ask_model_batch(model:, batch:, batch_prompt:, batch_fingerprint:, investigation:)
       # Check cache: if ALL items in this batch are cached for this model, skip the call
       if investigation
@@ -270,7 +279,7 @@ module Llm
       elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
 
       raise "Empty LLM response from #{model}" if response.content.blank?
-      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
+      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(unwrap_json(response.content))
       assessments_array = payload.fetch("assessments")
 
       complete_interaction(interaction, response:, payload:, elapsed_ms:) if interaction
@@ -357,8 +366,7 @@ module Llm
                 },
                 required: %w[verdict confidence_score reason_summary]
               },
-              minItems: count,
-              maxItems: count
+              description: "Array of exactly #{count} assessment objects, one per claim in order"
             }
           },
           required: %w[assessments]

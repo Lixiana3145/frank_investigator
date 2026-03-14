@@ -30,8 +30,6 @@ module Investigations
           Fetchers::HostCircuitBreaker.record_success!(article.host)
         end
 
-        Articles::SyncClaims.call(investigation:, article:)
-
         article_link.update!(follow_status: :crawled)
         Investigations::ExpandLinkedArticlesJob.perform_later(investigation.id, source_article_id: article.id) if article_link.depth < max_depth
         Investigations::AssessClaimsJob.perform_later(investigation.id)

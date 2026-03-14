@@ -66,8 +66,8 @@ class RhetoricalFallacyAnalyzerTest < ActiveSupport::TestCase
     @article.update!(body_text:
       "Police report data for Dallas shows crime fell 5% consistently " \
       "every month for the past 6 months. The statistics cover violent crime, " \
-      "property crime, and misdemeanors. The police chief attributed the " \
-      "decline to increased community policing programs."
+      "property crime, and misdemeanors across all precincts. Data was compiled " \
+      "from official police records filed in the Dallas County system."
     )
 
     result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)

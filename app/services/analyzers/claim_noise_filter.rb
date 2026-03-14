@@ -12,6 +12,8 @@ module Analyzers
       /\bentrar\b.*\bcadast/i,
       /\bcompartilh(?:ar|e)\b.*\b(?:facebook|twitter|whatsapp)\b/i,
       /\bshare\s+(?:on|this)\b/i,
+      /\bcopiar\s+link\b/i,                            # "copiar link" (copy link)
+      /\bcopy\s+link\b/i,
       /\bbaixe?\s+(?:o\s+)?app\b/i,
       /\bdownload\s+(?:the\s+)?app\b/i,
       /\bleia\s+(?:tamb[eé]m|mais)\b/i,           # "Leia também" / "Leia mais"
@@ -23,7 +25,14 @@ module Analyzers
       /\bassine\s/i,                                 # "Assine" (subscribe)
       /\bassinante\b/i,                              # "Assinante" (subscriber)
       /\bconteúdo\s+exclusivo\b/i,                   # "Conteúdo exclusivo" (exclusive content)
-      /\bacesse\s+(?:já|agora)\b/i                   # "Acesse já" (access now)
+      /\bacesse\s+(?:já|agora)\b/i,                   # "Acesse já" (access now)
+      /\bsubtitles?\s+settings?\b/i,                   # Video player UI
+      /\bchapters?\s+descriptions?\b/i,                 # Video player UI
+      /\bfullscreen\b/i,                                # Video player UI
+      /\bplayback\s+(?:speed|rate)\b/i,                 # Video player UI
+      /\blei\s+geral\s+de\s+prote[çc][ãa]o\s+de\s+dados\b/i, # LGPD privacy notice
+      /\bprote[çc][ãa]o\s+de\s+dados\s+pessoais\b/i,   # Privacy notice
+      /\bgeneral\s+data\s+protection\b/i                # GDPR privacy notice
     ].freeze
 
     METADATA_PATTERNS = [
@@ -36,7 +45,11 @@ module Analyzers
       /\A(?:publicado|published)\s+/i,
       /\A(?:foto|image|crédito|credit|ilustração):/i,
       /\ARedação\b/i,                                 # "Redação" (editorial team)
-      /\A[A-Z][a-záéíóúãõç]+\s+[A-Z][a-záéíóúãõç]+\s*[-–—]\s*\d/  # "Nome Sobrenome - 10/03/2026"
+      /\A[A-Z][a-záéíóúãõç]+\s+[A-Z][a-záéíóúãõç]+\s*[-–—]\s*\d/,  # "Nome Sobrenome - 10/03/2026"
+      # Bylines without "Por" prefix: "Élida Oliveira 12/11/2025 05h00"
+      /\A[A-Z][a-záéíóúãõç]+\s+[A-Z][a-záéíóúãõç]+\s+\d{1,2}\/\d{1,2}\/\d{2,4}/,
+      # Bylines with time: "Nome Sobrenome 05h00" or "Nome 14:30"
+      /\A[A-Z][a-záéíóúãõç]+(?:\s+[A-Z][a-záéíóúãõç]+){1,3}\s+\d{1,2}[h:]\d{2}/
     ].freeze
 
     PORTAL_BOILERPLATE = [
@@ -47,7 +60,10 @@ module Analyzers
       "Todos os direitos reservados",
       "All rights reserved",
       "Reprodução proibida",
-      "Política de Privacidade"
+      "Política de Privacidade",
+      "Publicidade",
+      "Propaganda",
+      "Advertisement"
     ].freeze
 
     PRICING_PATTERNS = [

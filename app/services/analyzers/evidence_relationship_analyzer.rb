@@ -152,7 +152,7 @@ module Analyzers
 
       elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
       raise "Empty LLM response" if response.content.blank?
-      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
+      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(unwrap_json(response.content))
       complete_interaction(interaction, response, payload, elapsed_ms)
 
       parse_contradiction_response(payload)
@@ -245,12 +245,18 @@ module Analyzers
       TextAnalysis.simple_tokens(text).reject { |token| TextAnalysis::STOP_WORDS.include?(token) }.uniq
     end
 
+    def unwrap_json(content)
+      text = content.to_s.strip
+      text = text.sub(/\A```(?:json)?\s*\n?/, "").sub(/\n?\s*```\z/, "") if text.start_with?("```")
+      text
+    end
+
     def llm_available?
       defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present?
     end
 
     def contradiction_model
-      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-3.7-sonnet"
+      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-sonnet-4-6"
     end
 
     def record_interaction(prompt, fingerprint)
@@ -365,8 +371,7 @@ module Analyzers
                 },
                 required: %w[stance relevance_score reasoning]
               },
-              minItems: count,
-              maxItems: count
+              description: "Array of exactly #{count} analysis objects, one per pair in order"
             }
           },
           required: %w[analyses]
@@ -398,7 +403,7 @@ module Analyzers
       end
 
       raise "Empty LLM response from #{model}" if response.content.blank?
-      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
+      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(unwrap_json_class(response.content))
 
       if interaction
         interaction.update!(
@@ -418,12 +423,18 @@ module Analyzers
       Array.new(batch_data.size) # Return nils so callers fall back to heuristic
     end
 
+    def self.unwrap_json_class(content)
+      text = content.to_s.strip
+      text = text.sub(/\A```(?:json)?\s*\n?/, "").sub(/\n?\s*```\z/, "") if text.start_with?("```")
+      text
+    end
+
     def self.llm_available_class?
       defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present?
     end
 
     def self.contradiction_model_class
-      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-3.7-sonnet"
+      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-sonnet-4-6"
     end
 
     def self.parse_contradiction_response_class(payload)

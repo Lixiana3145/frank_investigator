@@ -81,4 +81,24 @@ class Analyzers::ClaimNoiseFilterTest < ActiveSupport::TestCase
     text = "Economia em Alta | Política Nacional | Esportes Hoje | Mundo em Crise"
     assert Analyzers::ClaimNoiseFilter.noise?(text)
   end
+
+  # --- Bylines without prefix ---
+
+  test "rejects byline with date but no Por prefix" do
+    assert Analyzers::ClaimNoiseFilter.noise?("Élida Oliveira 12/11/2025 05h00 Atualizado há 3 horas")
+  end
+
+  test "rejects byline with time but no Por prefix" do
+    assert Analyzers::ClaimNoiseFilter.noise?("Carlos Eduardo Silva 14:30 em São Paulo")
+  end
+
+  # --- Ad markers ---
+
+  test "rejects Publicidade text" do
+    assert Analyzers::ClaimNoiseFilter.noise?("Publicidade")
+  end
+
+  test "rejects Advertisement text" do
+    assert Analyzers::ClaimNoiseFilter.noise?("Advertisement")
+  end
 end

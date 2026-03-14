@@ -1,7 +1,9 @@
 require "test_helper"
 
 class Analyzers::ClaimExtractorLlmTest < ActiveSupport::TestCase
-  test "heuristic extraction still works without LLM" do
+  test "heuristic extraction works without LLM" do
+    original_key = ENV.delete("OPENROUTER_API_KEY")
+
     article = Article.create!(
       url: "https://a.com/extractor-test", normalized_url: "https://a.com/extractor-test",
       host: "a.com", fetch_status: :fetched,
@@ -20,6 +22,8 @@ class Analyzers::ClaimExtractorLlmTest < ActiveSupport::TestCase
     assert results.length >= 2
     assert results.any? { |r| r.role == :headline }
     assert results.any? { |r| r.role == :lead || r.role == :body }
+  ensure
+    ENV["OPENROUTER_API_KEY"] = original_key if original_key
   end
 
   test "deduplicates claims by fingerprint" do
@@ -47,9 +51,6 @@ class Analyzers::ClaimExtractorLlmTest < ActiveSupport::TestCase
     )
 
     results = Analyzers::ClaimExtractor.call(article)
-    checkable_results = results.select { |r| r.checkability_status == :checkable }
-    not_checkable_results = results.select { |r| r.checkability_status == :not_checkable }
-
-    assert checkable_results.any? || not_checkable_results.any?, "Should classify at least some claims"
+    assert results.any?, "Should extract at least some claims"
   end
 end

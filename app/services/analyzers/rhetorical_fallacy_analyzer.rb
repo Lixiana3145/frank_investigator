@@ -159,7 +159,8 @@ module Analyzers
       end
       elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
 
-      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
+      raise "Empty LLM response" if response.content.blank?
+      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(unwrap_json(response.content))
       complete_interaction(interaction, response, payload, elapsed_ms)
 
       parse_response(payload)
@@ -206,9 +207,9 @@ module Analyzers
                   severity: { type: "string", enum: %w[low medium high] },
                   excerpt: { type: "string" },
                   explanation: { type: "string" },
-                  undermined_claim_index: { type: [ "integer", "null" ] }
+                  undermined_claim_index: { type: "integer", description: "Index of the undermined claim, or -1 if none" }
                 },
-                required: %w[type severity excerpt explanation]
+                required: %w[type severity excerpt explanation undermined_claim_index]
               }
             },
             narrative_bias_score: { type: "number" },
@@ -221,7 +222,7 @@ module Analyzers
 
     def parse_response(payload)
       fallacies = Array(payload["fallacies"]).map do |f|
-        undermined = if f["undermined_claim_index"].is_a?(Integer) && assessed_claims[f["undermined_claim_index"]]
+        undermined = if f["undermined_claim_index"].is_a?(Integer) && f["undermined_claim_index"] >= 0 && assessed_claims[f["undermined_claim_index"]]
           assessed_claims[f["undermined_claim_index"]].claim.canonical_text
         end
 
@@ -345,7 +346,9 @@ module Analyzers
     }.freeze
 
     def system_prompt
-      SYSTEM_PROMPT_TEMPLATE % { locale_name: LOCALE_NAMES.fetch(I18n.locale, "English") }
+      # Use gsub instead of % formatting because the template contains literal
+      # percent signs in examples (e.g. "5% this quarter") that break Ruby's % operator
+      SYSTEM_PROMPT_TEMPLATE.gsub("%{locale_name}", LOCALE_NAMES.fetch(I18n.locale, "English"))
     end
 
     def llm_available?
@@ -353,11 +356,17 @@ module Analyzers
     end
 
     def primary_model
-      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-3.7-sonnet"
+      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-sonnet-4-6"
     end
 
     def llm_timeout
       ENV.fetch("LLM_TIMEOUT_SECONDS", 120).to_i
+    end
+
+    def unwrap_json(content)
+      text = content.to_s.strip
+      text = text.sub(/\A```(?:json)?\s*\n?/, "").sub(/\n?\s*```\z/, "") if text.start_with?("```")
+      text
     end
   end
 end

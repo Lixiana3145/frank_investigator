@@ -14,9 +14,15 @@ module Analyzers
     end
 
     def call
-      candidates = heuristic_candidates
       llm_claims = extract_with_llm
-      candidates = merge_llm_claims(candidates, llm_claims) if llm_claims.any?
+      # When LLM extraction succeeds, use only LLM claims — they are higher quality
+      # and the heuristic headline/body claims are redundant duplicates.
+      # Fall back to heuristic only when LLM is unavailable or returns nothing.
+      candidates = if llm_claims.any?
+        llm_claims
+      else
+        heuristic_candidates
+      end
       candidates.uniq { |result| ClaimFingerprint.call(result.canonical_text) }
     end
 
@@ -60,7 +66,7 @@ module Analyzers
 
       elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
       raise "Empty LLM response" if response.content.blank?
-      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content.to_s)
+      payload = response.content.is_a?(Hash) ? response.content : JSON.parse(unwrap_json(response.content))
       complete_interaction(interaction, response, payload, elapsed_ms)
 
       parse_llm_claims(payload)
@@ -207,7 +213,7 @@ module Analyzers
     end
 
     def extraction_model
-      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-3.7-sonnet"
+      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-sonnet-4-6"
     end
 
     def record_interaction(prompt, fingerprint)
@@ -243,6 +249,14 @@ module Analyzers
       interaction.update!(status: :failed, error_class: error.class.name, error_message: error.message.truncate(500))
     rescue StandardError
       nil
+    end
+
+    def unwrap_json(content)
+      text = content.to_s.strip
+      if text.start_with?("```")
+        text = text.sub(/\A```(?:json)?\s*\n?/, "").sub(/\n?\s*```\z/, "")
+      end
+      text
     end
   end
 end

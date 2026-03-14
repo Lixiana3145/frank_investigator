@@ -40,7 +40,15 @@ module Parsing
       ".tags-list", ".tag-list", ".editoria-list",
       ".author-info", ".autor-info", ".byline-block",
       ".breadcrumb", ".breadcrumbs",
-      ".print-only", ".no-print"
+      ".print-only", ".no-print",
+
+      # Video players and embeds
+      ".video-player", ".jwplayer", "[class*='video-']", ".vjs-control-bar",
+      ".media-player", "[data-player]",
+
+      # Privacy/cookie notices
+      ".lgpd", ".cookie-banner", ".cookie-notice", "[class*='cookie']",
+      "[class*='consent']", "[class*='lgpd']", "[class*='gdpr']"
     ].join(",").freeze
 
     CONTENT_SELECTORS = [
@@ -120,10 +128,46 @@ module Parsing
       [ node, selector ]
     end
 
+    AD_MARKER_PATTERN = /\A\s*(?:Publicidade|Propaganda|Anúncio|Advertisement|Sponsored|Ad)\s*\z/i
+
+    SHARE_TEXT_PATTERN = /\A\s*(?:copiar\s+link|copy\s+link|compartilhar|share\s+this)\s*\z/i
+
+    # Short lines that look like tags, labels, or single proper nouns (no sentence structure)
+    TAG_LINE_PATTERN = /\A(?:[A-ZÁÉÍÓÚÃÕÇ0-9][a-záéíóúãõç0-9]*(?:\s+(?:de|do|da|dos|das|e|em|para)\s+[A-Za-záéíóúãõç0-9]+)?)\z/
+
+    # Section headers like "Tópicos relacionados", "Leia também", etc.
+    SECTION_HEADER_PATTERN = /\A(?:Tópicos?\s+relacionados?|Tags?|Leia\s+(?:também|mais)|Veja\s+(?:também|mais)|Related\s+(?:topics?|articles?)|Continua\s+depois\s+da\s+publicidade)\z/i
+
     def extract_body_text(node)
-      paragraphs = node.css("p, h2, h3, li").map { |element| element.text.squish }.reject(&:blank?)
+      paragraphs = node.css("p, h2, h3, li")
+        .map { |element| element.text.squish }
+        .reject { |t| t.blank? || t.match?(AD_MARKER_PATTERN) || t.match?(SHARE_TEXT_PATTERN) || t.match?(SECTION_HEADER_PATTERN) }
       text = paragraphs.join("\n\n")
+      text = strip_trailing_tags(text) if text.present?
+      text = strip_leading_byline(text) if text.present?
       text.presence || node.text.squish
+    end
+
+    def strip_trailing_tags(text)
+      lines = text.split("\n\n")
+      # Remove trailing short lines that look like tag labels (no sentence structure)
+      while lines.size > 1 && lines.last.length < 60 && lines.last.match?(TAG_LINE_PATTERN)
+        lines.pop
+      end
+      lines.join("\n\n")
+    end
+
+    def strip_leading_byline(text)
+      lines = text.split("\n\n")
+      # Remove leading lines that look like bylines: "Name Name" followed by "date time"
+      while lines.size > 1 && lines.first.length < 80
+        first = lines.first
+        break unless first.match?(/\A[A-ZÁÉÍÓÚÃÕÇ][a-záéíóúãõç]+(?:\s+[A-Za-záéíóúãõç]+){1,3}\z/) || # "Élida Oliveira"
+                     first.match?(/\A\d{1,2}\/\d{1,2}\/\d{2,4}\s/) ||                                  # "02/01/2026 05h00..."
+                     first.match?(/\A(?:Atualizado|Updated)\b/i)                                          # "Atualizado 3 meses..."
+        lines.shift
+      end
+      lines.join("\n\n")
     end
 
     def strip_noise(node)

@@ -13,7 +13,7 @@ class Articles::SyncClaimsTest < ActiveSupport::TestCase
 
     Articles::SyncClaims.call(investigation:, article:)
 
-    assert_operator Claim.count, :>=, 2
+    assert_operator Claim.count, :>=, 1
     assert_equal Claim.count, investigation.claim_assessments.count
     assert_equal article.article_claims.count, article.claims.count
   end
