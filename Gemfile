@@ -71,3 +71,5 @@ group :test do
 end
 
 gem "tailwindcss-rails", "~> 4.4"
+
+gem "ferrum", "~> 0.17.1"
