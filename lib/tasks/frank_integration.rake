@@ -254,112 +254,22 @@ namespace :frank do
     investigation.reload
     puts "  Status: #{investigation.status} (#{pipeline_elapsed}s)"
 
-    # Claims report
+    # Full quality report
     puts ""
-    puts "[3/4] Analysis Results"
-    puts "=" * 80
-
-    root = investigation.root_article
-    if root
-      puts "  Article: #{root.title}"
-      puts "  Host: #{root.host} | Kind: #{root.source_kind} | Authority: #{root.authority_tier} (#{root.authority_score.to_f.round(2)})"
-      puts "  Body length: #{root.body_text.to_s.length} chars"
-      puts "  Linked sources: #{root.sourced_links.count} (#{root.sourced_links.where(follow_status: :crawled).count} crawled)"
-      puts "  Rejection reason: #{root.rejection_reason}" if root.rejected?
-    end
-
-    puts ""
-    assessments = investigation.claim_assessments.includes(:claim)
-    checkable = assessments.where(checkability_status: "checkable").order(confidence_score: :desc)
-    uncheckable = assessments.where(checkability_status: %w[not_checkable ambiguous])
-
-    puts "  Claims: #{assessments.count} total | #{checkable.count} checkable | #{uncheckable.count} uncheckable"
-    puts ""
-
-    if checkable.any?
-      puts "  --- Checkable Claims ---"
-      checkable.each_with_index do |ca, idx|
-        puts "  #{idx + 1}. [#{ca.verdict}] (conf: #{ca.confidence_score.to_f.round(2)}) #{ca.claim.canonical_text.truncate(100)}"
-        puts "     Kind: #{ca.claim.claim_kind} | Time: #{ca.claim.time_scope || 'none'}"
-        puts "     Reason: #{ca.reason_summary.to_s.truncate(120)}" if ca.reason_summary.present?
-      end
-    end
-
-    if uncheckable.any?
-      puts ""
-      puts "  --- Uncheckable Claims ---"
-      uncheckable.each_with_index do |ca, idx|
-        puts "  #{idx + 1}. [#{ca.checkability_status}] #{ca.claim.canonical_text.truncate(100)}"
-      end
-    end
-
-    # Rejected articles
-    rejected_articles = Article.where(fetch_status: :rejected)
-    if rejected_articles.any?
-      puts ""
-      puts "  --- Rejected Articles ---"
-      rejected_articles.each do |a|
-        puts "  #{a.normalized_url.truncate(80)} — #{a.rejection_reason}"
-      end
-    end
-
-    # Billing report
-    puts ""
-    puts "[4/4] LLM Billing Report"
-    puts "=" * 80
-
-    interactions = LlmInteraction.where(investigation:)
-    completed = interactions.where(status: :completed)
-    failed = interactions.where(status: :failed)
-
-    total_cost = completed.sum(:cost_usd).to_f
-    total_prompt_tokens = completed.sum(:prompt_tokens).to_i
-    total_completion_tokens = completed.sum(:completion_tokens).to_i
-    total_latency = completed.sum(:latency_ms).to_i
-
-    puts "  Total LLM calls: #{interactions.count} (#{completed.count} completed, #{failed.count} failed)"
-    puts "  Total tokens: #{total_prompt_tokens + total_completion_tokens} (#{total_prompt_tokens} input + #{total_completion_tokens} output)"
-    puts "  Total cost: $#{'%.4f' % total_cost}"
-    puts "  Total LLM latency: #{(total_latency / 1000.0).round(1)}s"
-    puts ""
-
-    # Cost breakdown by interaction type
-    puts "  --- Cost by Interaction Type ---"
-    completed.group(:interaction_type).pluck(
-      :interaction_type,
-      Arel.sql("COUNT(*)"),
-      Arel.sql("SUM(prompt_tokens)"),
-      Arel.sql("SUM(completion_tokens)"),
-      Arel.sql("SUM(cost_usd)")
-    ).sort_by { |_, _, _, _, cost| -cost.to_f }.each do |type, count, pt, ct, cost|
-      puts "  %-25s %3d calls | %6d in + %5d out tokens | $%s" % [ type, count, pt.to_i, ct.to_i, "%.4f" % cost.to_f ]
-    end
-
-    # Cost breakdown by model
-    puts ""
-    puts "  --- Cost by Model ---"
-    completed.group(:model_id).pluck(
-      :model_id,
-      Arel.sql("COUNT(*)"),
-      Arel.sql("SUM(prompt_tokens)"),
-      Arel.sql("SUM(completion_tokens)"),
-      Arel.sql("SUM(cost_usd)")
-    ).sort_by { |_, _, _, _, cost| -cost.to_f }.each do |model, count, pt, ct, cost|
-      puts "  %-35s %3d calls | %6d in + %5d out | $%s" % [ model, count, pt.to_i, ct.to_i, "%.4f" % cost.to_f ]
-    end
-
-    # Failed calls detail
-    if failed.any?
-      puts ""
-      puts "  --- Failed LLM Calls ---"
-      failed.each do |f|
-        puts "  #{f.model_id} (#{f.interaction_type}): #{f.error_class} — #{f.error_message.to_s.truncate(100)}"
-      end
-    end
+    puts "[3/4] Quality Report"
+    IntegrationReport::Printer.new(investigation).print_all
 
     # Dump JSON report
     puts ""
+    puts "[4/4] JSON Export"
     FileUtils.mkdir_p(output_dir)
+
+    root = investigation.root_article
+    assessments = investigation.claim_assessments.includes(:claim)
+    checkable = assessments.where(checkability_status: "checkable").order(confidence_score: :desc)
+    uncheckable = assessments.where(checkability_status: %w[not_checkable ambiguous])
+    interactions = LlmInteraction.where(investigation:)
+    completed = interactions.where(status: :completed)
 
     report = {
       url: investigation.normalized_url,
@@ -381,13 +291,13 @@ namespace :frank do
         verdicts: checkable.group(:verdict).count
       },
       billing: {
-        total_cost_usd: total_cost.round(6),
-        total_prompt_tokens: total_prompt_tokens,
-        total_completion_tokens: total_completion_tokens,
+        total_cost_usd: completed.sum(:cost_usd).to_f.round(6),
+        total_prompt_tokens: completed.sum(:prompt_tokens).to_i,
+        total_completion_tokens: completed.sum(:completion_tokens).to_i,
         total_llm_calls: interactions.count,
         completed_calls: completed.count,
-        failed_calls: failed.count,
-        total_latency_ms: total_latency,
+        failed_calls: interactions.where(status: :failed).count,
+        total_latency_ms: completed.sum(:latency_ms).to_i,
         by_type: completed.group(:interaction_type).pluck(
           :interaction_type, Arel.sql("COUNT(*)"), Arel.sql("SUM(cost_usd)")
         ).map { |t, c, cost| { type: t, calls: c, cost_usd: cost.to_f.round(6) } },
@@ -404,6 +314,7 @@ namespace :frank do
     File.write(filepath, JSON.pretty_generate(report))
     puts "JSON report: #{filepath.relative_path_from(Rails.root)}"
     puts ""
+    total_cost = completed.sum(:cost_usd).to_f
     puts "Pipeline time: #{pipeline_elapsed}s | LLM cost: $#{'%.4f' % total_cost} | Claims: #{checkable.count} checkable / #{assessments.count} total"
   end
 end
