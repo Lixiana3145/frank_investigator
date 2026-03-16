@@ -39,11 +39,9 @@ class Fetchers::WebSearcherTest < ActiveSupport::TestCase
     </rss>
   XML
 
-  test "parses DuckDuckGo HTML results and extracts URLs from uddg param" do
+  test "extracts URLs from uddg param in DuckDuckGo redirect links" do
     searcher = Fetchers::WebSearcher.new(query: "test", max_results: 8)
-    results = searcher.send(:search_duckduckgo_html)
 
-    # This test would need network; instead test the URL extraction directly
     url = searcher.send(:extract_ddg_url, "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.reuters.com%2Fbusiness%2Fenergy%2Fpetrobras-diesel-2026-03-13&rut=abc")
 
     assert_match(/reuters\.com/, url)

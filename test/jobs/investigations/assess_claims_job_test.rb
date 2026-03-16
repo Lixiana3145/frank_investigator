@@ -3,13 +3,17 @@ require "test_helper"
 class Investigations::AssessClaimsJobTest < ActiveJob::TestCase
   setup do
     @previous_llm = Rails.application.config.x.frank_investigator.llm_client_class
+    @previous_fetcher = Rails.application.config.x.frank_investigator.fetcher_class
     Rails.application.config.x.frank_investigator.llm_client_class = "Llm::FakeClient"
+    Rails.application.config.x.frank_investigator.fetcher_class = "Fetchers::FakeFetcher"
     Llm::FakeClient.next_result = nil
   end
 
   teardown do
     Rails.application.config.x.frank_investigator.llm_client_class = @previous_llm
+    Rails.application.config.x.frank_investigator.fetcher_class = @previous_fetcher
     Llm::FakeClient.next_result = nil
+    Fetchers::FakeFetcher.clear
   end
 
   test "assesses claims and creates evidence items" do
