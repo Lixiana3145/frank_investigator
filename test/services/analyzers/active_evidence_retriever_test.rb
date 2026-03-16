@@ -15,38 +15,22 @@ class Analyzers::ActiveEvidenceRetrieverTest < ActiveSupport::TestCase
       checkability_status: :checkable
     )
     ArticleClaim.create!(article: @root, claim: @claim, role: :body, surface_text: @claim.canonical_text)
-    # Use fake fetcher
     @previous_fetcher = Rails.application.config.x.frank_investigator.fetcher_class
     Rails.application.config.x.frank_investigator.fetcher_class = "Fetchers::FakeFetcher"
+    # Ensure LLM is unavailable so LlmSearchQueryGenerator falls back
+    @original_api_key = ENV["OPENROUTER_API_KEY"]
+    ENV.delete("OPENROUTER_API_KEY")
   end
 
   teardown do
     Rails.application.config.x.frank_investigator.fetcher_class = @previous_fetcher
     Fetchers::FakeFetcher.clear
+    ENV["OPENROUTER_API_KEY"] = @original_api_key if @original_api_key
   end
 
-  test "generates search URLs for authority types" do
-    Fetchers::FakeFetcher.register(
-      /congress\.gov/,
-      "<html><head><title>Search Results</title></head><body><p>H.R.1234 Infrastructure Act passed by Congress</p></body></html>",
-      "Congress.gov Search"
-    )
-
+  test "returns an array from call" do
     results = Analyzers::ActiveEvidenceRetriever.call(investigation: @investigation, claim: @claim)
-
     assert results.is_a?(Array)
-  end
-
-  test "skips when evidence already exists from suggested hosts" do
-    Article.create!(
-      url: "https://congress.gov/existing", normalized_url: "https://congress.gov/existing",
-      host: "congress.gov", fetch_status: :fetched, body_text: "Existing evidence"
-    ).tap do |article|
-      ArticleClaim.create!(article:, claim: @claim, role: :linked_source, surface_text: @claim.canonical_text)
-    end
-
-    results = Analyzers::ActiveEvidenceRetriever.call(investigation: @investigation, claim: @claim)
-    assert_equal 0, results.count { |a| a.host == "congress.gov" }
   end
 
   test "respects MAX_FETCHES_PER_CLAIM limit" do
@@ -59,11 +43,56 @@ class Analyzers::ActiveEvidenceRetrieverTest < ActiveSupport::TestCase
 
     Fetchers::FakeFetcher.register(
       /./,
-      "<html><head><title>Result</title></head><body><p>Some content</p></body></html>",
+      "<html><head><title>Result</title></head><body><p>Some content about CPI inflation rate statistics data analysis for testing purposes.</p></body></html>",
       "Search Result"
     )
 
     results = Analyzers::ActiveEvidenceRetriever.call(investigation: @investigation, claim:)
     assert results.length <= Analyzers::ActiveEvidenceRetriever::MAX_FETCHES_PER_CLAIM
+  end
+
+  test "builds search queries from LlmSearchQueryGenerator and AuthorityQueryGenerator" do
+    retriever = Analyzers::ActiveEvidenceRetriever.new(investigation: @investigation, claim: @claim)
+    queries = retriever.send(:build_search_queries)
+
+    assert queries.is_a?(Array)
+    assert queries.any?, "Should generate at least one search query"
+    assert queries.all? { |q| q.is_a?(String) }, "All queries should be strings"
+    assert queries.size <= 5, "Should return at most 5 queries"
+  end
+
+  test "creates ArticleClaim links for fetched articles" do
+    article_url = "https://apnews.com/article/congress-infrastructure-bill-hr1234-bipartisan"
+    article_html = "<html><head><title>AP News</title></head><body><p>Congress infrastructure bill HR 1234 passed with bipartisan support for roads.</p></body></html>"
+    Fetchers::FakeFetcher.register(/apnews\.com/, article_html, "AP News")
+
+    # Pre-create article as if WebSearcher found it
+    article = Article.create!(
+      url: article_url,
+      normalized_url: Investigations::UrlNormalizer.call(article_url),
+      host: "apnews.com",
+      fetch_status: :pending
+    )
+
+    retriever = Analyzers::ActiveEvidenceRetriever.new(investigation: @investigation, claim: @claim)
+    retriever.send(:link_to_claim, article)
+    link = ArticleClaim.find_by(article:, claim: @claim)
+    assert_not_nil link, "Should create ArticleClaim link"
+    assert_equal "linked_source", link.role
+  end
+
+  test "skips URLs already linked to claim" do
+    existing_url = "https://www.reuters.com/existing-article-about-topic"
+    Article.create!(
+      url: existing_url, normalized_url: existing_url,
+      host: "www.reuters.com", fetch_status: :fetched
+    ).tap do |article|
+      ArticleClaim.create!(article:, claim: @claim, role: :linked_source, surface_text: @claim.canonical_text)
+    end
+
+    retriever = Analyzers::ActiveEvidenceRetriever.new(investigation: @investigation, claim: @claim)
+    linked_urls = retriever.send(:existing_linked_urls)
+
+    assert linked_urls.include?(existing_url), "Should track existing linked URLs"
   end
 end

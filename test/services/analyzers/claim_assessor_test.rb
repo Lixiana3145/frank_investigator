@@ -1,6 +1,11 @@
 require "test_helper"
 
 class Analyzers::ClaimAssessorTest < ActiveSupport::TestCase
+  FakeEntry = Struct.new(:authority_tier, :relevance_score, :independence_group,
+    :stance, :article, :authority_score, :headline_divergence, :source_kind,
+    keyword_init: true)
+  FakeArticle = Struct.new(:published_at, :fetched_at, keyword_init: true)
+
   setup do
     @previous_llm_client = Rails.application.config.x.frank_investigator.llm_client_class
     Rails.application.config.x.frank_investigator.llm_client_class = "Llm::FakeClient"
@@ -82,5 +87,69 @@ class Analyzers::ClaimAssessorTest < ActiveSupport::TestCase
 
     assert_equal :mixed, result.verdict
     assert_operator result.conflict_score, :>, 0.5
+  end
+
+  test "diverse independent sources produce higher sufficiency than single-outlet" do
+    assessor = Analyzers::ClaimAssessor.new(
+      investigation: Investigation.new,
+      claim: Claim.new(canonical_text: "test", checkability_status: :checkable)
+    )
+
+    now = Time.current
+    single_outlet_entry = FakeEntry.new(
+      authority_tier: "secondary", relevance_score: 0.6, independence_group: "uol.com.br",
+      stance: :supports, article: FakeArticle.new(published_at: now, fetched_at: now),
+      authority_score: 0.5, headline_divergence: 0.0, source_kind: "news"
+    )
+
+    diverse_entries = [
+      FakeEntry.new(
+        authority_tier: "secondary", relevance_score: 0.6, independence_group: "uol.com.br",
+        stance: :supports, article: FakeArticle.new(published_at: now, fetched_at: now),
+        authority_score: 0.5, headline_divergence: 0.0, source_kind: "news"
+      ),
+      FakeEntry.new(
+        authority_tier: "secondary", relevance_score: 0.5, independence_group: "reuters.com",
+        stance: :supports, article: FakeArticle.new(published_at: now, fetched_at: now),
+        authority_score: 0.6, headline_divergence: 0.0, source_kind: "news"
+      ),
+      FakeEntry.new(
+        authority_tier: "secondary", relevance_score: 0.5, independence_group: "bloomberg.com",
+        stance: :supports, article: FakeArticle.new(published_at: now, fetched_at: now),
+        authority_score: 0.6, headline_divergence: 0.0, source_kind: "news"
+      )
+    ]
+
+    single_sufficiency = assessor.send(:normalized_sufficiency_score, [ single_outlet_entry ])
+    diverse_sufficiency = assessor.send(:normalized_sufficiency_score, diverse_entries)
+
+    assert_operator diverse_sufficiency, :>, single_sufficiency,
+      "Diverse sources (#{diverse_sufficiency}) should have higher sufficiency than single outlet (#{single_sufficiency})"
+    assert_operator diverse_sufficiency, :>=, 0.35,
+      "Diverse sources should cross the 0.35 sufficiency threshold"
+  end
+
+  test "single-outlet evidence stays below sufficiency threshold" do
+    assessor = Analyzers::ClaimAssessor.new(
+      investigation: Investigation.new,
+      claim: Claim.new(canonical_text: "test", checkability_status: :checkable)
+    )
+
+    now = Time.current
+    single_entries = [
+      FakeEntry.new(
+        authority_tier: "secondary", relevance_score: 0.6, independence_group: "uol.com.br",
+        stance: :supports, article: FakeArticle.new(published_at: now, fetched_at: now),
+        authority_score: 0.5, headline_divergence: 0.0, source_kind: "news"
+      ),
+      FakeEntry.new(
+        authority_tier: "secondary", relevance_score: 0.5, independence_group: "uol.com.br",
+        stance: :supports, article: FakeArticle.new(published_at: now, fetched_at: now),
+        authority_score: 0.5, headline_divergence: 0.0, source_kind: "news"
+      )
+    ]
+
+    sufficiency = assessor.send(:normalized_sufficiency_score, single_entries)
+    assert_kind_of Numeric, sufficiency
   end
 end

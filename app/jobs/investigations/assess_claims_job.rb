@@ -114,19 +114,24 @@ module Investigations
       Rails.logger.warn("Authority retrieval failed: #{e.message}")
     end
 
+    MAX_SEARCH_FETCHES_PER_INVESTIGATION = 8
+
     def run_active_evidence_retrieval!
+      total_fetched = 0
+
       @investigation.claim_assessments.includes(:claim).find_each do |assessment|
+        break if total_fetched >= MAX_SEARCH_FETCHES_PER_INVESTIGATION
         next unless assessment.claim.checkable?
 
-        # Skip if we already have good evidence
         existing = Analyzers::EvidencePacketBuilder.call(investigation: @investigation, claim: assessment.claim)
-        primary_count = existing.count { |e| e.authority_tier == "primary" }
-        next if primary_count >= 2
+        independent_groups = existing.map(&:independence_group).uniq.count
+        next if independent_groups >= 3
 
-        Analyzers::ActiveEvidenceRetriever.call(
+        results = Analyzers::ActiveEvidenceRetriever.call(
           investigation: @investigation,
           claim: assessment.claim
         )
+        total_fetched += results.size
       end
     rescue StandardError => e
       Rails.logger.warn("Active evidence retrieval failed: #{e.message}")

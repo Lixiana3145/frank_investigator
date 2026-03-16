@@ -263,8 +263,10 @@ module Analyzers
     def normalized_sufficiency_score(entries)
       return 0 if entries.empty?
       primary_entries = entries.count { |entry| entry.authority_tier == "primary" }
+      independent_groups = entries.map(&:independence_group).reject(&:blank?).uniq.count
       weighted_count = entries.sum { |entry| entry.relevance_score.to_f }
-      [ (weighted_count * 0.25) + (primary_entries * 0.2), 1.0 ].min
+      independence_bonus = [ independent_groups * 0.1, 0.3 ].min
+      [ (weighted_count * 0.25) + (primary_entries * 0.2) + independence_bonus, 1.0 ].min
     end
 
     # If any primary-tier source disputes the claim, cap confidence and force

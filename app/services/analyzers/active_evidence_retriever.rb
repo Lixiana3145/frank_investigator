@@ -1,21 +1,6 @@
 module Analyzers
   class ActiveEvidenceRetriever
-    SEARCH_URL_TEMPLATES = {
-      us_legislation: "https://www.congress.gov/search?q=%{query}",
-      brazil_legislation: "https://www.camara.leg.br/busca-portal?contextoBusca=BuscaProposicoes&termo=%{query}",
-      us_statistics: "https://fred.stlouisfed.org/searchresults/?st=%{query}",
-      brazil_statistics: "https://sidra.ibge.gov.br/pesquisar?q=%{query}",
-      us_sec_filing: "https://efts.sec.gov/LATEST/search-index?q=%{query}",
-      brazil_market: "https://www.b3.com.br/pt_br/pesquise/?query=%{query}",
-      biomedical: "https://pubmed.ncbi.nlm.nih.gov/?term=%{query}",
-      us_court: "https://www.courtlistener.com/?q=%{query}",
-      brazil_court: "https://portal.stf.jus.br/processos/listarProcessos.asp?consulta=%{query}",
-      oversight: "https://www.gao.gov/search?query=%{query}",
-      budget_fiscal: "https://www.cbo.gov/search/results/%{query}"
-    }.freeze
-
     MAX_FETCHES_PER_CLAIM = 3
-    FETCH_TIMEOUT = 15_000
 
     def self.call(investigation:, claim:)
       new(investigation:, claim:).call
@@ -27,26 +12,42 @@ module Analyzers
     end
 
     def call
-      queries = AuthorityQueryGenerator.call(claim: @claim).first(5)
+      root_host = @investigation.root_article&.host
+      queries = build_search_queries
       return [] if queries.empty?
 
       fetched = 0
       results = []
+      seen_hosts = Set.new([ root_host ].compact)
+      seen_urls = existing_linked_urls
 
-      queries.each do |query|
+      queries.each do |query_text|
         break if fetched >= MAX_FETCHES_PER_CLAIM
 
-        # Skip if we already have evidence from this authority type
-        next if already_has_evidence_from?(query.suggested_hosts)
+        search_results = Fetchers::WebSearcher.call(query: query_text)
+        search_results.each do |sr|
+          break if fetched >= MAX_FETCHES_PER_CLAIM
 
-        url = search_url_for(query)
-        next unless url
+          normalized = normalize_url(sr.url)
+          next unless normalized
 
-        article = fetch_and_persist(url, query)
-        if article
-          fetched += 1
-          results << article
-          link_to_claim(article)
+          host = begin
+            URI.parse(normalized).host
+          rescue URI::InvalidURIError
+            next
+          end
+
+          next if seen_hosts.count { |h| h == host } >= 2  # Max 2 per host
+          next if seen_urls.include?(normalized)
+
+          article = fetch_and_persist(normalized, sr.title)
+          if article&.fetched?
+            fetched += 1
+            seen_hosts << host
+            seen_urls << normalized
+            results << article
+            link_to_claim(article)
+          end
         end
       end
 
@@ -55,45 +56,53 @@ module Analyzers
 
     private
 
-    def already_has_evidence_from?(hosts)
-      @claim.articles.fetched.where(host: hosts).exists?
+    def build_search_queries
+      llm_queries = LlmSearchQueryGenerator.call(
+        claim: @claim,
+        root_article_host: @investigation.root_article&.host,
+        investigation: @investigation
+      )
+      authority_queries = AuthorityQueryGenerator.call(claim: @claim)
+        .first(2).map(&:query_text)
+      (llm_queries + authority_queries).uniq.first(5)
     end
 
-    def search_url_for(query)
-      template = SEARCH_URL_TEMPLATES[query.authority_type.to_sym]
-      return nil unless template
-
-      encoded_query = ERB::Util.url_encode(query.query_text.truncate(100))
-      template % { query: encoded_query }
+    def existing_linked_urls
+      @claim.articles.pluck(:normalized_url).to_set
     end
 
-    def fetch_and_persist(url, query)
-      normalized = begin
-        Investigations::UrlNormalizer.call(url)
-      rescue Investigations::UrlNormalizer::InvalidUrlError
-        return nil
-      end
+    def normalize_url(url)
+      Investigations::UrlNormalizer.call(url)
+    rescue Investigations::UrlNormalizer::InvalidUrlError
+      nil
+    end
 
-      existing = Article.find_by(normalized_url: normalized)
+    def fetch_and_persist(normalized_url, title)
+      existing = Article.find_by(normalized_url:)
       return existing if existing&.fetched?
 
-      article = Article.find_or_create_by!(normalized_url: normalized) do |a|
-        a.url = url
-        a.host = URI.parse(normalized).host
+      article = Article.find_or_create_by!(normalized_url:) do |a|
+        a.url = normalized_url
+        a.host = URI.parse(normalized_url).host
         a.fetch_status = :pending
       end
     rescue ActiveRecord::RecordNotUnique
-      Article.find_by!(normalized_url: normalized)
+      Article.find_by!(normalized_url:)
     else
       return article if article.fetched?
 
       begin
         fetcher = fetcher_class.constantize.new
-        snapshot = fetcher.call(url)
-        Articles::PersistFetchedContent.call(article:, html: snapshot.html, title: snapshot.title, investigation: @investigation)
+        snapshot = fetcher.call(normalized_url)
+        Articles::PersistFetchedContent.call(
+          article:,
+          html: snapshot.html,
+          fetched_title: snapshot.title,
+          current_depth: 1
+        )
         article.reload
       rescue StandardError => e
-        Rails.logger.warn("Active retrieval fetch failed for #{url}: #{e.message}")
+        Rails.logger.warn("Active retrieval fetch failed for #{normalized_url}: #{e.message}")
         article.update!(fetch_status: :failed) unless article.fetched?
         nil
       end

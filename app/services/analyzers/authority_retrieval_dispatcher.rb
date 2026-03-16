@@ -37,9 +37,51 @@ module Analyzers
 
       return existing if existing.any?
 
-      query.suggested_hosts.filter_map do |host|
-        Article.find_by(host:, fetch_status: "fetched")
+      # Fallback: search the web with site: restriction
+      search_query = "site:#{query.suggested_hosts.first} #{query.query_text.truncate(60)}"
+      search_results = Fetchers::WebSearcher.call(query: search_query, max_results: 3)
+
+      search_results.filter_map do |sr|
+        host = begin
+          URI.parse(sr.url).host
+        rescue URI::InvalidURIError
+          next
+        end
+        next unless query.suggested_hosts.any? { |h| host.end_with?(h) || h.end_with?(host) }
+        fetch_and_persist_article(sr.url, sr.title)
       end.first(2)
+    end
+
+    def fetch_and_persist_article(url, title)
+      normalized = Investigations::UrlNormalizer.call(url)
+
+      existing = Article.find_by(normalized_url: normalized)
+      return existing if existing&.fetched?
+
+      article = Article.find_or_create_by!(normalized_url: normalized) do |a|
+        a.url = url
+        a.host = URI.parse(normalized).host
+        a.fetch_status = :pending
+      end
+
+      return article if article.fetched?
+
+      fetcher = fetcher_class.constantize.new
+      snapshot = fetcher.call(url)
+      Articles::PersistFetchedContent.call(
+        article:,
+        html: snapshot.html,
+        fetched_title: snapshot.title,
+        current_depth: 1
+      )
+      article.reload
+    rescue StandardError => e
+      Rails.logger.warn("Authority retrieval fetch failed for #{url}: #{e.message}")
+      nil
+    end
+
+    def fetcher_class
+      Rails.application.config.x.frank_investigator.fetcher_class
     end
 
     def link_articles_to_claim(articles)

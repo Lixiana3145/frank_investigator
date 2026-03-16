@@ -8,7 +8,8 @@ class LlmInteraction < ApplicationRecord
     query_generation: "query_generation",
     contradiction_analysis: "contradiction_analysis",
     headline_analysis: "headline_analysis",
-    rhetorical_analysis: "rhetorical_analysis"
+    rhetorical_analysis: "rhetorical_analysis",
+    search_query_generation: "search_query_generation"
   }, default: :assessment, validate: true
 
   enum :status, {
