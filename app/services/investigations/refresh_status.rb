@@ -11,8 +11,16 @@ module Investigations
     def call
       step_map = @investigation.pipeline_steps.index_by(&:name)
 
+      # Only treat failures in required steps as fatal. Non-required steps
+      # (e.g. fetch_linked_article:NNN) can fail without killing the investigation —
+      # some external sites will always block us and that's expected.
+      required_step_bases = Investigation::REQUIRED_STEPS.to_set
+      has_fatal_failure = @investigation.pipeline_steps.failed.any? do |step|
+        required_step_bases.include?(step.name)
+      end
+
       status =
-        if @investigation.pipeline_steps.failed.exists?
+        if has_fatal_failure
           :failed
         elsif Investigation::REQUIRED_STEPS.all? { |name| step_map[name]&.completed? }
           :completed

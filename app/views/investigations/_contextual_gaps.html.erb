@@ -1,0 +1,59 @@
+<% gaps_data = investigation.contextual_gaps %>
+<% return unless investigation.completed? && gaps_data.present? && Array(gaps_data["gaps"]).any? %>
+
+<%
+  completeness = gaps_data["completeness_score"].to_f
+  callout_color = if completeness >= 0.7
+    "border-l-verdict-green bg-verdict-green/4"
+  elsif completeness >= 0.4
+    "border-l-verdict-amber bg-verdict-amber/4"
+  else
+    "border-l-verdict-red bg-verdict-red/4"
+  end
+%>
+
+<section class="border border-line rounded-3xl p-5 mb-4 border-l-4 <%= callout_color %>">
+  <h3 class="font-bold mb-2"><%= t("investigations.contextual_gaps.heading") %></h3>
+  <p class="text-muted mb-3"><%= gaps_data["summary"] %></p>
+
+  <dl class="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3 mb-3">
+    <div>
+      <dt class="text-muted text-xs"><%= t("investigations.contextual_gaps.completeness") %></dt>
+      <dd class="mt-0.5 font-bold flex items-center gap-1.5">
+        <span class="inline-block w-12 h-1.5 bg-black/8 rounded-full overflow-hidden">
+          <span class="block h-full rounded-full score-fill <%= score_color_class(completeness) %>" style="width: <%= score_bar_width(completeness) %>%"></span>
+        </span>
+        <span><%= score_percent(completeness * 100) %></span>
+      </dd>
+    </div>
+  </dl>
+
+  <details class="mt-2 p-3 bg-black/2 rounded-xl border border-line/40" open>
+    <summary class="cursor-pointer text-sm text-muted hover:text-ink flex items-center gap-2">
+      <%= t("investigations.contextual_gaps.unaddressed_questions") %> (<%= Array(gaps_data["gaps"]).size %>)
+    </summary>
+    <ul class="mt-2 grid gap-3 list-none p-0 m-0">
+      <% Array(gaps_data["gaps"]).each do |gap| %>
+        <li class="py-3 border-b border-line/30 last:border-b-0">
+          <p class="font-semibold text-sm"><%= gap["question"] %></p>
+          <p class="text-muted text-sm mt-1"><%= gap["relevance"] %></p>
+
+          <% results = Array(gap["search_results"]) %>
+          <% if results.any? %>
+            <div class="mt-2 pl-3 border-l-2 border-line/40">
+              <p class="text-xs text-muted uppercase tracking-wide mb-1"><%= t("investigations.contextual_gaps.evidence_found") %></p>
+              <% results.each do |sr| %>
+                <div class="mb-1.5 last:mb-0">
+                  <a href="<%= sr["url"] %>" target="_blank" rel="noopener" class="text-sm text-ink hover:underline"><%= sr["title"].presence || sr["url"] %></a>
+                  <% if sr["snippet"].present? %>
+                    <p class="text-muted text-xs mt-0.5"><%= sr["snippet"].truncate(200) %></p>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </details>
+</section>
