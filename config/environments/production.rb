@@ -81,8 +81,9 @@ Rails.application.configure do
 
   # Enable DNS rebinding protection and other `Host` header attacks.
   # Set ALLOWED_HOST env var in production (e.g. "frank.example.com").
-  config.hosts = [ ENV["ALLOWED_HOST"] ].compact
-  config.hosts << /localhost/ if config.hosts.empty?
+  config.hosts = ENV.fetch("ALLOWED_HOST", "").split(",").map(&:strip).reject(&:empty?)
+  config.hosts << /\Alocalhost/
+  config.hosts << /\A\d+\.\d+\.\d+\.\d+/ # Allow direct IP access on local network
 
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
