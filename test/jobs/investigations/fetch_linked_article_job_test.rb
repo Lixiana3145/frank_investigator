@@ -52,7 +52,7 @@ class Investigations::FetchLinkedArticleJobTest < ActiveJob::TestCase
               <p>The budget report confirms a 4 percent tax reduction in 2026.</p>
               <p>According to the treasury, the policy will reduce the federal tax burden by an estimated twelve billion dollars over the next fiscal year.</p>
               <p>Economists at the central bank project a positive impact on consumer spending and employment across all sectors.</p>
-              <p><a href="https://records.example.net/appendix/fiscal-data-2026">Appendix</a></p>
+              <p>See the full breakdown in the <a href="https://records.example.net/appendix/fiscal-data-2026">Appendix</a> for detailed regional figures.</p>
             </article>
           </body>
         </html>

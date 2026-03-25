@@ -50,7 +50,7 @@ class Investigations::FetchRootArticleJobTest < ActiveJob::TestCase
               <p>City Hall announced taxes will fall by 4 percent in 2026.</p>
               <p>The article cites the full budget document published by the treasury department.</p>
               <p>Officials expect the reduction to benefit over 30 million residents across the metropolitan area and surrounding regions.</p>
-              <p><a href="https://example.com/budget/2026-fiscal-year-report">Budget document</a></p>
+              <p>The full details are available in the <a href="https://example.com/budget/2026-fiscal-year-report">Budget document</a> published last week.</p>
             </article>
           </body>
         </html>

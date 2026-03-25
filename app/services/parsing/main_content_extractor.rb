@@ -206,17 +206,46 @@ module Parsing
       end
     end
 
-    def extract_links(node)
-      node.css("a[href]").each_with_index.filter_map do |anchor, index|
-        href = normalize_link(anchor["href"])
-        next unless href
+    # Only extract links that are inline citations within editorial text.
+    #
+    # Two-layer filter:
+    # 1. Only look inside content-bearing elements (p, h2, h3, li) — same set as
+    #    extract_body_text — to exclude links in <div>, <nav>, <ul> chrome.
+    # 2. Require the parent element to contain enough non-link prose to be
+    #    considered editorial. Navigation chrome uses <p> tags as wrappers for
+    #    single link labels ("Newsletters", "Edição Impressa", topic tags).
+    #    Editorial citations sit inside sentences where link text is a small
+    #    fraction of the surrounding prose.
+    #
+    # Threshold: parent must have at least 40 chars of non-link text.
+    # This keeps "...cites the <a>budget document</a>..." (plenty of prose)
+    # and rejects "<p><a>Newsletters</a></p>" (zero non-link text).
+    MIN_NONLINK_TEXT = 40
 
-        {
-          href:,
-          anchor_text: anchor.text.squish,
-          context_excerpt: anchor.parent&.text.to_s.squish.truncate(240),
-          position: index
-        }
+    def extract_links(node)
+      index = 0
+      node.css("p, h2, h3, li").flat_map do |content_el|
+        el_text = content_el.text.to_s.squish
+        links = content_el.css("a[href]")
+        next [] if links.empty?
+
+        link_text_length = links.sum { |a| a.text.to_s.length }
+        nonlink_text = el_text.length - link_text_length
+        next [] if nonlink_text < MIN_NONLINK_TEXT
+
+        links.filter_map do |anchor|
+          href = normalize_link(anchor["href"])
+          next unless href
+
+          pos = index
+          index += 1
+          {
+            href:,
+            anchor_text: anchor.text.squish,
+            context_excerpt: el_text.truncate(240),
+            position: pos
+          }
+        end
       end
     end
 
