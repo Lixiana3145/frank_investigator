@@ -32,6 +32,10 @@ This is the foundational design constraint of the entire system. Every scoring, 
 
 11. **Rhetorical fallacy detection.** After claims are assessed, the `RhetoricalFallacyAnalyzer` examines the article's written structure against its own factual claims. It detects bait-and-pivot ("data shows X, but [opinion]"), appeal to authority over data ("in my 30 years..."), strawman, false cause, anecdote over data, loaded language, and other fallacies. When an article's rhetoric undermines its own high-confidence factual claims, this is flagged with severity and the specific undermined claim is identified.
 
+12. **Contextual gap detection.** An article can be factually correct in every individual claim and still be manipulative through omission. The `ContextualGapAnalyzer` identifies what the article chooses not to say: scope mismatches (citing foreign studies for local conclusions), missing counter-evidence, theoretical-vs-practical gaps, distributional blindness, and historical amnesia. It then searches the web for evidence addressing each gap. An article with all claims "supported" but major contextual gaps cannot receive a "strong" quality rating.
+
+13. **Completeness over accuracy.** Factual accuracy alone does not make an article trustworthy. An article that assembles true facts into a misleading narrative by omitting critical context is the most dangerous kind of misinformation because it passes every individual fact-check. The contextual completeness score penalizes this pattern.
+
 When in doubt, prefer `needs_more_evidence` over a weakly supported verdict. Conservative assessment protects users better than false confidence.
 
 ## Running the App
@@ -48,7 +52,7 @@ bundle exec rails test                    # Full suite
 bundle exec rails test test/path_test.rb  # Single file
 ```
 
-All tests must pass before committing. Current count: 338+.
+All tests must pass before committing. Current count: 648+.
 
 ## Key Architecture Decisions
 
@@ -57,6 +61,19 @@ All tests must pass before committing. Current count: 338+.
 - **SQLite in production.** WAL mode, tuned pragmas. No Postgres dependency.
 - **LLM via OpenRouter.** Multi-model consensus through `RubyLLM` gem. Models configurable via `OPENROUTER_MODELS` env var.
 - **Background jobs via Solid Queue.** Recurring jobs in `config/recurring.yml`.
+
+## Link Extraction and Noise Filtering
+
+`MainContentExtractor#extract_links` only extracts links from content-bearing elements (`<p>`, `<h2>`, `<h3>`, `<li>`) that contain at least 40 characters of non-link prose text. This filters out navigation chrome, subscription CTAs, topic tags, and other non-editorial links that many news sites wrap in `<p>` tags inside the article container.
+
+The `UrlClassifier` rejects known non-article hosts (app stores, login subdomains, paywall subdomains, social media, e-commerce, etc.) to prevent noise in the evidence graph.
+
+**When modifying link extraction or URL filtering:**
+
+- Test changes against multiple outlets. Brazilian news sites (Folha, G1, UOL, Estadão) have very different HTML structures from international outlets (NBER, Reuters, NYT). A filter that cleans up one site's navigation chrome may accidentally remove real editorial citations from another.
+- Run `bundle exec rails test` — the test suite includes extraction tests with realistic HTML from multiple outlet styles. Existing tests use inline citation links embedded in sentences (e.g., `<p>See the full breakdown in the <a href="...">Budget document</a> published last week.</p>`), not bare `<p><a>link</a></p>` blocks, because the extractor requires surrounding prose to distinguish editorial links from navigation.
+- When adding a new noise pattern to `UrlClassifier` or `MainContentExtractor`, verify it doesn't match legitimate citation patterns. For example, `/login\./` catches `login.folha.com.br` but would also catch a hypothetical `login.gov` (which is a real US government site). Prefer specific patterns over broad ones.
+- If a new outlet produces noisy links, first check whether the noise comes from the HTML structure (fix in `MainContentExtractor` selectors or `BLOCKED_SELECTORS`) or from the URLs themselves (fix in `UrlClassifier`). Prefer structural fixes over URL pattern matching.
 
 ## Code Conventions
 

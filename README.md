@@ -32,6 +32,9 @@ A fact does not become false because a million sources repeat a falsehood, and a
 - Provides full verdict history with evidence provenance snapshots
 - Analyzes headline-body divergence and headline citation amplification
 - Detects rhetorical fallacies that undermine the article's own factual claims
+- Analyzes contextual gaps: what the article omits that would change the reader's conclusion
+- Searches for counter-evidence addressing each identified gap
+- Generates an executive summary factoring in claims, rhetoric, and omissions
 - Live updates via Turbo Streams as the pipeline progresses
 
 ## Stack
