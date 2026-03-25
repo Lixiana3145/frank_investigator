@@ -37,6 +37,9 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Ignore deploy configuration (contains server-specific IPs, ports, etc.)
+/config/deploy.env
+
 
 /app/assets/builds/*
 !/app/assets/builds/.keep

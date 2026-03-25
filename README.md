@@ -63,7 +63,7 @@ OPENROUTER_API_KEY=your_key_here           # Required for LLM assessment
 Optional configuration:
 
 ```bash
-FRANK_INVESTIGATOR_LOCALE=en               # en or pt-BR (default: en)
+FRANK_INVESTIGATOR_LOCALE=pt-BR            # en or pt-BR (default: pt-BR)
 FRANK_INVESTIGATOR_MAX_LINK_DEPTH=1        # How deep to follow links (default: 1)
 FRANK_INVESTIGATOR_ARTICLE_FRESHNESS_TTL=3600  # Cache TTL in seconds (default: 3600)
 FRANK_INVESTIGATOR_OPENROUTER_MODELS=openai/gpt-5-mini,anthropic/claude-3.7-sonnet,google/gemini-2.5-pro
@@ -79,7 +79,41 @@ bundle exec rails test test/path_test.rb  # Single file
 
 ## Deployment
 
-Frank Investigator is designed for deployment with Kamal or Docker Compose. Configure locale and API keys via environment variables. Chromium must be available in the container (the default Dockerfile includes it).
+The app ships with a Docker image and a `bin/deploy` script for push-based deployment to a remote server with a Docker registry.
+
+### First-time setup
+
+```bash
+cp config/deploy.env.example config/deploy.env   # Fill in server IP, SSH port, registry, paths
+bin/deploy setup                                  # Creates dirs, env files, uploads compose file
+```
+
+Then edit `.env.production` on the server with your real `OPENROUTER_API_KEY` and `RAILS_MASTER_KEY`.
+
+### Deploy
+
+```bash
+bin/deploy              # Build image, push to registry, pull on server, restart
+```
+
+### Other commands
+
+```bash
+bin/deploy logs         # Tail production logs
+bin/deploy status       # Show container status
+bin/deploy stop         # Stop containers
+bin/deploy shell        # Open bash in the running container
+bin/deploy console      # Open Rails console
+```
+
+### How it works
+
+- `docker-compose.production.yml` defines the service (generic, no server-specific values)
+- `config/deploy.env` holds your server connection details (gitignored)
+- On the server, `APP_DATA_DIR/storage` is volume-mounted for SQLite databases
+- `APP_DATA_DIR/.env.production` holds runtime secrets (API keys, master key)
+- Solid Queue runs inside Puma (`SOLID_QUEUE_IN_PUMA=1`) — single container, no sidecars
+- Chromium is included in the Docker image for headless page fetching
 
 ## Internationalization
 

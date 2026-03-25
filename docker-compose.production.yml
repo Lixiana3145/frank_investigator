@@ -1,0 +1,23 @@
+services:
+  web:
+    image: ${REGISTRY_HOST}:${REGISTRY_PORT}/akitaonrails/frank_investigator:latest
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:80"
+    env_file:
+      - ${APP_DATA_DIR}/.env.production
+    environment:
+      - RAILS_ENV=production
+      - SOLID_QUEUE_IN_PUMA=1
+      - RAILS_LOG_TO_STDOUT=1
+    volumes:
+      - ${APP_DATA_DIR}/storage:/rails/storage
+    tmpfs:
+      - /tmp:size=256M
+    shm_size: '512m'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
