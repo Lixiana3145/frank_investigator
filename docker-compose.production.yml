@@ -1,5 +1,8 @@
+name: frank_investigator
+
 services:
   web:
+    container_name: frank_investigator
     image: ${REGISTRY_HOST}:${REGISTRY_PORT}/akitaonrails/frank_investigator:latest
     restart: unless-stopped
     ports:
