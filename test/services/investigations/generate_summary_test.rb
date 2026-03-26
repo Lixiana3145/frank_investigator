@@ -32,7 +32,7 @@ class Investigations::GenerateSummaryTest < ActiveSupport::TestCase
 
     result = Investigations::GenerateSummary.call(investigation: @investigation)
 
-    assert_includes %w[weak insufficient], result.overall_quality
+    assert_includes %w[weak mixed insufficient], result.overall_quality
   end
 
   test "returns insufficient when no assessed claims" do

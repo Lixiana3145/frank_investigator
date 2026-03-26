@@ -13,39 +13,45 @@ module Investigations
       You are an editorial quality analyst for a fact-checking system. You produce a concise
       executive summary of an investigation into a news article.
 
-      You will receive:
-      - The article title and excerpt
-      - All assessed claims with their verdicts, confidence scores, and reasons
-      - Scores for headline bait, independence, authority, and rhetorical analysis
-      - Contextual gap analysis: unaddressed questions and counter-evidence found via web search
-      - Coordinated narrative analysis: whether this article is part of a multi-outlet campaign
-        with convergent framing and convergent omissions
+      You will receive multiple analyzer scores. Your job is to synthesize them into a fair,
+      calibrated assessment — not to find fault, but to accurately rate the article's quality.
 
-      Your job is to synthesize ALL of these findings into:
-      1. A conclusion paragraph: what the article got right, what it omits, and overall quality
-      2. Strengths: specific things the article does well (well-sourced claims, primary evidence, etc.)
-      3. Weaknesses: specific problems — INCLUDING contextual gaps AND coordination signals.
-         Factor in:
-         - Missing counter-evidence found by web search
-         - Scope mismatches (citing foreign data for local conclusions)
-         - Omitted distributional effects, historical precedents, or institutional context
-         - If coordination_score is high: the article participates in a coordinated narrative
-           where multiple outlets share the same framing and omit the same counter-evidence.
-           This is a strong signal of narrative manipulation regardless of factual accuracy.
-      4. An overall_quality rating: "strong", "mixed", "weak", or "insufficient"
+      CALIBRATION PRINCIPLE: Every article has imperfections. Minor issues should not accumulate
+      into a harsh verdict. The question is not "is this article perfect?" but "does this article
+      deliberately mislead the reader?" Distinguish between:
+      - NORMAL EDITORIAL CHOICES: some emotional language, incomplete context, unverified citations
+        — this is standard journalism, not manipulation. Rate "strong" or "mixed".
+      - DELIBERATE MANIPULATION: systematic omissions, fabricated citations, coordinated framing
+        across outlets, statistical tricks designed to deceive. Rate "weak".
+      - SEVERE CASES: coordinated campaigns with convergent omissions AND convergent fallacies,
+        or articles with multiple high-severity deception signals. Rate "weak".
+
+      Analyzer scores to consider (only flag those with SIGNIFICANT findings):
+      - Claim verdicts and confidence scores
+      - Headline bait, rhetorical fallacies, narrative bias
+      - Contextual gaps: unaddressed questions and missing counter-evidence
+      - Source misrepresentation: does the article accurately represent its citations?
+      - Temporal manipulation: is old data presented as current?
+      - Statistical deception: are numbers presented misleadingly?
+      - Selective quotation: are quotes taken out of context?
+      - Authority laundering: does the citation chain inflate low-authority sources?
+      - Coordinated narrative: do multiple outlets share identical framing and omissions?
+      - Emotional manipulation: emotional temperature vs evidence density
 
       Rating guide:
-      - strong: Claims supported, relevant context addressed, no major omissions, no coordination
-      - mixed: Claims may be supported but significant context is missing or scope is questionable
-      - weak: Major contextual gaps, misleading through omission, most claims unsupported,
-        OR high coordination score (article participates in a coordinated narrative campaign)
-      - insufficient: Not enough evidence to assess meaningfully
+      - strong: Well-sourced claims, relevant context addressed, no significant deception signals.
+        Minor imperfections (a few unverifiable citations, some emotional language) are acceptable.
+      - mixed: Some claims supported but notable gaps or moderate deception signals. The article
+        is not deliberately misleading but has significant shortcomings.
+      - weak: Deliberate manipulation detected — major contextual omissions designed to mislead,
+        systematic source misrepresentation, coordinated narrative campaign, or multiple high-severity
+        deception signals working together. Reserve this for genuinely problematic articles.
+      - insufficient: Not enough evidence to assess meaningfully.
 
-      CRITICAL: An article where every claim is technically true but critical counter-evidence
-      is omitted should be rated "mixed" at best, "weak" if the omissions are severe. An article
-      that is part of a coordinated narrative campaign (coordination_score > 0.5) with convergent
-      omissions should be rated "weak" regardless of individual claim accuracy — the manipulation
-      is in the orchestrated pattern, not in any single article.
+      DO NOT rate "weak" just because several analyzers found minor issues. A score of 0.2 from
+      five different analyzers does not equal one score of 1.0 — it means the article has normal
+      imperfections. Rate "weak" only when there is clear evidence of intentional manipulation
+      or severe quality failures.
 
       IMPORTANT: Write the conclusion, strengths, and weaknesses texts in %{locale_name}.
       The overall_quality field must always use the English enum values above.
@@ -254,18 +260,24 @@ module Investigations
       # Factor in new analyzers
       emotional = @investigation.emotional_manipulation || {}
       manipulation_score = emotional["manipulation_score"].to_f
-      misrep_score = (@investigation.source_misrepresentation || {})["misrepresentation_score"].to_f
-      laundering_score = (@investigation.authority_laundering || {})["laundering_score"].to_f
 
-      # Aggregate deception signal from all analyzers
+      # Aggregate deception signals — only count signals above noise threshold (0.25).
+      # Minor imperfections in honest journalism should not accumulate into a false
+      # "weak" rating. Every article has some unverifiable citations, some emotional
+      # language, some incomplete context — that's normal editorial work, not deception.
+      noise_threshold = 0.25
       deception_signals = [
-        misrep_score,
+        (@investigation.source_misrepresentation || {})["misrepresentation_score"].to_f,
         1.0 - ((@investigation.temporal_manipulation || {})["temporal_integrity_score"] || 1.0).to_f,
         1.0 - ((@investigation.statistical_deception || {})["statistical_integrity_score"] || 1.0).to_f,
         1.0 - ((@investigation.selective_quotation || {})["quotation_integrity_score"] || 1.0).to_f,
-        laundering_score
-      ].select { |s| s > 0 }
-      avg_deception = deception_signals.any? ? deception_signals.sum / deception_signals.size : 0.0
+        (@investigation.authority_laundering || {})["laundering_score"].to_f
+      ].select { |s| s > noise_threshold }
+
+      # Use max signal for "weak" determination — one serious finding matters more
+      # than many minor ones. Use count of significant signals for "strong" gating.
+      max_deception = deception_signals.max || 0.0
+      significant_deception_count = deception_signals.size
 
       quality = if coordination_score >= 0.6 || manipulation_score >= 0.7
         "weak"
@@ -273,9 +285,9 @@ module Investigations
         "weak"
       elsif completeness > 0 && completeness < 0.4
         "weak"
-      elsif avg_deception >= 0.5
-        "weak"
-      elsif avg_confidence >= 0.6 && supported.size > disputed.size && completeness >= 0.7 && coordination_score < 0.3 && avg_deception < 0.2
+      elsif max_deception >= 0.6 || significant_deception_count >= 3
+        "weak" # one severe deception or multiple moderate ones
+      elsif avg_confidence >= 0.6 && supported.size > disputed.size && completeness >= 0.7 && coordination_score < 0.3 && significant_deception_count == 0
         "strong"
       elsif avg_confidence >= 0.6 && supported.size > disputed.size
         "mixed"

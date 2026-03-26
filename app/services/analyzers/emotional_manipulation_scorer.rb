@@ -90,6 +90,13 @@ module Analyzers
         - weight (number 0.0-1.0): how much this factor contributes
       - summary: 2-3 sentence assessment of emotional manipulation risk
 
+      CALIBRATION: Most articles have some emotional language — this is normal and does not
+      make them manipulative. Manipulation requires emotional appeals that SUBSTITUTE for
+      evidence, not emotional language that ACCOMPANIES evidence. An opinion piece with strong
+      language and solid citations is passionate journalism, not manipulation. Only score
+      manipulation_score above 0.5 when there is a clear pattern of emotion compensating for
+      missing evidence or amplifying deception detected by other analyzers.
+
       IMPORTANT: Write the summary, dominant_emotions labels, and contributing_factors
       descriptions in %{locale_name}.
 
