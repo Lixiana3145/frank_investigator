@@ -96,7 +96,7 @@ Export these environment variables in your shell before deploying. Kamal reads t
 export KAMAL_REGISTRY_USERNAME=your-github-username
 export KAMAL_REGISTRY_PASSWORD=ghp_your_github_pat    # PAT with write:packages scope
 export OPENROUTER_API_KEY=sk-or-v1-...
-export FRANK_INVESTIGATOR_OPENROUTER_MODELS=google/gemini-2.0-flash-001,meta-llama/llama-4-maverick
+export FRANK_INVESTIGATOR_OPENROUTER_MODELS=anthropic/claude-sonnet-4-6
 export FRANK_AUTH_SECRET=$(openssl rand -hex 32)
 export JOBS_AUTH_PASSWORD=$(openssl rand -hex 16)
 export GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX               # Optional
