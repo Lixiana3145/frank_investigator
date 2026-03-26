@@ -97,7 +97,7 @@ module Investigations
       return nil if query.blank?
 
       cleaned = URI.decode_www_form(query)
-        .reject { |key, _| key.match?(JUNK_PARAMS) }
+        .reject { |key, _| key.blank? || key.match?(JUNK_PARAMS) }
         .sort
 
       cleaned.empty? ? nil : URI.encode_www_form(cleaned)
