@@ -45,6 +45,7 @@ env:
     - FRANK_AUTH_SECRET
     - ALLOWED_HOST
     - JOBS_AUTH_PASSWORD
+    - GOOGLE_ANALYTICS_ID
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"

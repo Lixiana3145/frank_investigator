@@ -8,6 +8,11 @@ Rails.application.configure do
     policy.style_src   :self
     policy.connect_src :self
 
+    if ENV["GOOGLE_ANALYTICS_ID"].present?
+      policy.script_src  :self, "https://www.googletagmanager.com"
+      policy.connect_src :self, "https://www.google-analytics.com", "https://www.googletagmanager.com"
+    end
+
     if Rails.env.development?
       policy.connect_src :self, "ws://localhost:*", "wss://localhost:*"
     else
