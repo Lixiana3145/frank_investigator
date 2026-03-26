@@ -117,6 +117,13 @@ en:
       unaddressed_questions: "Unaddressed questions"
       evidence_found: "Counter-evidence found"
 
+    coordinated_narrative:
+      heading: "Coordinated narrative analysis"
+      coordination_score: "Coordination score"
+      convergent_framing: "Convergent framing"
+      convergent_omissions: "Convergent omissions"
+      similar_coverage: "Similar coverage found"
+
     investigation_summary:
       heading: "Investigation summary"
       strengths: "Strengths"
@@ -272,6 +279,7 @@ en:
       assess_claims: "Assess claims"
       expand_linked_articles_root: "Expand linked articles"
       analyze_contextual_gaps: "Analyze contextual gaps"
+      detect_coordinated_narrative: "Detect coordinated narrative"
       generate_summary: "Generate summary"
     severity:
       error: "Error"
@@ -299,6 +307,7 @@ en:
       contextual_gaps_found:
         one: "%{count} critical contextual gap was identified — important context is missing"
         other: "%{count} critical contextual gaps were identified — important context is missing"
+      coordinated_narrative_detected: "This article appears to be part of a coordinated narrative campaign with convergent framing and omissions across multiple outlets"
       conclusion: "Of %{total} assessed claims, %{supported} are supported, %{disputed} are disputed, and %{needs_evidence} need more evidence."
 
     contextual_gaps:
@@ -309,6 +318,10 @@ en:
       heuristic_summary: "Heuristic analysis identified %{count} potential contextual gap(s)."
       no_gaps: "No significant contextual gaps detected by heuristic analysis."
       no_analysis: "No contextual gap analysis performed."
+
+    coordinated_narrative:
+      no_analysis: "No coordinated narrative analysis performed."
+      insufficient_coverage: "Not enough related coverage found to assess coordination patterns."
 
     fallacy_types:
       bait_and_pivot: "Bait and pivot"

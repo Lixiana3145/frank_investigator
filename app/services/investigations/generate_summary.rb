@@ -18,27 +18,34 @@ module Investigations
       - All assessed claims with their verdicts, confidence scores, and reasons
       - Scores for headline bait, independence, authority, and rhetorical analysis
       - Contextual gap analysis: unaddressed questions and counter-evidence found via web search
+      - Coordinated narrative analysis: whether this article is part of a multi-outlet campaign
+        with convergent framing and convergent omissions
 
       Your job is to synthesize ALL of these findings into:
       1. A conclusion paragraph: what the article got right, what it omits, and overall quality
       2. Strengths: specific things the article does well (well-sourced claims, primary evidence, etc.)
-      3. Weaknesses: specific problems — INCLUDING contextual gaps. An article that is factually
-         correct but omits critical context that would change the reader's conclusion is WEAK,
-         not strong. Factor in:
+      3. Weaknesses: specific problems — INCLUDING contextual gaps AND coordination signals.
+         Factor in:
          - Missing counter-evidence found by web search
          - Scope mismatches (citing foreign data for local conclusions)
          - Omitted distributional effects, historical precedents, or institutional context
+         - If coordination_score is high: the article participates in a coordinated narrative
+           where multiple outlets share the same framing and omit the same counter-evidence.
+           This is a strong signal of narrative manipulation regardless of factual accuracy.
       4. An overall_quality rating: "strong", "mixed", "weak", or "insufficient"
 
       Rating guide:
-      - strong: Claims supported, relevant context addressed, no major omissions
+      - strong: Claims supported, relevant context addressed, no major omissions, no coordination
       - mixed: Claims may be supported but significant context is missing or scope is questionable
-      - weak: Major contextual gaps, misleading through omission, or most claims unsupported
+      - weak: Major contextual gaps, misleading through omission, most claims unsupported,
+        OR high coordination score (article participates in a coordinated narrative campaign)
       - insufficient: Not enough evidence to assess meaningfully
 
       CRITICAL: An article where every claim is technically true but critical counter-evidence
-      is omitted should be rated "mixed" at best, "weak" if the omissions are severe. Factual
-      accuracy alone does not make an article trustworthy — completeness matters.
+      is omitted should be rated "mixed" at best, "weak" if the omissions are severe. An article
+      that is part of a coordinated narrative campaign (coordination_score > 0.5) with convergent
+      omissions should be rated "weak" regardless of individual claim accuracy — the manipulation
+      is in the orchestrated pattern, not in any single article.
 
       IMPORTANT: Write the conclusion, strengths, and weaknesses texts in %{locale_name}.
       The overall_quality field must always use the English enum values above.
@@ -141,8 +148,20 @@ module Investigations
           completeness_score: contextual["completeness_score"].to_f,
           summary: contextual["summary"],
           gaps: gaps_context
-        }
+        },
+        coordinated_narrative: coordinated_narrative_context
       }.to_json
+    end
+
+    def coordinated_narrative_context
+      coordinated = @investigation.coordinated_narrative || {}
+      {
+        coordination_score: coordinated["coordination_score"].to_f,
+        pattern_summary: coordinated["pattern_summary"],
+        convergent_framing: Array(coordinated["convergent_framing"]),
+        convergent_omissions: Array(coordinated["convergent_omissions"]),
+        similar_outlets_count: Array(coordinated["similar_coverage"]).size
+      }
     end
 
     def response_schema
@@ -202,14 +221,24 @@ module Investigations
         weaknesses << I18n.t("heuristic_fallbacks.summary.contextual_gaps_found", count: gap_count)
       end
 
-      quality = if disputed.size > supported.size
+      # Factor in coordinated narrative
+      coordinated = @investigation.coordinated_narrative || {}
+      coordination_score = coordinated["coordination_score"].to_f
+
+      if coordination_score >= 0.5
+        weaknesses << I18n.t("heuristic_fallbacks.summary.coordinated_narrative_detected")
+      end
+
+      quality = if coordination_score >= 0.6
+        "weak" # coordinated narrative campaign overrides individual claim quality
+      elsif disputed.size > supported.size
         "weak"
       elsif completeness > 0 && completeness < 0.4
         "weak"
-      elsif avg_confidence >= 0.6 && supported.size > disputed.size && completeness >= 0.7
+      elsif avg_confidence >= 0.6 && supported.size > disputed.size && completeness >= 0.7 && coordination_score < 0.3
         "strong"
       elsif avg_confidence >= 0.6 && supported.size > disputed.size
-        "mixed" # downgrade from strong due to contextual gaps
+        "mixed"
       elsif assessed_claims.size <= 1 && needs_evidence.any?
         "insufficient"
       else

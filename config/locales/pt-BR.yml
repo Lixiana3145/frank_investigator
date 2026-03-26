@@ -121,6 +121,13 @@ pt-BR:
       unaddressed_questions: "Questões não abordadas"
       evidence_found: "Contra-evidência encontrada"
 
+    coordinated_narrative:
+      heading: "Análise de narrativa coordenada"
+      coordination_score: "Pontuação de coordenação"
+      convergent_framing: "Enquadramento convergente"
+      convergent_omissions: "Omissões convergentes"
+      similar_coverage: "Cobertura similar encontrada"
+
     investigation_summary:
       heading: "Resumo da investigação"
       strengths: "Pontos fortes"
@@ -276,6 +283,7 @@ pt-BR:
       assess_claims: "Avaliar alegações"
       expand_linked_articles_root: "Expandir artigos vinculados"
       analyze_contextual_gaps: "Analisar lacunas contextuais"
+      detect_coordinated_narrative: "Detectar narrativa coordenada"
       generate_summary: "Gerar resumo"
     severity:
       error: "Erro"
@@ -303,6 +311,7 @@ pt-BR:
       contextual_gaps_found:
         one: "%{count} lacuna contextual crítica foi identificada — contexto importante está ausente"
         other: "%{count} lacunas contextuais críticas foram identificadas — contexto importante está ausente"
+      coordinated_narrative_detected: "Este artigo parece fazer parte de uma campanha narrativa coordenada com enquadramento e omissões convergentes em múltiplos veículos"
       conclusion: "De %{total} alegações avaliadas, %{supported} são sustentadas, %{disputed} são contestadas e %{needs_evidence} precisam de mais evidência."
 
     contextual_gaps:
@@ -313,6 +322,10 @@ pt-BR:
       heuristic_summary: "A análise heurística identificou %{count} possível(is) lacuna(s) contextual(is)."
       no_gaps: "Nenhuma lacuna contextual significativa detectada pela análise heurística."
       no_analysis: "Nenhuma análise de lacunas contextuais realizada."
+
+    coordinated_narrative:
+      no_analysis: "Nenhuma análise de narrativa coordenada realizada."
+      insufficient_coverage: "Cobertura relacionada insuficiente para avaliar padrões de coordenação."
 
     fallacy_types:
       bait_and_pivot: "Isca e desvio"

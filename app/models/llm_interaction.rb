@@ -11,6 +11,7 @@ class LlmInteraction < ApplicationRecord
     rhetorical_analysis: "rhetorical_analysis",
     search_query_generation: "search_query_generation",
     contextual_gap_analysis: "contextual_gap_analysis",
+    coordinated_narrative: "coordinated_narrative",
     investigation_summary: "investigation_summary"
   }, default: :assessment, validate: true
 

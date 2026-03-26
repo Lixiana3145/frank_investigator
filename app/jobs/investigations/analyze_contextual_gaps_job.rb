@@ -31,7 +31,7 @@ module Investigations
       end
     ensure
       if @investigation
-        Investigations::GenerateSummaryJob.perform_later(@investigation.id)
+        Investigations::DetectCoordinatedNarrativeJob.perform_later(@investigation.id)
         Investigations::RefreshStatus.call(@investigation)
       end
     end

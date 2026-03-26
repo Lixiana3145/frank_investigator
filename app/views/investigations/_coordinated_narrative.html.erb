@@ -1,0 +1,84 @@
+<% data = investigation.coordinated_narrative %>
+<% return unless investigation.completed? && data.present? && data["coordination_score"].to_f > 0 %>
+
+<%
+  score = data["coordination_score"].to_f
+  callout_color = if score >= 0.6
+    "border-l-verdict-red bg-verdict-red/4"
+  elsif score >= 0.3
+    "border-l-verdict-amber bg-verdict-amber/4"
+  else
+    "border-l-verdict-green bg-verdict-green/4"
+  end
+%>
+
+<section class="border border-line rounded-3xl p-5 mb-4 border-l-4 <%= callout_color %>">
+  <h3 class="font-bold mb-2"><%= t("investigations.coordinated_narrative.heading") %></h3>
+  <p class="text-muted mb-3"><%= data["pattern_summary"] %></p>
+
+  <dl class="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3 mb-3">
+    <div>
+      <dt class="text-muted text-xs"><%= t("investigations.coordinated_narrative.coordination_score") %></dt>
+      <dd class="mt-0.5 font-bold flex items-center gap-1.5">
+        <span class="inline-block w-12 h-1.5 bg-black/8 rounded-full overflow-hidden">
+          <span class="block h-full rounded-full score-fill <%= score_color_class(1.0 - score) %>" style="width: <%= score_bar_width(score) %>%"></span>
+        </span>
+        <span><%= score_percent(score * 100) %></span>
+      </dd>
+    </div>
+  </dl>
+
+  <% framing = Array(data["convergent_framing"]) %>
+  <% omissions = Array(data["convergent_omissions"]) %>
+
+  <% if framing.any? || omissions.any? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+      <% if framing.any? %>
+        <div>
+          <h4 class="text-sm font-semibold text-verdict-amber mb-2"><%= t("investigations.coordinated_narrative.convergent_framing") %></h4>
+          <ul class="list-none p-0 m-0 space-y-1">
+            <% framing.each do |f| %>
+              <li class="flex items-start gap-2 text-sm">
+                <span class="text-verdict-amber shrink-0 mt-0.5">&#9632;</span>
+                <span><%= f %></span>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if omissions.any? %>
+        <div>
+          <h4 class="text-sm font-semibold text-verdict-red mb-2"><%= t("investigations.coordinated_narrative.convergent_omissions") %></h4>
+          <ul class="list-none p-0 m-0 space-y-1">
+            <% omissions.each do |o| %>
+              <li class="flex items-start gap-2 text-sm">
+                <span class="text-verdict-red shrink-0 mt-0.5">&#9888;</span>
+                <span><%= o %></span>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% coverage = Array(data["similar_coverage"]) %>
+  <% if coverage.any? %>
+    <details class="mt-3 p-3 bg-black/2 rounded-xl border border-line/40">
+      <summary class="cursor-pointer text-sm text-muted hover:text-ink">
+        <%= t("investigations.coordinated_narrative.similar_coverage") %> (<%= coverage.size %>)
+      </summary>
+      <ul class="mt-2 grid gap-2 list-none p-0 m-0">
+        <% coverage.each do |item| %>
+          <li>
+            <a href="<%= item["url"] %>" target="_blank" rel="noopener" class="text-sm text-ink hover:underline"><%= item["title"].presence || item["url"] %></a>
+            <% if item["snippet"].present? %>
+              <p class="text-muted text-xs mt-0.5"><%= item["snippet"].truncate(200) %></p>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+</section>

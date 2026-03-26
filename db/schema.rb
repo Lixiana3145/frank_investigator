@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_25_235649) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_122025) do
   create_table "article_claims", force: :cascade do |t|
     t.integer "article_id", null: false
     t.integer "claim_id", null: false
@@ -193,6 +193,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_235649) do
     t.datetime "analysis_completed_at"
     t.string "checkability_status", default: "pending", null: false
     t.json "contextual_gaps"
+    t.json "coordinated_narrative"
     t.datetime "created_at", null: false
     t.decimal "headline_bait_score", precision: 5, scale: 2, default: "0.0", null: false
     t.json "llm_summary"
