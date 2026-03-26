@@ -32,10 +32,16 @@ A fact does not become false because a million sources repeat a falsehood, and a
 - Provides full verdict history with evidence provenance snapshots
 - Analyzes headline-body divergence and headline citation amplification
 - Detects rhetorical fallacies that undermine the article's own factual claims
+- Detects source misrepresentation: when an article claims a source says X but it actually says Y
+- Detects temporal manipulation: old data presented as current, selective timeframes, timeline mixing
+- Detects statistical deception: cherry-picked baselines, misleading percentages, missing denominators
+- Detects selective quotation: quotes truncated or taken out of context to reverse meaning
+- Detects authority laundering: citation chains that inflate low-authority sources into apparent credibility
 - Analyzes contextual gaps: what the article omits that would change the reader's conclusion
 - Searches for counter-evidence addressing each identified gap
 - Detects coordinated narrative campaigns: finds related coverage, compares narrative fingerprints, flags convergent framing and convergent omissions across outlets
-- Generates an executive summary factoring in claims, rhetoric, omissions, and coordination signals
+- Scores emotional manipulation: emotional temperature vs evidence density, calibrated so passionate journalism backed by evidence is not penalized
+- Generates an executive summary from 15 pipeline steps with calibrated scoring that distinguishes normal editorial imperfections from deliberate manipulation
 - Live updates via Turbo Streams as the pipeline progresses
 
 ## Stack
