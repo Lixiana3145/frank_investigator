@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_26_122025) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_125809) do
   create_table "article_claims", force: :cascade do |t|
     t.integer "article_id", null: false
     t.integer "claim_id", null: false
@@ -191,20 +191,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_122025) do
 
   create_table "investigations", force: :cascade do |t|
     t.datetime "analysis_completed_at"
+    t.json "authority_laundering"
     t.string "checkability_status", default: "pending", null: false
     t.json "contextual_gaps"
     t.json "coordinated_narrative"
     t.datetime "created_at", null: false
+    t.json "emotional_manipulation"
     t.decimal "headline_bait_score", precision: 5, scale: 2, default: "0.0", null: false
     t.json "llm_summary"
     t.string "normalized_url", null: false
     t.decimal "overall_confidence_score", precision: 5, scale: 2, default: "0.0", null: false
     t.json "rhetorical_analysis"
     t.integer "root_article_id"
+    t.json "selective_quotation"
     t.string "slug"
+    t.json "source_misrepresentation"
+    t.json "statistical_deception"
     t.string "status", default: "queued", null: false
     t.string "submitted_url", null: false
     t.text "summary"
+    t.json "temporal_manipulation"
     t.datetime "updated_at", null: false
     t.index ["checkability_status"], name: "index_investigations_on_checkability_status"
     t.index ["normalized_url"], name: "index_investigations_on_normalized_url", unique: true

@@ -1,5 +1,11 @@
 class Investigation < ApplicationRecord
-  REQUIRED_STEPS = %w[fetch_root_article extract_claims analyze_headline assess_claims expand_linked_articles_root analyze_contextual_gaps detect_coordinated_narrative generate_summary].freeze
+  REQUIRED_STEPS = %w[
+    fetch_root_article extract_claims analyze_headline assess_claims expand_linked_articles_root
+    detect_source_misrepresentation detect_temporal_manipulation detect_statistical_deception
+    detect_selective_quotation detect_authority_laundering
+    analyze_rhetorical_structure analyze_contextual_gaps detect_coordinated_narrative
+    score_emotional_manipulation generate_summary
+  ].freeze
 
   broadcasts_refreshes
 

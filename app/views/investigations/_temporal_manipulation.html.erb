@@ -1,0 +1,44 @@
+<% data = investigation.temporal_manipulation %>
+<% return unless investigation.completed? && data.present? %>
+<% items = Array(data["manipulations"]) %>
+<% return if items.empty? && data["temporal_integrity_score"].to_f >= 1.0 %>
+
+<%
+  score = 1.0 - data["temporal_integrity_score"].to_f
+  callout_color = score >= 0.5 ? "border-l-verdict-red bg-verdict-red/4" : score >= 0.2 ? "border-l-verdict-amber bg-verdict-amber/4" : "border-l-verdict-green bg-verdict-green/4"
+%>
+
+<section class="border border-line rounded-3xl p-5 mb-4 border-l-4 <%= callout_color %>">
+  <h3 class="font-bold mb-2"><%= t("investigations.temporal_manipulation.heading") %></h3>
+  <p class="text-muted mb-3"><%= data["summary"] %></p>
+
+  <dl class="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3 mb-3">
+    <div>
+      <dt class="text-muted text-xs"><%= t("investigations.temporal_manipulation.temporal_integrity") %></dt>
+      <dd class="mt-0.5 font-bold flex items-center gap-1.5">
+        <span class="inline-block w-12 h-1.5 bg-black/8 rounded-full overflow-hidden">
+          <span class="block h-full rounded-full score-fill <%= score_color_class(data["temporal_integrity_score"].to_f) %>" style="width: <%= score_bar_width(data["temporal_integrity_score"].to_f) %>%"></span>
+        </span>
+        <span><%= score_percent(data["temporal_integrity_score"].to_f * 100) %></span>
+      </dd>
+    </div>
+  </dl>
+
+  <% if items.any? %>
+    <details class="mt-2 p-3 bg-black/2 rounded-xl border border-line/40" open>
+      <summary class="cursor-pointer text-sm text-muted hover:text-ink"><%= t("investigations.temporal_manipulation.detected_manipulations") %> (<%= items.size %>)</summary>
+      <ul class="mt-2 grid gap-3 list-none p-0 m-0">
+        <% items.each do |item| %>
+          <li class="py-2 border-b border-line/30 last:border-b-0">
+            <div class="flex gap-2 mb-1">
+              <span class="<%= fallacy_severity_badge(item["severity"]) %>"><%= item["type"].to_s.tr("_", " ").capitalize %></span>
+              <span class="<%= fallacy_severity_badge(item["severity"]) %>"><%= item["severity"]&.capitalize %></span>
+            </div>
+            <blockquote class="text-sm italic text-muted"><%= item["excerpt"] %></blockquote>
+            <p class="text-sm mt-1"><%= item["explanation"] %></p>
+          </li>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+</section>

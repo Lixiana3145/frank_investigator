@@ -178,8 +178,26 @@ module Analyzers
         headline_bait_score: @investigation.headline_bait_score.to_f,
         rhetorical_summary: rhetorical["summary"],
         narrative_bias_score: rhetorical["narrative_bias_score"].to_f,
-        fallacy_count: Array(rhetorical["fallacies"]).size
-      }.to_json
+        fallacy_count: Array(rhetorical["fallacies"]).size,
+        upstream_findings: upstream_findings
+      }.compact.to_json
+    end
+
+    def upstream_findings
+      findings = {}
+      if (sm = @investigation.source_misrepresentation).present?
+        distorted = Array(sm["misrepresentations"]).select { |m| m["verdict"].in?(%w[distorted fabricated]) }
+        findings[:distorted_sources] = distorted.map { |m| m["explanation"] } if distorted.any?
+      end
+      if (sd = @investigation.statistical_deception).present?
+        deceptions = Array(sd["deceptions"]).select { |d| d["type"].in?(%w[missing_base denominator_games cherry_picked_baseline]) }
+        findings[:statistical_gaps] = deceptions.map { |d| d["explanation"] } if deceptions.any?
+      end
+      if (sq = @investigation.selective_quotation).present?
+        truncated = Array(sq["quotations"]).select { |q| q["verdict"].in?(%w[truncated reversed]) }
+        findings[:truncated_quotes] = truncated.map { |q| q["explanation"] } if truncated.any?
+      end
+      findings.presence
     end
 
     def response_schema

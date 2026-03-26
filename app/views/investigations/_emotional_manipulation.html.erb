@@ -1,0 +1,69 @@
+<% data = investigation.emotional_manipulation %>
+<% return unless investigation.completed? && data.present? && data["manipulation_score"].to_f > 0 %>
+
+<%
+  score = data["manipulation_score"].to_f
+  callout_color = score >= 0.6 ? "border-l-verdict-red bg-verdict-red/4" : score >= 0.3 ? "border-l-verdict-amber bg-verdict-amber/4" : "border-l-verdict-green bg-verdict-green/4"
+%>
+
+<section class="border border-line rounded-3xl p-5 mb-4 border-l-4 <%= callout_color %>">
+  <h3 class="font-bold mb-2"><%= t("investigations.emotional_manipulation.heading") %></h3>
+  <p class="text-muted mb-3"><%= data["summary"] %></p>
+
+  <dl class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3 mb-3">
+    <div>
+      <dt class="text-muted text-xs"><%= t("investigations.emotional_manipulation.emotional_temperature") %></dt>
+      <dd class="mt-0.5 font-bold flex items-center gap-1.5">
+        <span class="inline-block w-12 h-1.5 bg-black/8 rounded-full overflow-hidden">
+          <span class="block h-full rounded-full score-fill <%= score_color_class(1.0 - data["emotional_temperature"].to_f) %>" style="width: <%= score_bar_width(data["emotional_temperature"].to_f) %>%"></span>
+        </span>
+        <span><%= score_percent(data["emotional_temperature"].to_f * 100) %></span>
+      </dd>
+    </div>
+    <div>
+      <dt class="text-muted text-xs"><%= t("investigations.emotional_manipulation.evidence_density") %></dt>
+      <dd class="mt-0.5 font-bold flex items-center gap-1.5">
+        <span class="inline-block w-12 h-1.5 bg-black/8 rounded-full overflow-hidden">
+          <span class="block h-full rounded-full score-fill <%= score_color_class(data["evidence_density"].to_f) %>" style="width: <%= score_bar_width(data["evidence_density"].to_f) %>%"></span>
+        </span>
+        <span><%= score_percent(data["evidence_density"].to_f * 100) %></span>
+      </dd>
+    </div>
+    <div>
+      <dt class="text-muted text-xs"><%= t("investigations.emotional_manipulation.manipulation_score") %></dt>
+      <dd class="mt-0.5 font-bold flex items-center gap-1.5">
+        <span class="inline-block w-12 h-1.5 bg-black/8 rounded-full overflow-hidden">
+          <span class="block h-full rounded-full score-fill <%= score_color_class(1.0 - score) %>" style="width: <%= score_bar_width(score) %>%"></span>
+        </span>
+        <span><%= score_percent(score * 100) %></span>
+      </dd>
+    </div>
+  </dl>
+
+  <% emotions = Array(data["dominant_emotions"]) %>
+  <% if emotions.any? %>
+    <div class="mb-3">
+      <p class="text-muted text-xs mb-1"><%= t("investigations.emotional_manipulation.dominant_emotions") %></p>
+      <div class="flex flex-wrap gap-1.5">
+        <% emotions.each do |emotion| %>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-verdict-amber/12 text-verdict-amber"><%= emotion %></span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <% factors = Array(data["contributing_factors"]) %>
+  <% if factors.any? %>
+    <details class="mt-2 p-3 bg-black/2 rounded-xl border border-line/40">
+      <summary class="cursor-pointer text-sm text-muted hover:text-ink"><%= t("investigations.emotional_manipulation.contributing_factors") %> (<%= factors.size %>)</summary>
+      <ul class="mt-2 grid gap-1 list-none p-0 m-0">
+        <% factors.each do |factor| %>
+          <li class="flex items-start gap-2 text-sm py-1">
+            <span class="text-muted shrink-0">&#8226;</span>
+            <span><%= factor["factor"] %></span>
+          </li>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+</section>

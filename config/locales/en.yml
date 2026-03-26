@@ -117,6 +117,46 @@ en:
       unaddressed_questions: "Unaddressed questions"
       evidence_found: "Counter-evidence found"
 
+    source_misrepresentation:
+      heading: "Source misrepresentation analysis"
+      misrepresentation_score: "Misrepresentation score"
+      cited_sources: "Cited sources"
+      verdict_accurate: "Accurate"
+      verdict_distorted: "Distorted"
+      verdict_fabricated: "Fabricated"
+      verdict_unverifiable: "Unverifiable"
+
+    temporal_manipulation:
+      heading: "Temporal manipulation analysis"
+      temporal_integrity: "Temporal integrity"
+      detected_manipulations: "Detected manipulations"
+
+    statistical_deception:
+      heading: "Statistical deception analysis"
+      statistical_integrity: "Statistical integrity"
+      detected_deceptions: "Detected deceptions"
+
+    selective_quotation:
+      heading: "Selective quotation analysis"
+      quotation_integrity: "Quotation integrity"
+      analyzed_quotes: "Analyzed quotes"
+      verdict_faithful: "Faithful"
+      verdict_truncated: "Truncated"
+      verdict_reversed: "Reversed"
+
+    authority_laundering:
+      heading: "Authority laundering analysis"
+      laundering_score: "Laundering score"
+      detected_chains: "Detected chains"
+
+    emotional_manipulation:
+      heading: "Emotional manipulation analysis"
+      emotional_temperature: "Emotional temperature"
+      evidence_density: "Evidence density"
+      manipulation_score: "Manipulation score"
+      dominant_emotions: "Dominant emotions"
+      contributing_factors: "Contributing factors"
+
     coordinated_narrative:
       heading: "Coordinated narrative analysis"
       coordination_score: "Coordination score"
@@ -279,7 +319,14 @@ en:
       assess_claims: "Assess claims"
       expand_linked_articles_root: "Expand linked articles"
       analyze_contextual_gaps: "Analyze contextual gaps"
+      detect_source_misrepresentation: "Detect source misrepresentation"
+      detect_temporal_manipulation: "Detect temporal manipulation"
+      detect_statistical_deception: "Detect statistical deception"
+      detect_selective_quotation: "Detect selective quotation"
+      detect_authority_laundering: "Detect authority laundering"
+      analyze_rhetorical_structure: "Analyze rhetorical structure"
       detect_coordinated_narrative: "Detect coordinated narrative"
+      score_emotional_manipulation: "Score emotional manipulation"
       generate_summary: "Generate summary"
     severity:
       error: "Error"
@@ -318,6 +365,39 @@ en:
       heuristic_summary: "Heuristic analysis identified %{count} potential contextual gap(s)."
       no_gaps: "No significant contextual gaps detected by heuristic analysis."
       no_analysis: "No contextual gap analysis performed."
+
+    source_misrepresentation:
+      no_analysis: "No source misrepresentation analysis performed."
+      no_sources: "No cited sources could be verified."
+
+    temporal_manipulation:
+      no_analysis: "No temporal manipulation analysis performed."
+      no_issues: "No temporal manipulation issues detected by heuristic analysis."
+      heuristic_summary: "Heuristic analysis detected %{count} potential temporal manipulation(s)."
+      undated_stale_excerpt: "References to years %{years} without explicit dating"
+      undated_stale_explanation: "The article references data from older periods without clearly indicating the age of the information, allowing readers to assume it is current."
+      predominantly_old_excerpt: "%{count} of %{total} year references are to older periods"
+      predominantly_old_explanation: "The majority of temporal references predate the publication year (%{publication_year}) by more than 2 years, suggesting reliance on outdated data."
+      wide_spread_excerpt: "Timeline spans from %{min} to %{max}"
+      wide_spread_explanation: "The article references events spanning %{spread} years, which may mix unrelated periods to imply connections."
+
+    statistical_deception:
+      no_analysis: "No statistical deception analysis performed."
+      no_issues: "No statistical deception detected."
+
+    selective_quotation:
+      no_analysis: "No selective quotation analysis performed."
+      no_quotes: "No quotations found to analyze."
+      no_quotations: "No quotations found in the article."
+      unverifiable_explanation: "No linked source material available to verify this quotation against its original context."
+      heuristic_summary: "Heuristic analysis found %{count} quotation(s) but could not verify them without source context."
+
+    authority_laundering:
+      no_analysis: "No authority laundering analysis performed."
+      no_chains: "No multi-hop citation chains detected."
+
+    emotional_manipulation:
+      no_analysis: "No emotional manipulation analysis performed."
 
     coordinated_narrative:
       no_analysis: "No coordinated narrative analysis performed."

@@ -64,11 +64,15 @@
     <%= render "headline_bait", investigation: @investigation %>
   <% end %>
 
+  <%= render "source_misrepresentation", investigation: @investigation %>
+  <%= render "temporal_manipulation", investigation: @investigation %>
+  <%= render "statistical_deception", investigation: @investigation %>
+  <%= render "selective_quotation", investigation: @investigation %>
+  <%= render "authority_laundering", investigation: @investigation %>
   <%= render "rhetorical_analysis", investigation: @investigation %>
-
   <%= render "contextual_gaps", investigation: @investigation %>
-
   <%= render "coordinated_narrative", investigation: @investigation %>
+  <%= render "emotional_manipulation", investigation: @investigation %>
 
   <%= render "investigation_summary", investigation: @investigation %>
 

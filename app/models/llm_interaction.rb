@@ -12,6 +12,12 @@ class LlmInteraction < ApplicationRecord
     search_query_generation: "search_query_generation",
     contextual_gap_analysis: "contextual_gap_analysis",
     coordinated_narrative: "coordinated_narrative",
+    source_misrepresentation: "source_misrepresentation",
+    temporal_manipulation: "temporal_manipulation",
+    statistical_deception: "statistical_deception",
+    selective_quotation: "selective_quotation",
+    authority_laundering: "authority_laundering",
+    emotional_manipulation: "emotional_manipulation",
     investigation_summary: "investigation_summary"
   }, default: :assessment, validate: true
 

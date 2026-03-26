@@ -71,7 +71,7 @@ module Investigations
           end
         end
 
-        Investigations::AnalyzeRhetoricalStructureJob.perform_later(@investigation.id)
+        Investigations::DetectSourceMisrepresentationJob.perform_later(@investigation.id)
 
         { assessed_claims_count: @investigation.claim_assessments.count }
       end

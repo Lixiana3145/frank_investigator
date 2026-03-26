@@ -182,12 +182,32 @@ module Analyzers
         }
       end
 
+      # Include upstream analyzer results for cross-analysis
+      upstream = {}
+      if (sm = @investigation.source_misrepresentation).present?
+        upstream[:source_misrepresentation_score] = sm["misrepresentation_score"].to_f
+        upstream[:distorted_sources] = Array(sm["misrepresentations"]).count { |m| m["verdict"].in?(%w[distorted fabricated]) }
+      end
+      if (tm = @investigation.temporal_manipulation).present?
+        upstream[:temporal_integrity_score] = tm["temporal_integrity_score"].to_f
+        upstream[:temporal_issues] = Array(tm["manipulations"]).size
+      end
+      if (sd = @investigation.statistical_deception).present?
+        upstream[:statistical_integrity_score] = sd["statistical_integrity_score"].to_f
+        upstream[:statistical_issues] = Array(sd["deceptions"]).size
+      end
+      if (sq = @investigation.selective_quotation).present?
+        upstream[:quotation_integrity_score] = sq["quotation_integrity_score"].to_f
+        upstream[:problematic_quotes] = Array(sq["quotations"]).count { |q| q["verdict"].in?(%w[truncated reversed fabricated]) }
+      end
+
       {
         article_title: article.title,
         article_body: article.body_text.to_s.truncate(4000),
         article_source_kind: article.source_kind,
-        assessed_claims: claims_context
-      }.to_json
+        assessed_claims: claims_context,
+        upstream_analysis: upstream.presence
+      }.compact.to_json
     end
 
     def response_schema

@@ -149,8 +149,30 @@ module Investigations
           summary: contextual["summary"],
           gaps: gaps_context
         },
-        coordinated_narrative: coordinated_narrative_context
+        coordinated_narrative: coordinated_narrative_context,
+        source_misrepresentation: analyzer_score_context(:source_misrepresentation, :misrepresentation_score),
+        temporal_manipulation: analyzer_score_context(:temporal_manipulation, :temporal_integrity_score),
+        statistical_deception: analyzer_score_context(:statistical_deception, :statistical_integrity_score),
+        selective_quotation: analyzer_score_context(:selective_quotation, :quotation_integrity_score),
+        authority_laundering: analyzer_score_context(:authority_laundering, :laundering_score),
+        emotional_manipulation: emotional_manipulation_context
       }.to_json
+    end
+
+    def analyzer_score_context(column, score_key)
+      data = @investigation.public_send(column) || {}
+      { score_key => data[score_key.to_s].to_f, summary: data["summary"] }
+    end
+
+    def emotional_manipulation_context
+      data = @investigation.emotional_manipulation || {}
+      {
+        manipulation_score: data["manipulation_score"].to_f,
+        emotional_temperature: data["emotional_temperature"].to_f,
+        evidence_density: data["evidence_density"].to_f,
+        dominant_emotions: Array(data["dominant_emotions"]),
+        summary: data["summary"]
+      }
     end
 
     def coordinated_narrative_context
@@ -229,13 +251,31 @@ module Investigations
         weaknesses << I18n.t("heuristic_fallbacks.summary.coordinated_narrative_detected")
       end
 
-      quality = if coordination_score >= 0.6
-        "weak" # coordinated narrative campaign overrides individual claim quality
+      # Factor in new analyzers
+      emotional = @investigation.emotional_manipulation || {}
+      manipulation_score = emotional["manipulation_score"].to_f
+      misrep_score = (@investigation.source_misrepresentation || {})["misrepresentation_score"].to_f
+      laundering_score = (@investigation.authority_laundering || {})["laundering_score"].to_f
+
+      # Aggregate deception signal from all analyzers
+      deception_signals = [
+        misrep_score,
+        1.0 - ((@investigation.temporal_manipulation || {})["temporal_integrity_score"] || 1.0).to_f,
+        1.0 - ((@investigation.statistical_deception || {})["statistical_integrity_score"] || 1.0).to_f,
+        1.0 - ((@investigation.selective_quotation || {})["quotation_integrity_score"] || 1.0).to_f,
+        laundering_score
+      ].select { |s| s > 0 }
+      avg_deception = deception_signals.any? ? deception_signals.sum / deception_signals.size : 0.0
+
+      quality = if coordination_score >= 0.6 || manipulation_score >= 0.7
+        "weak"
       elsif disputed.size > supported.size
         "weak"
       elsif completeness > 0 && completeness < 0.4
         "weak"
-      elsif avg_confidence >= 0.6 && supported.size > disputed.size && completeness >= 0.7 && coordination_score < 0.3
+      elsif avg_deception >= 0.5
+        "weak"
+      elsif avg_confidence >= 0.6 && supported.size > disputed.size && completeness >= 0.7 && coordination_score < 0.3 && avg_deception < 0.2
         "strong"
       elsif avg_confidence >= 0.6 && supported.size > disputed.size
         "mixed"
