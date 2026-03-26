@@ -21,9 +21,10 @@ module Investigations
 
         { coordination_score: result.coordination_score, coverage_found: result.similar_coverage.size }
       end
+      @step_succeeded = true
     ensure
       if @investigation
-        Investigations::ScoreEmotionalManipulationJob.perform_later(@investigation.id)
+        Investigations::ScoreEmotionalManipulationJob.perform_later(@investigation.id) if @step_succeeded
         Investigations::RefreshStatus.call(@investigation)
       end
     end

@@ -3,29 +3,34 @@ module Investigations
     queue_as :default
 
     def perform(investigation_id)
-      investigation = Investigation.includes(:root_article).find(investigation_id)
+      @investigation = Investigation.includes(:root_article).find(investigation_id)
+      @article = @investigation.root_article
 
-      Pipeline::StepRunner.call(investigation:, name: "fetch_root_article") do
-        article = investigation.root_article || raise("Investigation is missing a root article")
+      Pipeline::StepRunner.call(investigation: @investigation, name: "fetch_root_article") do
+        raise("Investigation is missing a root article") unless @article
 
-        if article.fresh?
-          Rails.logger.info("[FetchRootArticle] Article #{article.normalized_url} is fresh (fetched #{article.fetched_at}), skipping re-fetch")
+        if @article.fresh?
+          Rails.logger.info("[FetchRootArticle] Article #{@article.normalized_url} is fresh (fetched #{@article.fetched_at}), skipping re-fetch")
         else
-          snapshot = fetcher.call(article.normalized_url)
-          Articles::PersistFetchedContent.call(article:, html: snapshot.html, fetched_title: snapshot.title, current_depth: 0)
+          snapshot = fetcher.call(@article.normalized_url)
+          Articles::PersistFetchedContent.call(article: @article, html: snapshot.html, fetched_title: snapshot.title, current_depth: 0)
         end
 
-        Investigations::ExtractClaimsJob.perform_later(investigation.id)
-        Investigations::AnalyzeHeadlineJob.perform_later(investigation.id)
-        Investigations::ExpandLinkedArticlesJob.perform_later(investigation.id, source_article_id: article.id)
-
-        { links_count: article.sourced_links.count, cached: article.fresh? }
+        { links_count: @article.sourced_links.count, cached: @article.fresh? }
       end
+      @step_succeeded = true
     rescue Fetchers::ChromiumFetcher::FetchError => error
-      investigation.root_article&.update!(fetch_status: :failed)
+      @investigation.root_article&.update!(fetch_status: :failed)
       raise error
     ensure
-      Investigations::RefreshStatus.call(investigation) if investigation
+      if @investigation
+        if @step_succeeded && @article
+          Investigations::ExtractClaimsJob.perform_later(@investigation.id)
+          Investigations::AnalyzeHeadlineJob.perform_later(@investigation.id)
+          Investigations::ExpandLinkedArticlesJob.perform_later(@investigation.id, source_article_id: @article.id)
+        end
+        Investigations::RefreshStatus.call(@investigation)
+      end
     end
 
     private

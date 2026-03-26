@@ -27,9 +27,10 @@ module Investigations
           { batched: true }
         end
       end
+      @step_succeeded = true
     ensure
       if @investigation
-        Investigations::AnalyzeRhetoricalStructureJob.perform_later(@investigation.id)
+        Investigations::AnalyzeRhetoricalStructureJob.perform_later(@investigation.id) if @step_succeeded
         Investigations::RefreshStatus.call(@investigation)
       end
     end

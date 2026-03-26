@@ -29,9 +29,10 @@ module Investigations
           completeness_score: result.completeness_score
         }
       end
+      @step_succeeded = true
     ensure
       if @investigation
-        Investigations::DetectCoordinatedNarrativeJob.perform_later(@investigation.id)
+        Investigations::DetectCoordinatedNarrativeJob.perform_later(@investigation.id) if @step_succeeded
         Investigations::RefreshStatus.call(@investigation)
       end
     end

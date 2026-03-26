@@ -21,9 +21,10 @@ module Investigations
 
         { manipulation_score: result.manipulation_score, emotional_temperature: result.emotional_temperature }
       end
+      @step_succeeded = true
     ensure
       if @investigation
-        Investigations::GenerateSummaryJob.perform_later(@investigation.id)
+        Investigations::GenerateSummaryJob.perform_later(@investigation.id) if @step_succeeded
         Investigations::RefreshStatus.call(@investigation)
       end
     end

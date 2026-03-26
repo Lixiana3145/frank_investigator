@@ -3,17 +3,20 @@ module Investigations
     queue_as :default
 
     def perform(investigation_id)
-      investigation = Investigation.includes(:root_article).find(investigation_id)
+      @investigation = Investigation.includes(:root_article).find(investigation_id)
 
-      Pipeline::StepRunner.call(investigation:, name: "extract_claims") do
-        article = investigation.root_article || raise("Investigation is missing a root article")
-        Articles::SyncClaims.call(investigation:, article:)
+      Pipeline::StepRunner.call(investigation: @investigation, name: "extract_claims") do
+        article = @investigation.root_article || raise("Investigation is missing a root article")
+        Articles::SyncClaims.call(investigation: @investigation, article:)
 
-        Investigations::AssessClaimsJob.perform_later(investigation.id)
-        { claims_count: investigation.claim_assessments.count }
+        { claims_count: @investigation.claim_assessments.count }
       end
+      @step_succeeded = true
     ensure
-      Investigations::RefreshStatus.call(investigation) if investigation
+      if @investigation
+        Investigations::AssessClaimsJob.perform_later(@investigation.id) if @step_succeeded
+        Investigations::RefreshStatus.call(@investigation)
+      end
     end
   end
 end

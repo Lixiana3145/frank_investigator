@@ -29,9 +29,10 @@ module Investigations
           narrative_bias_score: result.narrative_bias_score
         }
       end
+      @step_succeeded = true
     ensure
       if @investigation
-        Investigations::AnalyzeContextualGapsJob.perform_later(@investigation.id)
+        Investigations::AnalyzeContextualGapsJob.perform_later(@investigation.id) if @step_succeeded
         Investigations::RefreshStatus.call(@investigation)
       end
     end

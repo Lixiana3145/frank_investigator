@@ -71,12 +71,14 @@ module Investigations
           end
         end
 
-        Investigations::BatchContentAnalysisJob.perform_later(@investigation.id)
-
         { assessed_claims_count: @investigation.claim_assessments.count }
       end
+      @step_succeeded = true
     ensure
-      Investigations::RefreshStatus.call(@investigation) if @investigation
+      if @investigation
+        Investigations::BatchContentAnalysisJob.perform_later(@investigation.id) if @step_succeeded
+        Investigations::RefreshStatus.call(@investigation)
+      end
     end
 
     private
