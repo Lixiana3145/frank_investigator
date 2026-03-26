@@ -1,6 +1,7 @@
 class InvestigationsController < ApplicationController
   MAX_URL_LENGTH = 2048
 
+  before_action :authenticate_submitter!, only: :home
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
   def home
@@ -34,6 +35,7 @@ class InvestigationsController < ApplicationController
 
   def show
     @investigation = Investigation.find_by!(slug: params[:id])
+
     @root_article = @investigation.root_article
     @checkable_claims = @investigation.claim_assessments
       .includes(claim: {}, evidence_items: :article, llm_interactions: {}, verdict_snapshots: {})
@@ -47,10 +49,19 @@ class InvestigationsController < ApplicationController
     @links = @root_article&.sourced_links&.includes(:target_article)&.order(:position) || []
     @failure_info = build_failure_info
 
+    # HTTP caching: completed reports are immutable
+    finished = @investigation.completed? || @investigation.failed?
+
     respond_to do |format|
-      format.html
+      format.html do
+        if finished
+          expires_in 1.hour, public: true
+          response.headers["ETag"] = %("#{Digest::MD5.hexdigest(@investigation.cache_key_with_version)}")
+        end
+      end
       format.json do
-        if @investigation.completed? || @investigation.failed?
+        if finished
+          expires_in 1.hour, public: true
           render json: investigation_json
         else
           response.headers["Retry-After"] = "5"
@@ -293,6 +304,15 @@ class InvestigationsController < ApplicationController
     respond_to do |format|
       format.html { render file: Rails.root.join("public/404.html"), layout: false, status: :not_found }
       format.json { render json: { error: "not_found" }, status: :not_found }
+    end
+  end
+
+  def authenticate_submitter!
+    secret = ENV["FRANK_AUTH_SECRET"]
+    return if secret.blank? # No secret configured = open access (dev mode)
+
+    authenticate_or_request_with_http_basic("Frank Investigator") do |_user, password|
+      ActiveSupport::SecurityUtils.secure_compare(password, secret)
     end
   end
 
