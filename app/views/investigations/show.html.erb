@@ -73,13 +73,34 @@
   <%= render "coordinated_narrative", investigation: @investigation %>
   <%= render "emotional_manipulation", investigation: @investigation %>
 
-  <%= render "source_misrepresentation", investigation: @investigation %>
-  <%= render "temporal_manipulation", investigation: @investigation %>
-  <%= render "statistical_deception", investigation: @investigation %>
-  <%= render "selective_quotation", investigation: @investigation %>
-  <%= render "authority_laundering", investigation: @investigation %>
-  <%= render "rhetorical_analysis", investigation: @investigation %>
-  <%= render "contextual_gaps", investigation: @investigation %>
+  <% if @investigation.completed? %>
+    <% detailed_sections = [
+      [:source_misrepresentation, "investigations.source_misrepresentation.heading"],
+      [:temporal_manipulation, "investigations.temporal_manipulation.heading"],
+      [:statistical_deception, "investigations.statistical_deception.heading"],
+      [:selective_quotation, "investigations.selective_quotation.heading"],
+      [:authority_laundering, "investigations.authority_laundering.heading"],
+      [:rhetorical_analysis, "investigations.rhetorical_analysis.heading"],
+      [:contextual_gaps, "investigations.contextual_gaps.heading"],
+    ] %>
+    <% detailed_sections.each do |analyzer, heading_key| %>
+      <% significant = analyzer_significant?(@investigation, analyzer) %>
+      <details class="mb-2" <%= "open" if significant %>>
+        <summary class="cursor-pointer text-sm font-semibold text-muted hover:text-ink py-2 flex items-center gap-2">
+          <% if significant %>
+            <span class="w-2 h-2 rounded-full bg-verdict-amber shrink-0"></span>
+          <% else %>
+            <span class="w-2 h-2 rounded-full bg-verdict-green shrink-0"></span>
+          <% end %>
+          <%= t(heading_key) %>
+          <% unless significant %>
+            <span class="text-xs text-muted font-normal">— <%= t("investigations.show.no_issues_found") %></span>
+          <% end %>
+        </summary>
+        <%= render analyzer.to_s, investigation: @investigation %>
+      </details>
+    <% end %>
+  <% end %>
 
   <section class="space-y-4">
     <%= render "root_article_panel", root_article: @root_article %>

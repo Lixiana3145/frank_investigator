@@ -65,6 +65,7 @@ en:
       what_we_could_not_check: "What we could not check"
       default_uncheckable_reason: "This claim needs more context before it can be checked."
       uncheckable_pending: "No subjective or ambiguous claims have been classified yet."
+      no_issues_found: "no significant issues found"
       no_uncheckable_claims: "No uncheckable claims were found in this article."
 
     progress:

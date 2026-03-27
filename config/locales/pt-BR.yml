@@ -69,6 +69,7 @@ pt-BR:
       what_we_could_not_check: "O que não pudemos verificar"
       default_uncheckable_reason: "Esta alegação precisa de mais contexto antes de poder ser verificada."
       uncheckable_pending: "Nenhuma alegação subjetiva ou ambígua foi classificada ainda."
+      no_issues_found: "nenhum problema significativo encontrado"
       no_uncheckable_claims: "Nenhuma alegação não verificável foi encontrada neste artigo."
 
     progress:

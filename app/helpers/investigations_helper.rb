@@ -106,6 +106,33 @@ module InvestigationsHelper
     end
   end
 
+  # Check if an analyzer found significant issues worth showing expanded
+  def analyzer_significant?(investigation, analyzer)
+    case analyzer
+    when :source_misrepresentation
+      investigation.source_misrepresentation&.dig("misrepresentation_score").to_f > 0.25
+    when :temporal_manipulation
+      (investigation.temporal_manipulation&.dig("temporal_integrity_score") || 1.0).to_f < 0.75
+    when :statistical_deception
+      (investigation.statistical_deception&.dig("statistical_integrity_score") || 1.0).to_f < 0.75
+    when :selective_quotation
+      (investigation.selective_quotation&.dig("quotation_integrity_score") || 1.0).to_f < 0.75
+    when :authority_laundering
+      investigation.authority_laundering&.dig("laundering_score").to_f > 0.25
+    when :rhetorical_analysis
+      investigation.rhetorical_analysis&.dig("narrative_bias_score").to_f > 0.2 ||
+        Array(investigation.rhetorical_analysis&.dig("fallacies")).any?
+    when :contextual_gaps
+      (investigation.contextual_gaps&.dig("completeness_score") || 1.0).to_f < 0.7
+    when :emotional_manipulation
+      investigation.emotional_manipulation&.dig("manipulation_score").to_f > 0.3
+    when :coordinated_narrative
+      investigation.coordinated_narrative&.dig("coordination_score").to_f > 0.2
+    else
+      true
+    end
+  end
+
   def render_reason_summary(text)
     return "" if text.blank?
 
