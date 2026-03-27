@@ -21,8 +21,13 @@ module Investigations
 
         { overall_quality: summary_data&.dig(:overall_quality) }
       end
+      @step_succeeded = true
     ensure
-      Investigations::RefreshStatus.call(@investigation) if @investigation
+      if @investigation
+        # Cross-reference is non-blocking enrichment — fire and forget
+        Investigations::CrossReferenceJob.perform_later(@investigation.id) if @step_succeeded
+        Investigations::RefreshStatus.call(@investigation)
+      end
     end
   end
 end

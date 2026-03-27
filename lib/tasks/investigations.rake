@@ -36,4 +36,24 @@ namespace :frank do
     Investigations::BatchContentAnalysisJob.perform_later(inv.id)
     puts "  Jobs enqueued. Pipeline will complete via Solid Queue."
   end
+
+  desc "Cross-reference an investigation with related ones (by slug)"
+  task :crossref, [ :slug ] => :environment do |_t, args|
+    slug = args[:slug] || ENV["SLUG"]
+    abort "Usage: rails frank:crossref[SLUG]" unless slug
+
+    inv = Investigation.find_by!(slug: slug)
+    puts "Cross-referencing #{inv.slug} (#{inv.root_article&.title.to_s.truncate(60)})"
+
+    result = Analyzers::CrossInvestigationEnricher.call(investigation: inv)
+    if result
+      related = Array(result[:related_investigations])
+      puts "  Found #{related.size} related investigations"
+      related.each { |r| puts "    #{r[:slug]} — #{r[:host]} (#{r[:quality]})" }
+      puts "  Critical omissions: #{Array(result[:critical_omissions]).size}"
+      Array(result[:critical_omissions]).each { |o| puts "    - #{o.truncate(100)}" }
+    else
+      puts "  No related investigations found."
+    end
+  end
 end

@@ -198,6 +198,18 @@ en:
       convergent_omissions: "Convergent omissions"
       similar_coverage: "Similar coverage found"
 
+    event_context:
+      heading: "Event context from related investigations"
+      subheading:
+        one: "This event was analyzed across %{count} article"
+        other: "This event was analyzed across %{count} articles"
+      composite_timeline: "Composite timeline"
+      critical_omissions: "Facts omitted by the majority of articles"
+      narrative_assessment: "Narrative assessment"
+      coverage_comparison: "Coverage comparison"
+      articles: "articles"
+      this_article: "This article"
+
     investigation_summary:
       heading: "Investigation summary"
       strengths: "Strengths"

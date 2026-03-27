@@ -202,6 +202,18 @@ pt-BR:
       convergent_omissions: "Omissões convergentes"
       similar_coverage: "Cobertura similar encontrada"
 
+    event_context:
+      heading: "Contexto do evento a partir de investigações relacionadas"
+      subheading:
+        one: "Este evento foi analisado em %{count} artigo"
+        other: "Este evento foi analisado em %{count} artigos"
+      composite_timeline: "Linha do tempo composta"
+      critical_omissions: "Fatos omitidos pela maioria dos artigos"
+      narrative_assessment: "Avaliação narrativa"
+      coverage_comparison: "Comparação de cobertura"
+      articles: "artigos"
+      this_article: "Este artigo"
+
     investigation_summary:
       heading: "Resumo da investigação"
       strengths: "Pontos fortes"

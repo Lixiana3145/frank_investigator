@@ -1,0 +1,85 @@
+<% ctx = investigation.event_context %>
+<% return unless ctx.present? && Array(ctx["related_investigations"]).size > 1 %>
+
+<section class="border border-line rounded-3xl p-5 mb-4 border-l-4 border-l-ink bg-ink/2">
+  <h3 class="font-bold mb-2"><%= t("investigations.event_context.heading") %></h3>
+  <p class="text-muted mb-3 text-sm"><%= t("investigations.event_context.subheading", count: Array(ctx["related_investigations"]).size) %></p>
+
+  <% if ctx["composite_timeline"].present? %>
+    <div class="mb-4">
+      <h4 class="text-sm font-semibold mb-1"><%= t("investigations.event_context.composite_timeline") %></h4>
+      <p class="text-sm leading-relaxed"><%= ctx["composite_timeline"] %></p>
+    </div>
+  <% end %>
+
+  <% omissions = Array(ctx["critical_omissions"]) %>
+  <% if omissions.any? %>
+    <div class="mb-4">
+      <h4 class="text-sm font-semibold text-verdict-red mb-1"><%= t("investigations.event_context.critical_omissions") %></h4>
+      <ul class="list-none p-0 m-0 space-y-1">
+        <% omissions.each do |o| %>
+          <li class="flex items-start gap-2 text-sm">
+            <span class="text-verdict-red shrink-0 mt-0.5">&#9888;</span>
+            <span><%= o %></span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if ctx["narrative_assessment"].present? %>
+    <div class="mb-4">
+      <h4 class="text-sm font-semibold mb-1"><%= t("investigations.event_context.narrative_assessment") %></h4>
+      <p class="text-sm text-muted"><%= ctx["narrative_assessment"] %></p>
+    </div>
+  <% end %>
+
+  <% this_host = investigation.root_article&.host %>
+  <% related = Array(ctx["related_investigations"]) %>
+
+  <details class="mt-3 p-3 bg-black/2 rounded-xl border border-line/40">
+    <summary class="cursor-pointer text-sm text-muted hover:text-ink">
+      <%= t("investigations.event_context.coverage_comparison") %> (<%= related.size %> <%= t("investigations.event_context.articles") %>)
+    </summary>
+    <div class="mt-3 grid gap-3">
+      <% related.each do |inv_data| %>
+        <% is_current = inv_data["slug"] == investigation.slug %>
+        <div class="p-3 rounded-lg border <%= is_current ? 'border-ink/20 bg-ink/3' : 'border-line/40' %>">
+          <div class="flex items-center gap-2 mb-1">
+            <% if is_current %>
+              <span class="text-xs font-bold uppercase tracking-wide text-muted"><%= t("investigations.event_context.this_article") %></span>
+            <% else %>
+              <%= link_to investigation_path(inv_data["slug"]), class: "text-sm text-ink hover:underline" do %>
+                <%= inv_data["host"] %>
+              <% end %>
+            <% end %>
+            <span class="<%= badge_class_for(inv_data["quality"] == "strong" ? "supported" : inv_data["quality"] == "weak" ? "disputed" : "mixed") %> text-xs"><%= inv_data["quality"]&.capitalize %></span>
+          </div>
+          <p class="text-xs text-muted mb-2"><%= inv_data["title"] %></p>
+
+          <% included = Array(inv_data["facts_included"]) %>
+          <% omitted = Array(inv_data["facts_omitted"]) %>
+
+          <% if included.any? %>
+            <div class="mb-1">
+              <% included.first(3).each do |f| %>
+                <span class="inline-flex items-center gap-1 text-xs text-verdict-green mr-1">&#10003; <%= f.truncate(60) %></span>
+              <% end %>
+            </div>
+          <% end %>
+
+          <% if omitted.any? %>
+            <div>
+              <% omitted.first(3).each do |f| %>
+                <span class="inline-flex items-center gap-1 text-xs text-verdict-red mr-1">&#10007; <%= f.truncate(60) %></span>
+              <% end %>
+              <% if omitted.size > 3 %>
+                <span class="text-xs text-muted">+<%= omitted.size - 3 %> more</span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </details>
+</section>
