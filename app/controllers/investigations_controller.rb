@@ -49,19 +49,19 @@ class InvestigationsController < ApplicationController
     @links = @root_article&.sourced_links&.includes(:target_article)&.order(:position) || []
     @failure_info = build_failure_info
 
-    # HTTP caching: completed reports are immutable
+    # HTTP caching: completed reports use ETag for conditional requests
+    # but short max-age so deploys with new view code take effect quickly
     finished = @investigation.completed? || @investigation.failed?
 
     respond_to do |format|
       format.html do
         if finished
-          expires_in 1.hour, public: true
-          response.headers["ETag"] = %("#{Digest::MD5.hexdigest(@investigation.cache_key_with_version)}")
+          expires_in 5.minutes, public: false
         end
       end
       format.json do
         if finished
-          expires_in 1.hour, public: true
+          expires_in 5.minutes, public: false
           render json: investigation_json
         else
           response.headers["Retry-After"] = "5"
