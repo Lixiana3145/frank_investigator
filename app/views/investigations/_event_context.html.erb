@@ -8,7 +8,7 @@
   <% if ctx["composite_timeline"].present? %>
     <div class="mb-4">
       <h4 class="text-sm font-semibold mb-1"><%= t("investigations.event_context.composite_timeline") %></h4>
-      <p class="text-sm leading-relaxed"><%= ctx["composite_timeline"] %></p>
+      <div class="text-sm leading-relaxed"><%= render_reason_summary(ctx["composite_timeline"]) %></div>
     </div>
   <% end %>
 
@@ -20,7 +20,7 @@
         <% omissions.each do |o| %>
           <li class="flex items-start gap-2 text-sm">
             <span class="text-verdict-red shrink-0 mt-0.5">&#9888;</span>
-            <span><%= o %></span>
+            <span><%= render_reason_summary(o) %></span>
           </li>
         <% end %>
       </ul>
@@ -30,7 +30,7 @@
   <% if ctx["narrative_assessment"].present? %>
     <div class="mb-4">
       <h4 class="text-sm font-semibold mb-1"><%= t("investigations.event_context.narrative_assessment") %></h4>
-      <p class="text-sm text-muted"><%= ctx["narrative_assessment"] %></p>
+      <div class="text-sm text-muted"><%= render_reason_summary(ctx["narrative_assessment"]) %></div>
     </div>
   <% end %>
 
