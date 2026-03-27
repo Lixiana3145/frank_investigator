@@ -1,5 +1,7 @@
 module Analyzers
   class ClaimCanonicalizer
+    include LlmHelpers
+
     CANONICALIZATION_VERSION = 1
 
     Result = Struct.new(:canonical_form, :semantic_key, keyword_init: true)
@@ -98,12 +100,8 @@ module Analyzers
         .truncate(80, omission: "")
     end
 
-    def llm_available?
-      defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present?
-    end
-
     def canonicalization_model
-      Array(Rails.application.config.x.frank_investigator.openrouter_models).first
+      primary_model
     end
   end
 end

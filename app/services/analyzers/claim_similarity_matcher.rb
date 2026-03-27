@@ -1,5 +1,7 @@
 module Analyzers
   class ClaimSimilarityMatcher
+    include LlmHelpers
+
     SIMILARITY_THRESHOLD = 0.55
     ENTITY_OVERLAP_MINIMUM = 0.4
     MAX_LLM_CANDIDATES = 5
@@ -168,12 +170,8 @@ module Analyzers
       end
     end
 
-    def llm_available?
-      defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present?
-    end
-
     def equivalence_model
-      Array(Rails.application.config.x.frank_investigator.openrouter_models).first
+      primary_model
     end
   end
 end

@@ -10,6 +10,8 @@ if ENV["COVERAGE"] || ENV["CI"]
 end
 
 ENV["RAILS_ENV"] ||= "test"
+ENV.delete("FRANK_AUTH_SECRET")   # Disable submission auth in tests
+ENV.delete("JOBS_AUTH_PASSWORD")  # Reset to default "admin" for error_reports tests
 require_relative "../config/environment"
 require "rails/test_help"
 
@@ -19,7 +21,7 @@ module ActiveSupport
     setup { I18n.locale = :en }
 
     # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors)
+    parallelize(workers: ENV["PARALLEL_WORKERS"]&.to_i || :number_of_processors)
 
     parallelize_setup do |worker|
       SimpleCov.command_name "#{SimpleCov.command_name}-#{worker}" if defined?(SimpleCov)

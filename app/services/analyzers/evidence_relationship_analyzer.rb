@@ -1,5 +1,7 @@
 module Analyzers
   class EvidenceRelationshipAnalyzer
+    include LlmHelpers
+
     NEGATION_PATTERNS = [
       /\bfalse\b/i,
       /\bno evidence\b/i,
@@ -245,53 +247,17 @@ module Analyzers
       TextAnalysis.simple_tokens(text).reject { |token| TextAnalysis::STOP_WORDS.include?(token) }.uniq
     end
 
-    def unwrap_json(content)
-      text = content.to_s.strip
-      text = text.sub(/\A```(?:json)?\s*\n?/, "").sub(/\n?\s*```\z/, "") if text.start_with?("```")
-      text
-    end
-
-    def llm_available?
-      defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present?
+    def interaction_type_name
+      :contradiction_analysis
     end
 
     def contradiction_model
-      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-sonnet-4-6"
+      primary_model
     end
 
     def record_interaction(prompt, fingerprint)
       return nil unless @investigation
-      LlmInteraction.create!(
-        investigation: @investigation,
-        interaction_type: :contradiction_analysis,
-        model_id: contradiction_model,
-        prompt_text: prompt,
-        evidence_packet_fingerprint: fingerprint,
-        status: :pending
-      )
-    rescue StandardError
-      nil
-    end
-
-    def complete_interaction(interaction, response, payload, elapsed_ms)
-      return unless interaction
-      interaction.update!(
-        response_text: response.content.to_s,
-        response_json: payload,
-        status: :completed,
-        latency_ms: elapsed_ms,
-        prompt_tokens: response.respond_to?(:input_tokens) ? response.input_tokens : nil,
-        completion_tokens: response.respond_to?(:output_tokens) ? response.output_tokens : nil
-      )
-    rescue StandardError
-      nil
-    end
-
-    def fail_interaction(interaction, error)
-      return unless interaction
-      interaction.update!(status: :failed, error_class: error.class.name, error_message: error.message.truncate(500))
-    rescue StandardError
-      nil
+      create_interaction(contradiction_model, prompt, fingerprint)
     end
 
     # --- Class-level batch helpers ---

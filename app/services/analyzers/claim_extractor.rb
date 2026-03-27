@@ -1,5 +1,7 @@
 module Analyzers
   class ClaimExtractor
+    include LlmHelpers
+
     Result = Struct.new(:canonical_text, :surface_text, :role, :checkability_status, :importance_score, :canonical_form, :semantic_key, keyword_init: true)
 
     MAX_LLM_INPUT_LENGTH = 3000
@@ -208,55 +210,17 @@ module Analyzers
       text.split(/(?<=[.!?])\s+/).map(&:strip)
     end
 
-    def llm_available?
-      defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present?
+    def interaction_type_name
+      :claim_decomposition
     end
 
     def extraction_model
-      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-sonnet-4-6"
+      primary_model
     end
 
     def record_interaction(prompt, fingerprint)
       return nil unless @investigation
-      LlmInteraction.create!(
-        investigation: @investigation,
-        interaction_type: :claim_decomposition,
-        model_id: extraction_model,
-        prompt_text: prompt,
-        evidence_packet_fingerprint: fingerprint,
-        status: :pending
-      )
-    rescue StandardError
-      nil
-    end
-
-    def complete_interaction(interaction, response, payload, elapsed_ms)
-      return unless interaction
-      interaction.update!(
-        response_text: response.content.to_s,
-        response_json: payload,
-        status: :completed,
-        latency_ms: elapsed_ms,
-        prompt_tokens: response.respond_to?(:input_tokens) ? response.input_tokens : nil,
-        completion_tokens: response.respond_to?(:output_tokens) ? response.output_tokens : nil
-      )
-    rescue StandardError => e
-      Rails.logger.warn("Failed to update LLM interaction: #{e.message}")
-    end
-
-    def fail_interaction(interaction, error)
-      return unless interaction
-      interaction.update!(status: :failed, error_class: error.class.name, error_message: error.message.truncate(500))
-    rescue StandardError
-      nil
-    end
-
-    def unwrap_json(content)
-      text = content.to_s.strip
-      if text.start_with?("```")
-        text = text.sub(/\A```(?:json)?\s*\n?/, "").sub(/\n?\s*```\z/, "")
-      end
-      text
+      create_interaction(extraction_model, prompt, fingerprint)
     end
   end
 end

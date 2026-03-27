@@ -11,6 +11,8 @@ module Analyzers
   # - Attributing cause to an unrelated actor (strawman / false cause)
   # - Presenting a strong claim then immediately undermining it with speculation
   class RhetoricalFallacyAnalyzer
+    include LlmHelpers
+
     Result = Struct.new(
       :fallacies,
       :narrative_bias_score,
@@ -330,70 +332,14 @@ module Analyzers
       Result.new(fallacies: [], narrative_bias_score: 0.0, summary: I18n.t("heuristic_fallbacks.no_analysis"))
     end
 
-    # ── LLM interaction helpers ──
-
-    def create_interaction(model, prompt, fingerprint)
-      LlmInteraction.create!(
-        investigation: @investigation,
-        interaction_type: :rhetorical_analysis,
-        model_id: model,
-        prompt_text: prompt,
-        evidence_packet_fingerprint: fingerprint,
-        status: :pending
-      )
-    rescue StandardError => e
-      Rails.logger.warn("Failed to create rhetorical analysis interaction: #{e.message}")
-      nil
+    def interaction_type_name
+      :rhetorical_analysis
     end
-
-    def complete_interaction(interaction, response, payload, elapsed_ms)
-      return unless interaction
-      interaction.update!(
-        response_text: response.content.to_s,
-        response_json: payload,
-        status: :completed,
-        latency_ms: elapsed_ms,
-        prompt_tokens: response.respond_to?(:input_tokens) ? response.input_tokens : nil,
-        completion_tokens: response.respond_to?(:output_tokens) ? response.output_tokens : nil
-      )
-    rescue StandardError => e
-      Rails.logger.warn("Failed to update rhetorical analysis interaction: #{e.message}")
-    end
-
-    def fail_interaction(interaction, error)
-      return unless interaction
-      interaction.update!(status: :failed, error_class: error.class.name, error_message: error.message.truncate(500))
-    rescue StandardError
-      nil
-    end
-
-    LOCALE_NAMES = {
-      en: "English",
-      "pt-BR": "Brazilian Portuguese"
-    }.freeze
 
     def system_prompt
       # Use gsub instead of % formatting because the template contains literal
       # percent signs in examples (e.g. "5% this quarter") that break Ruby's % operator
-      SYSTEM_PROMPT_TEMPLATE.gsub("%{locale_name}", LOCALE_NAMES.fetch(I18n.locale, "English"))
-    end
-
-    def llm_available?
-      defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present?
-    end
-
-    def primary_model
-      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-sonnet-4-6"
-    end
-
-    def llm_timeout
-      ENV.fetch("LLM_TIMEOUT_SECONDS", 120).to_i
-    end
-
-    def unwrap_json(content)
-      text = content.to_s.strip
-      text = text.sub(/\A```(?:json)?\s*\n?/, "").sub(/\n?\s*```\z/, "") if text.start_with?("```")
-      text
+      SYSTEM_PROMPT_TEMPLATE.gsub("%{locale_name}", locale_name)
     end
   end
 end

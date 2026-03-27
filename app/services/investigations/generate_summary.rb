@@ -1,13 +1,10 @@
 module Investigations
   class GenerateSummary
+    include Analyzers::LlmHelpers
+
     Result = Struct.new(:conclusion, :strengths, :weaknesses, :overall_quality, keyword_init: true)
 
     QUALITY_VALUES = %w[strong mixed weak insufficient].freeze
-
-    LOCALE_NAMES = {
-      en: "English",
-      "pt-BR": "Brazilian Portuguese"
-    }.freeze
 
     SYSTEM_PROMPT_TEMPLATE = <<~PROMPT.freeze
       You are an editorial quality analyst for a fact-checking system. You produce a concise
@@ -314,63 +311,12 @@ module Investigations
       Result.new(conclusion:, strengths:, weaknesses:, overall_quality: quality)
     end
 
-    # ── LLM interaction helpers ──
-
-    def create_interaction(model, prompt, fingerprint)
-      LlmInteraction.create!(
-        investigation: @investigation,
-        interaction_type: :investigation_summary,
-        model_id: model,
-        prompt_text: prompt,
-        evidence_packet_fingerprint: fingerprint,
-        status: :pending
-      )
-    rescue StandardError => e
-      Rails.logger.warn("Failed to create summary interaction: #{e.message}")
-      nil
-    end
-
-    def complete_interaction(interaction, response, payload, elapsed_ms)
-      return unless interaction
-      interaction.update!(
-        response_text: response.content.to_s,
-        response_json: payload,
-        status: :completed,
-        latency_ms: elapsed_ms,
-        prompt_tokens: response.respond_to?(:input_tokens) ? response.input_tokens : nil,
-        completion_tokens: response.respond_to?(:output_tokens) ? response.output_tokens : nil
-      )
-    rescue StandardError => e
-      Rails.logger.warn("Failed to update summary interaction: #{e.message}")
-    end
-
-    def fail_interaction(interaction, error)
-      return unless interaction
-      interaction.update!(status: :failed, error_class: error.class.name, error_message: error.message.truncate(500))
-    rescue StandardError
-      nil
+    def interaction_type_name
+      :investigation_summary
     end
 
     def system_prompt
-      SYSTEM_PROMPT_TEMPLATE.gsub("%{locale_name}", LOCALE_NAMES.fetch(I18n.locale, "English"))
-    end
-
-    def llm_available?
-      defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present?
-    end
-
-    def primary_model
-      Array(Rails.application.config.x.frank_investigator.openrouter_models).first || "anthropic/claude-sonnet-4-6"
-    end
-
-    def llm_timeout
-      ENV.fetch("LLM_TIMEOUT_SECONDS", 120).to_i
-    end
-
-    def unwrap_json(content)
-      text = content.to_s.strip
-      text = text.sub(/\A```(?:json)?\s*\n?/, "").sub(/\n?\s*```\z/, "") if text.start_with?("```")
-      text
+      SYSTEM_PROMPT_TEMPLATE.gsub("%{locale_name}", locale_name)
     end
   end
 end

@@ -1,5 +1,7 @@
 module Analyzers
   class LlmSearchQueryGenerator
+    include LlmHelpers
+
     LLM_TIMEOUT_SECONDS = 30
 
     SYSTEM_PROMPT = <<~PROMPT.freeze
@@ -96,18 +98,12 @@ module Analyzers
       }
     end
 
+    def interaction_type_name
+      :search_query_generation
+    end
+
     def record_interaction(model:, prompt:)
-      LlmInteraction.create!(
-        investigation: @investigation,
-        interaction_type: :search_query_generation,
-        model_id: model,
-        prompt_text: prompt,
-        evidence_packet_fingerprint: Digest::SHA256.hexdigest(prompt),
-        status: :pending
-      )
-    rescue StandardError => e
-      Rails.logger.warn("[LlmSearchQueryGenerator] Failed to create interaction record: #{e.message}")
-      nil
+      create_interaction(model, prompt, Digest::SHA256.hexdigest(prompt))
     end
 
     def fallback_queries
@@ -115,19 +111,11 @@ module Analyzers
     end
 
     def llm_available?
-      defined?(RubyLLM) && ENV["OPENROUTER_API_KEY"].present? && models.any?
+      super && models.any?
     end
 
     def models
       @models ||= Array(Rails.application.config.x.frank_investigator.openrouter_models)
-    end
-
-    def unwrap_json(content)
-      text = content.to_s.strip
-      if text.start_with?("```")
-        text = text.sub(/\A```(?:json)?\s*\n?/, "").sub(/\n?\s*```\z/, "")
-      end
-      text
     end
   end
 end
