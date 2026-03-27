@@ -11,6 +11,9 @@ module Investigations
 
       Analyzers::CrossInvestigationEnricher.call(investigation: @investigation)
       Rails.logger.info("[CrossReference] Enriched investigation #{@investigation.slug}")
+
+      # Auto-submit related articles for full investigation
+      Investigations::AutoSubmitRelatedJob.perform_later(@investigation.id)
     rescue StandardError => e
       # Non-fatal — cross-referencing is enrichment, not a required step
       Rails.logger.warn("[CrossReference] Failed for #{@investigation.slug}: #{e.message}")
