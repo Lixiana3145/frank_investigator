@@ -1,0 +1,39 @@
+namespace :frank do
+  desc "Re-run analysis pipeline for an investigation (by slug)"
+  task :reanalyze, [ :slug ] => :environment do |_t, args|
+    slug = args[:slug] || ENV["SLUG"]
+    abort "Usage: rails frank:reanalyze[SLUG] or SLUG=xxx rails frank:reanalyze" unless slug
+
+    inv = Investigation.find_by!(slug: slug)
+    puts "Re-analyzing investigation #{inv.slug} (#{inv.normalized_url.truncate(60)})"
+
+    # Clear cached LLM interactions so fresh calls are made
+    LlmInteraction.where(investigation: inv).destroy_all
+    puts "  Cleared #{LlmInteraction.where(investigation: inv).count} LLM interactions"
+
+    # Reset analysis columns
+    inv.update!(
+      source_misrepresentation: nil, temporal_manipulation: nil,
+      statistical_deception: nil, selective_quotation: nil,
+      authority_laundering: nil, rhetorical_analysis: nil,
+      contextual_gaps: nil, coordinated_narrative: nil,
+      emotional_manipulation: nil, llm_summary: nil,
+      headline_bait_score: 0
+    )
+
+    # Reset analysis pipeline steps (keep fetch/extract/assess)
+    analysis_steps = %w[
+      analyze_headline detect_source_misrepresentation detect_temporal_manipulation
+      detect_statistical_deception detect_selective_quotation detect_authority_laundering
+      analyze_rhetorical_structure analyze_contextual_gaps detect_coordinated_narrative
+      score_emotional_manipulation generate_summary
+    ]
+    inv.pipeline_steps.where(name: analysis_steps).destroy_all
+    inv.update!(status: :processing)
+
+    puts "  Reset analysis steps. Re-running from headline analysis..."
+    Investigations::AnalyzeHeadlineJob.perform_later(inv.id)
+    Investigations::BatchContentAnalysisJob.perform_later(inv.id)
+    puts "  Jobs enqueued. Pipeline will complete via Solid Queue."
+  end
+end

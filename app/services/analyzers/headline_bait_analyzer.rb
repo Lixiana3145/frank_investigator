@@ -56,9 +56,15 @@ module Analyzers
       /\bpesquisador[a]?\b/i,                          # Portuguese: researcher (humanizing label)
       /\bincidente\b/i,                                # Portuguese: incident (soft for crime)
       /\benvolvid[oa]\b/i,                             # Portuguese: involved (passive)
+      /\bobteve\s+direito\b/i,                         # Portuguese: obtained the right (framing tragedy as empowerment)
+      /\bcom\s+direito\b/i,                            # Portuguese: with the right to
+      /\boptou\b/i, /\bescolheu\b/i,                  # Portuguese: chose/opted (agency framing for forced situations)
+      /\bquem\s+é\b/i,                                 # Portuguese: who is (humanizing profile framing)
       /\btook\b/i, /\bremoved?\b/i, /\baccessed?\b/i, # English: soft verbs
       /\bresearcher\b/i, /\bscientist\b/i,            # humanizing labels
-      /\bincident\b/i, /\bevent\b/i, /\bsituation\b/i # minimizing nouns
+      /\bincident\b/i, /\bevent\b/i, /\bsituation\b/i, # minimizing nouns
+      /\bobtained?\s+the\s+right\b/i,                 # English: obtained the right
+      /\bchose\s+to\b/i, /\bopted\s+for\b/i           # English: agency framing
     ].freeze
 
     # Severe body language that the headline should reflect but doesn't

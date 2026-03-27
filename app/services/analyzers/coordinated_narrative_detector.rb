@@ -43,7 +43,13 @@ module Analyzers
       5. OMISSIONS: What relevant facts about this event does the article NOT mention?
       6. META VS SUBSTANCE: Does the article investigate the underlying facts, or does it focus
          on the meta-narrative (how other media covered it, who said what about whom)?
-      7. SEARCH QUERIES: 3 search queries to find other coverage of the same event from
+      7. CAUSAL CHAIN: What is the full causal chain of events? List it as A → B → C.
+         Then note: which links does this article include, and which does it skip?
+         An article that starts at C without mentioning A is performing causal chain erasure.
+      8. EUPHEMISTIC FRAMING: Does the article use softening language to describe severe
+         events? Note any instances where a tragedy is framed as empowerment, a failure
+         as a choice, or a systemic problem as an individual story.
+      9. SEARCH QUERIES: 3 search queries to find other coverage of the same event from
          different editorial perspectives. Queries should be in the article's language.
 
       IMPORTANT: Write all text fields in %{locale_name}.
@@ -88,11 +94,31 @@ module Analyzers
       vs. discusses media behavior? Articles primarily about "outlet X said Y" rather than
       "here is what the evidence shows" are meta-focused.
 
+      CAUSAL CHAIN ERASURE: When an event has a clear causal chain (A caused B which led
+      to C), do multiple outlets start the narrative at C without mentioning A? This is one
+      of the most effective sanitization techniques: by removing the cause, the outcome
+      appears inevitable or even positive. Example: "Woman obtains right to euthanasia"
+      (starting at C) vs "Woman who was gang-raped and left paraplegic receives euthanasia
+      after government failed to prosecute attackers" (full chain A→B→C). If most outlets
+      erase the same links in the causal chain, this is convergent sanitization.
+
+      EUPHEMISTIC CONVERGENCE: Do multiple outlets use the same softening language to
+      describe a tragedy? When several outlets frame a devastating outcome in empowering
+      or neutral terms ("obtained the right to", "chose to", "her decision") instead of
+      describing the underlying horror, this is coordinated euphemism — especially when
+      the body text reveals the severity that the framing conceals. An article that calls
+      something a "right" when it's actually a last resort after institutional failure is
+      performing narrative laundering — making a systemic failure look like individual
+      empowerment.
+
       WHAT IS NOT COORDINATION:
       - Multiple outlets reporting the same facts (that's just news)
       - Similar headlines about a major event (natural news cycle)
       - Shared political alignment without shared fallacies (editorial bias, not coordination)
       - Different conclusions drawn from the same evidence (healthy journalism)
+      - One outlet presenting the full causal chain while others sanitize it — the
+        complete version is NOT more "biased", it's more honest. Penalize sanitization,
+        not completeness.
 
       Rate coordination_score (0.0-1.0):
       - 0.0-0.2: Normal independent coverage, different angles and conclusions
@@ -206,10 +232,12 @@ module Analyzers
             emotional_anchors: { type: "array", items: { type: "string" } },
             stance: { type: "string" },
             key_omissions: { type: "array", items: { type: "string" } },
+            causal_chain: { type: "string", description: "Full causal chain as A -> B -> C, noting which links are present/missing" },
+            euphemistic_framing: { type: "array", items: { type: "string" }, description: "Instances where severity is softened or tragedies framed as empowerment" },
             meta_vs_substance: { type: "string", enum: %w[mostly_meta mostly_substance balanced] },
             search_queries: { type: "array", items: { type: "string" } }
           },
-          required: %w[core_event blamed_entities defended_entities emotional_anchors stance key_omissions meta_vs_substance search_queries]
+          required: %w[core_event blamed_entities defended_entities emotional_anchors stance key_omissions causal_chain euphemistic_framing meta_vs_substance search_queries]
         }
       }
     end
