@@ -68,6 +68,8 @@ group :test do
   gem "selenium-webdriver"
   # Code coverage [https://github.com/simplecov-ruby/simplecov]
   gem "simplecov", require: false
+  # Stub HTTP requests to LLM APIs and web search
+  gem "webmock", "~> 3.26"
 end
 
 gem "tailwindcss-rails", "~> 4.4"

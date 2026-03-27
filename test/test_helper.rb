@@ -14,11 +14,20 @@ ENV.delete("FRANK_AUTH_SECRET")   # Disable submission auth in tests
 ENV.delete("JOBS_AUTH_PASSWORD")  # Reset to default "admin" for error_reports tests
 require_relative "../config/environment"
 require "rails/test_help"
+require_relative "support/llm_stubs"
+
+# WebMock: block external HTTP by default, allow localhost for internal services
+WebMock.disable_net_connect!(allow_localhost: true)
 
 module ActiveSupport
   class TestCase
     # Tests always run in English regardless of the configured default locale
-    setup { I18n.locale = :en }
+    setup do
+      I18n.locale = :en
+      LlmStubs.stub_openrouter!
+      LlmStubs.stub_openrouter_models!
+      LlmStubs.stub_web_searcher!
+    end
 
     # Run tests in parallel with specified workers
     parallelize(workers: ENV["PARALLEL_WORKERS"]&.to_i || :number_of_processors)

@@ -7,6 +7,13 @@ class Analyzers::ClaimAssessorVerdictsTest < ActiveSupport::TestCase
     @investigation = Investigation.create!(submitted_url: @root.url, normalized_url: @root.normalized_url, root_article: @root)
     @claim = Claim.create!(canonical_text: "GDP grew 3% in 2025", canonical_fingerprint: "verdict_test_#{SecureRandom.hex(4)}", checkability_status: :checkable)
     ClaimAssessment.create!(investigation: @investigation, claim: @claim)
+    # These tests verify heuristic verdict logic, not LLM output
+    @saved_key = ENV["OPENROUTER_API_KEY"]
+    ENV["OPENROUTER_API_KEY"] = nil
+  end
+
+  teardown do
+    ENV["OPENROUTER_API_KEY"] = @saved_key
   end
 
   test "returns not_checkable result for not_checkable claims" do

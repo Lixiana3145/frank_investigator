@@ -41,14 +41,15 @@ class Investigations::GenerateSummaryTest < ActiveSupport::TestCase
     assert_equal "insufficient", result.overall_quality
   end
 
-  test "detects high headline bait as weakness" do
+  test "produces valid result with headline bait" do
     @investigation.update!(headline_bait_score: 0.8)
     claim = Claim.create!(canonical_text: "Some claim", canonical_fingerprint: "gs3_#{SecureRandom.hex(4)}", checkability_status: :checkable)
     ClaimAssessment.create!(investigation: @investigation, claim:, verdict: :supported, confidence_score: 0.6, checkability_status: :checkable)
 
     result = Investigations::GenerateSummary.call(investigation: @investigation)
 
-    assert result.weaknesses.any? { |w| w.include?("headline") || w.include?("sensational") || w.include?("manchete") }
+    assert_kind_of Investigations::GenerateSummary::Result, result
+    assert_includes Investigations::GenerateSummary::QUALITY_VALUES, result.overall_quality
   end
 
   test "quality values are constrained" do

@@ -40,10 +40,11 @@ class RhetoricalFallacyAnalyzerTest < ActiveSupport::TestCase
       "condones acts of violence and this country is going downhill."
     )
 
-    result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)
-
-    assert result.fallacies.any? { |f| f.type == "bait_and_pivot" }
-    assert_operator result.narrative_bias_score, :>, 0
+    without_llm do
+      result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)
+      assert result.fallacies.any? { |f| f.type == "bait_and_pivot" }
+      assert_operator result.narrative_bias_score, :>, 0
+    end
   end
 
   test "heuristic detects appeal to authority over data" do
@@ -54,12 +55,13 @@ class RhetoricalFallacyAnalyzerTest < ActiveSupport::TestCase
       "don't tell the real story."
     )
 
-    result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)
-
-    types = result.fallacies.map(&:type)
-    assert types.include?("bait_and_pivot") || types.include?("appeal_to_authority"),
-      "Expected bait_and_pivot or appeal_to_authority but got: #{types}"
-    assert_operator result.narrative_bias_score, :>, 0
+    without_llm do
+      result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)
+      types = result.fallacies.map(&:type)
+      assert types.include?("bait_and_pivot") || types.include?("appeal_to_authority"),
+        "Expected bait_and_pivot or appeal_to_authority but got: #{types}"
+      assert_operator result.narrative_bias_score, :>, 0
+    end
   end
 
   test "no fallacies for straight factual reporting" do
@@ -70,9 +72,11 @@ class RhetoricalFallacyAnalyzerTest < ActiveSupport::TestCase
       "from official police records filed in the Dallas County system."
     )
 
-    result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)
-    assert_empty result.fallacies
-    assert_operator result.narrative_bias_score, :<=, 0.1, "Factual reporting should have near-zero bias score"
+    without_llm do
+      result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)
+      assert_empty result.fallacies
+      assert_operator result.narrative_bias_score, :<=, 0.1, "Factual reporting should have near-zero bias score"
+    end
   end
 
   test "empty result when no assessed claims" do
@@ -98,9 +102,10 @@ class RhetoricalFallacyAnalyzerTest < ActiveSupport::TestCase
       "destruindo o país com suas políticas irresponsáveis."
     )
 
-    result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)
-
-    assert result.fallacies.any? { |f| f.type == "bait_and_pivot" }
+    without_llm do
+      result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)
+      assert result.fallacies.any? { |f| f.type == "bait_and_pivot" }
+    end
   end
 
   test "result struct has expected fields" do
@@ -126,5 +131,15 @@ class RhetoricalFallacyAnalyzerTest < ActiveSupport::TestCase
     assert_includes types, "loaded_language"
     assert_includes types, "ad_hominem"
     assert_includes types, "cherry_picking"
+  end
+
+  private
+
+  def without_llm
+    saved = ENV["OPENROUTER_API_KEY"]
+    ENV["OPENROUTER_API_KEY"] = nil
+    yield
+  ensure
+    ENV["OPENROUTER_API_KEY"] = saved
   end
 end
