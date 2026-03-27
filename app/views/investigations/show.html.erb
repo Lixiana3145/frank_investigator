@@ -64,7 +64,7 @@
     </section>
   <% end %>
 
-  <% if @investigation.headline_bait_score > 0 %>
+  <% if @root_article&.title.present? && (@investigation.completed? || @investigation.failed?) %>
     <%= render "headline_bait", investigation: @investigation %>
   <% end %>
 
