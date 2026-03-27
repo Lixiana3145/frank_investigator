@@ -1,13 +1,30 @@
 <%
-  # Compute overall credibility from all analyzer signals
+  # Compute overall credibility from ALL analyzer signals
   coordination = investigation.coordinated_narrative&.dig("coordination_score").to_f
   completeness = investigation.contextual_gaps&.dig("completeness_score").to_f
   manipulation = investigation.emotional_manipulation&.dig("manipulation_score").to_f
   headline_bait = investigation.headline_bait_score.to_f / 100.0
+  misrep = investigation.source_misrepresentation&.dig("misrepresentation_score").to_f
+  temporal = 1.0 - (investigation.temporal_manipulation&.dig("temporal_integrity_score") || 1.0).to_f
+  statistical = 1.0 - (investigation.statistical_deception&.dig("statistical_integrity_score") || 1.0).to_f
+  quotation = 1.0 - (investigation.selective_quotation&.dig("quotation_integrity_score") || 1.0).to_f
+  laundering = investigation.authority_laundering&.dig("laundering_score").to_f
+  bias = investigation.rhetorical_analysis&.dig("narrative_bias_score").to_f
 
-  # Credibility is the inverse of the worst signals — a single severe finding matters
-  worst_signal = [ coordination, 1.0 - completeness, manipulation, headline_bait ].max
-  credibility = (1.0 - worst_signal).clamp(0, 1)
+  # All problem signals (higher = worse)
+  signals = [ coordination, 1.0 - completeness, manipulation, headline_bait,
+              misrep, temporal, statistical, quotation, laundering, bias ]
+
+  # Credibility weights the worst signal heavily but also considers the average
+  # of significant signals (above noise threshold). This prevents a single minor
+  # finding from tanking credibility while ensuring severe findings dominate.
+  worst_signal = signals.max
+  significant = signals.select { |s| s > 0.25 }
+  avg_significant = significant.any? ? significant.sum / significant.size : 0.0
+
+  # Blend: 60% worst signal, 40% average of significant signals
+  blended = worst_signal * 0.6 + avg_significant * 0.4
+  credibility = (1.0 - blended).clamp(0, 1)
 %>
 <section class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 mb-4" id="summary_cards">
   <article class="border border-line bg-card backdrop-blur-sm rounded-2xl p-5 shadow-sm">
