@@ -29,9 +29,19 @@ module Analyzers
       keyword_init: true
     )
 
-    # Fallacy types informed by classical rhetoric and Schopenhauer's 38 Stratagems
-    # ("The Art of Being Right", 1831). Each maps to one or more of Schopenhauer's
-    # eristic dialectic techniques adapted for written news analysis.
+    # 16 fallacy types informed by classical rhetoric and Schopenhauer's 38 Stratagems
+    # ("The Art of Being Right", 1831).
+    #
+    # Coverage of Schopenhauer's stratagems:
+    #   Directly mapped (6): #2→equivocation, #9→twisted_conclusion, #11→false_admission,
+    #     #13→paradox_framing, #32→odious_categorization, #37→faulty_proof_exploitation
+    #   Covered by existing types (13): #1→loaded_language, #3→source_misrepresentation,
+    #     #5→cherry_picking, #6→bait_and_pivot, #8→emotional_manipulation, #12→loaded_language,
+    #     #14→headline_bait, #24→false_cause, #25→cherry_picking, #26→strawman,
+    #     #29→bait_and_pivot, #30→appeal_to_authority, #38→ad_hominem
+    #   Not mapped (19): #4,#7,#10,#15,#16,#17,#18,#19,#20,#21,#22,#23,#27,#28,#33,#34,#35,#36
+    #     — these are debate-specific tactics (interruption, question barrage, provocation)
+    #     that don't reliably apply to written news analysis without excessive false positives.
     FALLACY_TYPES = %w[
       bait_and_pivot
       appeal_to_authority
@@ -47,6 +57,8 @@ module Analyzers
       odious_categorization
       twisted_conclusion
       paradox_framing
+      false_admission
+      faulty_proof_exploitation
     ].freeze
 
     SYSTEM_PROMPT_TEMPLATE = <<~PROMPT.freeze
@@ -120,6 +132,20 @@ module Analyzers
       "Anyone who questions this policy must want people to suffer." Forces the reader
       into agreement by making dissent socially costly rather than logically unsound.
       (Based on Schopenhauer's Stratagem #13)
+
+      false_admission: Treating an unproven or alleged claim as established fact later
+      in the same article. The article initially presents something as alleged, reported,
+      or unverified, but subsequent paragraphs refer to it as though it were confirmed.
+      Example: "Sources say X happened" in paragraph 2, then "Since X happened, the
+      consequences are..." in paragraph 8 — the allegation silently became a fact.
+      (Based on Schopenhauer's Stratagem #11)
+
+      faulty_proof_exploitation: Attacking a weak or flawed argument to dismiss an
+      entire position, even when stronger arguments for that position exist. The article
+      finds one bad piece of evidence and uses it to discredit the whole case, ignoring
+      other valid evidence. Example: "The study cited by critics was retracted, therefore
+      the concern is baseless" — when other unrebutted evidence supports the concern.
+      (Based on Schopenhauer's Stratagem #37)
 
       IMPORTANT rules:
       - Only flag clear, identifiable fallacies. Do NOT flag normal journalistic framing,
