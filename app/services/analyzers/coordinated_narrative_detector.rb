@@ -97,10 +97,10 @@ module Analyzers
       CAUSAL CHAIN ERASURE: When an event has a clear causal chain (A caused B which led
       to C), do multiple outlets start the narrative at C without mentioning A? This is one
       of the most effective sanitization techniques: by removing the cause, the outcome
-      appears inevitable or even positive. Example: "Woman obtains right to euthanasia"
-      (starting at C) vs "Woman who was gang-raped and left paraplegic receives euthanasia
-      after government failed to prosecute attackers" (full chain A→B→C). If most outlets
-      erase the same links in the causal chain, this is convergent sanitization.
+      appears inevitable or even positive. Example: "Person receives benefit X" (starting
+      at C) vs "Person suffered event A which caused condition B, leading to outcome C
+      after institutions failed to address the root cause" (full chain A→B→C). If most
+      outlets erase the same links in the causal chain, this is convergent sanitization.
 
       EUPHEMISTIC CONVERGENCE: Do multiple outlets use the same softening language to
       describe a tragedy? When several outlets frame a devastating outcome in empowering

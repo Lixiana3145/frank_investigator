@@ -60,9 +60,9 @@ module Analyzers
          reduction, subsidy), ALWAYS ask: was there a preceding action in the opposite
          direction? Is this a net change or a partial reversal of a prior increase/
          restriction? What is the real baseline — before the original change, or after?
-         Example: government raises tariffs on 5000 products, then "cuts" tariffs on
-         1000 of them and announces a generous tax relief — while net taxes are still
-         higher than before. The article reporting only the cut is propaganda by omission.
+         Example: an authority raises fees across a category, later reduces some of
+         them, and announces the reduction as a new benefit — while the net cost is
+         still higher than before. Reporting only the reduction is propaganda by omission.
 
       8. BENEFIT PASS-THROUGH: When an article claims a policy will benefit consumers
          (lower prices, more access), ask whether there is evidence the benefit actually
