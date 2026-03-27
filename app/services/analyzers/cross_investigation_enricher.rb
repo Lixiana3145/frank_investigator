@@ -15,7 +15,7 @@ module Analyzers
     include LlmHelpers
 
     MIN_ENTITY_OVERLAP = 2
-    MIN_KEYWORD_OVERLAP = 6
+    MIN_KEYWORD_OVERLAP = 12
     MAX_RELATED = 10
 
     SYSTEM_PROMPT_TEMPLATE = <<~PROMPT.freeze
@@ -128,6 +128,11 @@ module Analyzers
       a o e de da do das dos em na no nas nos por para com que se um uma os as ao aos
       the and of to in for is on at by from with this that was were are be been has have
       não foi são ser mais como entre sobre após desde também ainda
+      acordo artigo Brasil brasileiro casos contra deve disse durante
+      estado federal governo havia outra outro parte pode podem
+      quando primeiro segundo seria sobre todos vezes
+      according article been could during every first government
+      other should since their those through would years
     ]).freeze
 
     def extract_keywords_from(investigation)
@@ -140,7 +145,7 @@ module Analyzers
       text.downcase
         .gsub(/[^a-zà-ú0-9\s]/, " ")
         .split
-        .reject { |w| w.length < 5 || STOP_WORDS.include?(w) }
+        .reject { |w| w.length < 6 || STOP_WORDS.include?(w) }
         .uniq
         .to_set
     end
