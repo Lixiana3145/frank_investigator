@@ -33,6 +33,11 @@ module Analyzers
       - Doesn't sensationalize either — be factual, not dramatic
       - Stays within reasonable headline length (max 150 characters)
 
+      IMPORTANT: Write a HEADLINE, not a critique. The honest headline is what the
+      article SHOULD have been titled — it's a title for the same article, not a
+      review of it. Don't say "artigo ignora X" or "article omits X". Instead,
+      include the missing context as part of the headline itself.
+
       If the original headline is already accurate and balanced, return it unchanged.
 
       IMPORTANT: Write the headline in %{locale_name}.
