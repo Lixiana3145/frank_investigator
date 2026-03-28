@@ -132,6 +132,7 @@ en:
     headline_bait:
       heading: "Headline analysis"
       headline: "Headline"
+      honest_headline: "A more honest headline"
       lead_paragraph: "Lead paragraph"
 
     root_article_panel:

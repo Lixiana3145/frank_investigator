@@ -136,6 +136,7 @@ pt-BR:
     headline_bait:
       heading: "Análise da manchete"
       headline: "Manchete"
+      honest_headline: "Uma manchete mais honesta"
       lead_paragraph: "Parágrafo inicial"
 
     root_article_panel:

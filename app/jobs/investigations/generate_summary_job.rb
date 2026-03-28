@@ -21,6 +21,10 @@ module Investigations
 
         { overall_quality: summary_data&.dig(:overall_quality) }
       end
+      # Generate honest headline after summary (has full context)
+      honest = Analyzers::HonestHeadlineGenerator.call(investigation: @investigation)
+      @investigation.update_column(:honest_headline, honest) if honest
+
       @step_succeeded = true
     ensure
       if @investigation

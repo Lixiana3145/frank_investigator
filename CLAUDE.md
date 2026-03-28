@@ -104,6 +104,8 @@ When adding or changing analysis sections, scores, pipeline steps, or report lay
 
 The methodology page must always reflect the current report structure so readers can understand what each section and score means.
 
+When report data changes (new columns on Investigation, new analyzer results), also update the `investigation_json` method in `InvestigationsController` to include the new data in the JSON API response.
+
 ## i18n
 
 All user-presentable text must use `t()` lookups — never hardcode strings in views, controllers, or helpers. Locale files live in `config/locales/` (`en.yml`, `pt-BR.yml`). When adding or changing any user-facing text:

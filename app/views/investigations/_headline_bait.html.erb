@@ -22,6 +22,12 @@
         <dt class="text-muted text-xs uppercase tracking-wide"><%= t("investigations.headline_bait.headline") %></dt>
         <dd class="m-0"><strong><%= article.title %></strong></dd>
       </div>
+      <% if investigation.honest_headline.present? && investigation.honest_headline != article.title %>
+        <div class="grid gap-0.5">
+          <dt class="text-muted text-xs uppercase tracking-wide"><%= t("investigations.headline_bait.honest_headline") %></dt>
+          <dd class="m-0 text-verdict-green font-semibold"><%= investigation.honest_headline %></dd>
+        </div>
+      <% end %>
       <% if article.excerpt.present? %>
         <div class="grid gap-0.5">
           <dt class="text-muted text-xs uppercase tracking-wide"><%= t("investigations.headline_bait.lead_paragraph") %></dt>

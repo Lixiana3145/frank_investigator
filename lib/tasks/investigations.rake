@@ -37,6 +37,25 @@ namespace :frank do
     puts "  Jobs enqueued. Pipeline will complete via Solid Queue."
   end
 
+  desc "Generate honest headlines for all completed investigations"
+  task honest_headlines: :environment do
+    investigations = Investigation.where(status: "completed").where(honest_headline: nil).includes(:root_article)
+    puts "Generating honest headlines for #{investigations.count} investigations..."
+
+    investigations.each do |inv|
+      next unless inv.root_article&.title.present?
+      honest = Analyzers::HonestHeadlineGenerator.call(investigation: inv)
+      if honest
+        inv.update_column(:honest_headline, honest)
+        puts "  #{inv.slug} — #{honest.truncate(80)}"
+      end
+    rescue StandardError => e
+      puts "  #{inv.slug} — ERROR: #{e.message.truncate(80)}"
+    end
+
+    puts "Done."
+  end
+
   desc "Cross-reference ALL completed investigations"
   task crossref_all: :environment do
     investigations = Investigation.where(status: "completed").order(created_at: :desc)
