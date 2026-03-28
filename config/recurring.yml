@@ -34,8 +34,8 @@ production:
     schedule: every 12 hours
   backup_database:
     class: BackupDatabaseJob
-    schedule: every hour
-    description: "Copy database to /content/backups/ for rsync (skips odd night hours)"
+    schedule: at 3am every day
+    description: "Copy database to /content/backups/ for rsync"
   recover_stale_pipelines:
     command: "Pipeline::ResumeInterrupted.call"
     schedule: every 5 minutes
