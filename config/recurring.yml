@@ -32,6 +32,10 @@ production:
     class: Claims::DetectSourceCorrectionsJob
     queue: default
     schedule: every 12 hours
+  backup_database:
+    class: BackupDatabaseJob
+    schedule: every hour
+    description: "Copy database to /content/backups/ for rsync (skips odd night hours)"
   recover_stale_pipelines:
     command: "Pipeline::ResumeInterrupted.call"
     schedule: every 5 minutes
