@@ -6,7 +6,7 @@ module Investigations
       @investigation = Investigation.includes(:root_article).find(investigation_id)
       @article = @investigation.root_article
 
-      Pipeline::StepRunner.call(investigation: @investigation, name: "fetch_root_article") do
+      result = Pipeline::StepRunner.call(investigation: @investigation, name: "fetch_root_article") do
         raise("Investigation is missing a root article") unless @article
 
         if @article.fresh?
@@ -18,7 +18,7 @@ module Investigations
 
         { links_count: @article.sourced_links.count, cached: @article.fresh? }
       end
-      @step_succeeded = true
+      @step_succeeded = result.executed
     rescue Fetchers::ChromiumFetcher::FetchError => error
       @investigation.root_article&.update!(fetch_status: :failed)
       raise error

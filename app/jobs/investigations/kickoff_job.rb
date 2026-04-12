@@ -5,11 +5,11 @@ module Investigations
     def perform(investigation_id)
       @investigation = Investigation.find(investigation_id)
 
-      Pipeline::StepRunner.call(investigation: @investigation, name: "kickoff") do
+      result = Pipeline::StepRunner.call(investigation: @investigation, name: "kickoff") do
         @investigation.update!(status: :processing)
         {}
       end
-      @step_succeeded = true
+      @step_succeeded = result.executed
     ensure
       if @investigation
         Investigations::FetchRootArticleJob.perform_later(@investigation.id) if @step_succeeded

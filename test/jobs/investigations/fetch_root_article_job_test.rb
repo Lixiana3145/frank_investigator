@@ -71,4 +71,31 @@ class Investigations::FetchRootArticleJobTest < ActiveJob::TestCase
       Investigations::ExpandLinkedArticlesJob.perform_now(investigation.id, source_article_id: investigation.root_article.id)
     end
   end
+
+  test "does not fan out when fetch_root_article is already completed" do
+    article = Article.create!(
+      url: "https://example.com/already-fetched",
+      normalized_url: "https://example.com/already-fetched",
+      host: "example.com",
+      fetch_status: :fetched,
+      fetched_at: Time.current,
+      title: "Fetched",
+      body_text: "Fetched content"
+    )
+    investigation = Investigation.create!(
+      submitted_url: article.url,
+      normalized_url: article.normalized_url,
+      root_article: article,
+      status: :processing
+    )
+    investigation.pipeline_steps.create!(name: "fetch_root_article", status: :completed, finished_at: Time.current)
+
+    assert_no_enqueued_jobs only: [
+      Investigations::ExtractClaimsJob,
+      Investigations::AnalyzeHeadlineJob,
+      Investigations::ExpandLinkedArticlesJob
+    ] do
+      Investigations::FetchRootArticleJob.perform_now(investigation.id)
+    end
+  end
 end

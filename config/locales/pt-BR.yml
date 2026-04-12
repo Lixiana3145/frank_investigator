@@ -301,6 +301,18 @@ pt-BR:
     errors:
       url_too_long: "A URL é muito longa (máximo de %{max} caracteres)"
 
+  authority_laundering:
+    chain_explanation:
+      escalation: "A autoridade escala de %{origin_tier} (%{origin_host}) para %{final_tier} (%{final_host}) ao longo de %{hops} salto(s)"
+      crosses_boundary:
+        one: "A cadeia cruza %{count} fronteira editorial"
+        other: "A cadeia cruza %{count} fronteiras editoriais"
+      same_group: "A cadeia permanece dentro do mesmo grupo editorial"
+    summary:
+      no_chains: "Nenhuma cadeia de lavagem de autoridade foi detectada. As citações apontam diretamente para as fontes."
+      chains_found: "%{total} cadeia(s) de citação com escalada de autoridade foram detectadas (%{high} de alta severidade, %{medium} de severidade média). Pontuação de lavagem: %{score}. Citações circulares: %{circular}."
+      no_analysis: "Nenhuma cadeia de citação em múltiplos saltos foi encontrada para análise."
+
   error_reports:
     index:
       title: "Relatórios de Erro — Frank Investigator"
@@ -475,6 +487,9 @@ pt-BR:
     source_misrepresentation:
       no_analysis: "Nenhuma análise de distorção de fontes realizada."
       no_sources: "Nenhuma fonte citada pôde ser verificada."
+      no_sources_fetched: "Nenhuma das %{total} fontes citadas pôde ser buscada para verificação."
+      partial_verification: "Apenas %{fetched} de %{total} fontes citadas puderam ser buscadas para verificação."
+      no_citations: "O artigo não contém citações externas para verificar."
 
     temporal_manipulation:
       no_analysis: "Nenhuma análise de manipulação temporal realizada."
@@ -490,6 +505,20 @@ pt-BR:
     statistical_deception:
       no_analysis: "Nenhuma análise de engano estatístico realizada."
       no_issues: "Nenhum engano estatístico detectado."
+      heuristic_summary: "A análise heurística encontrou %{uncontextualized} referência(s) percentual(is) sem valores-base claros entre %{total} referência(s) percentual(is) no total."
+      no_statistics: "Nenhuma alegação estatística ou comparação numérica foi encontrada para análise."
+      no_percentages_summary: "O artigo usa comparações numéricas, mas não fornece contexto percentual suficiente para uma análise estatística mais profunda."
+      multiplier_excerpt: "Uma alegação de multiplicação ou crescimento expressivo é apresentada sem o valor-base correspondente."
+      multiplier_explanation: "Multiplicadores grandes podem soar dramáticos enquanto escondem que os números de partida podem ser muito pequenos."
+      multiplier_corrective: "Uma apresentação honesta mostraria o valor inicial e o valor final ao lado do multiplicador."
+      missing_base_excerpt:
+        one: "%{count} percentual é apresentado sem valor-base ou denominador claros."
+        other: "%{count} percentuais são apresentados sem valores-base ou denominadores claros."
+      missing_base_explanation: "Percentuais sem seus valores-base ou denominadores dificultam avaliar a escala real da mudança descrita."
+      missing_base_corrective: "Uma apresentação honesta acompanharia cada percentual com os números absolutos relevantes ou com o denominador correspondente."
+      pct_of_pct_excerpt: "O artigo parece empilhar um percentual sobre outro percentual."
+      pct_of_pct_explanation: "Percentuais empilhados podem obscurecer qual população está sendo medida e exagerar a impressão de precisão ou escala."
+      pct_of_pct_corrective: "Uma apresentação honesta restabeleceria a população real, o denominador e a quantidade absoluta resultante."
 
     selective_quotation:
       no_analysis: "Nenhuma análise de citação seletiva realizada."
@@ -503,6 +532,7 @@ pt-BR:
       no_chains: "Nenhuma cadeia de citação multi-passo detectada."
 
     emotional_manipulation:
+      summary: "A análise heurística encontrou %{density}% de densidade de linguagem emocional e estimou uma pontuação de manipulação emocional de %{score}."
       no_analysis: "Nenhuma análise de manipulação emocional realizada."
 
     coordinated_narrative:

@@ -13,6 +13,7 @@ module Pipeline
     # Steps handled by BatchContentAnalysisJob are mapped to it since
     # it creates all 5 sub-steps in one go.
     STEP_TO_JOB = {
+      "kickoff" => "Investigations::KickoffJob",
       "fetch_root_article" => "Investigations::FetchRootArticleJob",
       "extract_claims" => "Investigations::ExtractClaimsJob",
       "analyze_headline" => "Investigations::AnalyzeHeadlineJob",
@@ -68,6 +69,8 @@ module Pipeline
     end
 
     def find_first_incomplete_step(investigation)
+      return "kickoff" if investigation.pipeline_steps.none?
+
       step_map = investigation.pipeline_steps.index_by(&:name)
 
       Investigation::REQUIRED_STEPS.each do |name|
@@ -94,12 +97,23 @@ module Pipeline
     end
 
     def job_already_queued?(investigation, job_class_name)
-      SolidQueue::Job.where(class_name: job_class_name)
-        .where("arguments LIKE ?", "%#{investigation.id}%")
-        .where(finished_at: nil)
-        .exists?
+      jobs = SolidQueue::Job.where(class_name: job_class_name)
+      live_jobs = jobs.where(id: SolidQueue::ReadyExecution.select(:job_id))
+        .or(jobs.where(id: SolidQueue::ClaimedExecution.select(:job_id)))
+        .or(jobs.where(id: SolidQueue::ScheduledExecution.select(:job_id)))
+        .or(jobs.where(id: SolidQueue::BlockedExecution.select(:job_id)))
+
+      live_jobs.find_each.any? do |job|
+        Array(parse_job_arguments(job)["arguments"]).first == investigation.id
+      end
     rescue StandardError
       false
+    end
+
+    def parse_job_arguments(job)
+      JSON.parse(job.arguments)
+    rescue JSON::ParserError, TypeError
+      {}
     end
   end
 end

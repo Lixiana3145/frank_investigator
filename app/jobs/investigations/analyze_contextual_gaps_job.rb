@@ -5,7 +5,7 @@ module Investigations
     def perform(investigation_id)
       @investigation = Investigation.includes(:root_article, claim_assessments: :claim).find(investigation_id)
 
-      Pipeline::StepRunner.call(investigation: @investigation, name: "analyze_contextual_gaps", allow_rerun: true) do
+      result = Pipeline::StepRunner.call(investigation: @investigation, name: "analyze_contextual_gaps", allow_rerun: true) do
         result = Analyzers::ContextualGapAnalyzer.call(investigation: @investigation)
 
         gaps_data = {
@@ -29,7 +29,7 @@ module Investigations
           completeness_score: result.completeness_score
         }
       end
-      @step_succeeded = true
+      @step_succeeded = result.executed
     ensure
       if @investigation
         enqueue_next_if_converged if @step_succeeded

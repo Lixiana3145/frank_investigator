@@ -25,4 +25,19 @@ class Investigations::KickoffJobTest < ActiveJob::TestCase
 
     assert_equal 1, investigation.pipeline_steps.where(name: "kickoff").count
   end
+
+  test "does not enqueue fetch when kickoff step was already completed elsewhere" do
+    article = Article.create!(url: "https://example.com/kickoff-noop", normalized_url: "https://example.com/kickoff-noop", host: "example.com")
+    investigation = Investigation.create!(
+      submitted_url: article.url,
+      normalized_url: article.normalized_url,
+      root_article: article,
+      status: :processing
+    )
+    investigation.pipeline_steps.create!(name: "kickoff", status: :completed, finished_at: Time.current)
+
+    assert_no_enqueued_jobs only: Investigations::FetchRootArticleJob do
+      Investigations::KickoffJob.perform_now(investigation.id)
+    end
+  end
 end

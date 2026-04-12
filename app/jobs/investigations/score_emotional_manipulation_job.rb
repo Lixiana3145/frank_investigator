@@ -5,7 +5,7 @@ module Investigations
     def perform(investigation_id)
       @investigation = Investigation.includes(:root_article, claim_assessments: :claim).find(investigation_id)
 
-      Pipeline::StepRunner.call(investigation: @investigation, name: "score_emotional_manipulation", allow_rerun: true) do
+      result = Pipeline::StepRunner.call(investigation: @investigation, name: "score_emotional_manipulation", allow_rerun: true) do
         result = Analyzers::EmotionalManipulationScorer.call(investigation: @investigation)
 
         emotional_data = {
@@ -21,7 +21,7 @@ module Investigations
 
         { manipulation_score: result.manipulation_score, emotional_temperature: result.emotional_temperature }
       end
-      @step_succeeded = true
+      @step_succeeded = result.executed
     ensure
       if @investigation
         Investigations::GenerateSummaryJob.perform_later(@investigation.id) if @step_succeeded

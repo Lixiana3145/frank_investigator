@@ -5,7 +5,7 @@ module Investigations
     def perform(investigation_id)
       @investigation = Investigation.includes(:root_article, claim_assessments: :claim).find(investigation_id)
 
-      Pipeline::StepRunner.call(investigation: @investigation, name: "detect_coordinated_narrative", allow_rerun: true) do
+      result = Pipeline::StepRunner.call(investigation: @investigation, name: "detect_coordinated_narrative", allow_rerun: true) do
         result = Analyzers::CoordinatedNarrativeDetector.call(investigation: @investigation)
 
         narrative_data = {
@@ -21,7 +21,7 @@ module Investigations
 
         { coordination_score: result.coordination_score, coverage_found: result.similar_coverage.size }
       end
-      @step_succeeded = true
+      @step_succeeded = result.executed
     ensure
       if @investigation
         enqueue_next_if_converged if @step_succeeded

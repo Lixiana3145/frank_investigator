@@ -4,6 +4,10 @@ en:
   date:
     formats:
       long: "%B %d, %Y"
+    month_names: [~, January, February, March, April, May, June, July, August, September, October, November, December]
+    abbr_month_names: [~, Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]
+    day_names: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
+    abbr_day_names: [Sun, Mon, Tue, Wed, Thu, Fri, Sat]
   time:
     formats:
       long: "%Y-%m-%d %H:%M:%S %Z"
@@ -297,6 +301,18 @@ en:
     errors:
       url_too_long: "URL is too long (maximum %{max} characters)"
 
+  authority_laundering:
+    chain_explanation:
+      escalation: "Authority escalates from %{origin_tier} (%{origin_host}) to %{final_tier} (%{final_host}) across %{hops} hop(s)"
+      crosses_boundary:
+        one: "Chain crosses %{count} editorial boundary"
+        other: "Chain crosses %{count} editorial boundaries"
+      same_group: "Chain stays within the same editorial group"
+    summary:
+      no_chains: "No authority laundering chains detected. Citations reference sources directly."
+      chains_found: "%{total} citation chain(s) detected with authority escalation (%{high} high, %{medium} medium severity). Laundering score: %{score}. Circular citations: %{circular}."
+      no_analysis: "No multi-hop citation chains found to analyze."
+
   error_reports:
     index:
       title: "Error Reports — Frank Investigator"
@@ -471,6 +487,9 @@ en:
     source_misrepresentation:
       no_analysis: "No source misrepresentation analysis performed."
       no_sources: "No cited sources could be verified."
+      no_sources_fetched: "None of the %{total} cited sources could be fetched for verification."
+      partial_verification: "Only %{fetched} of %{total} cited sources could be fetched for verification."
+      no_citations: "Article contains no outbound citations to verify."
 
     temporal_manipulation:
       no_analysis: "No temporal manipulation analysis performed."
@@ -486,6 +505,20 @@ en:
     statistical_deception:
       no_analysis: "No statistical deception analysis performed."
       no_issues: "No statistical deception detected."
+      heuristic_summary: "Heuristic analysis found %{uncontextualized} percentage figure(s) without clear base values out of %{total} total percentage reference(s)."
+      no_statistics: "No statistical claims or numeric comparisons were found to analyze."
+      no_percentages_summary: "The article uses numeric comparisons but does not provide enough percentage-based context for deeper statistical analysis."
+      multiplier_excerpt: "A multiplier or dramatic growth claim is presented without the underlying base value."
+      multiplier_explanation: "Large multipliers can sound dramatic while hiding that the underlying numbers may be very small."
+      multiplier_corrective: "An honest presentation would show the starting value and ending value alongside the multiplier."
+      missing_base_excerpt:
+        one: "%{count} percentage is presented without a clear base value or denominator."
+        other: "%{count} percentages are presented without clear base values or denominators."
+      missing_base_explanation: "Percentages without their base values or denominators make it hard to judge the real scale of the change being described."
+      missing_base_corrective: "An honest presentation would pair each percentage with the relevant absolute numbers or denominator."
+      pct_of_pct_excerpt: "The article appears to layer one percentage on top of another percentage."
+      pct_of_pct_explanation: "Stacked percentages can obscure what population is actually being measured and exaggerate the impression of precision or scale."
+      pct_of_pct_corrective: "An honest presentation would restate the actual population, denominator, and resulting absolute quantity."
 
     selective_quotation:
       no_analysis: "No selective quotation analysis performed."
@@ -499,6 +532,7 @@ en:
       no_chains: "No multi-hop citation chains detected."
 
     emotional_manipulation:
+      summary: "Heuristic analysis found %{density}% emotional language density and estimated an emotional manipulation score of %{score}."
       no_analysis: "No emotional manipulation analysis performed."
 
     coordinated_narrative:

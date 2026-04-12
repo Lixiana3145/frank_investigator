@@ -24,6 +24,22 @@ class Investigations::EnsureStartedTest < ActiveSupport::TestCase
     end
   end
 
+  test "does not enqueue kickoff again for an investigation already in progress" do
+    article = Article.create!(url: "https://example.com/in-progress", normalized_url: "https://example.com/in-progress", host: "example.com")
+    investigation = Investigation.create!(
+      submitted_url: article.url,
+      normalized_url: article.normalized_url,
+      root_article: article,
+      status: :processing
+    )
+    investigation.pipeline_steps.create!(name: "kickoff", status: :completed, finished_at: Time.current)
+
+    assert_no_enqueued_jobs only: Investigations::KickoffJob do
+      returned = Investigations::EnsureStarted.call(submitted_url: article.url)
+      assert_equal investigation.id, returned.id
+    end
+  end
+
   test "classifies source metadata on article" do
     investigation = Investigations::EnsureStarted.call(submitted_url: "https://www.congress.gov/bill/test")
 

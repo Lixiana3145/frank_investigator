@@ -39,4 +39,27 @@ class Analyzers::StatisticalDeceptionDetectorTest < ActiveSupport::TestCase
     assert_respond_to result, :statistical_integrity_score
     assert_respond_to result, :summary
   end
+
+  test "heuristic fallback translation keys exist in english and portuguese" do
+    keys = %w[
+      heuristic_summary
+      no_statistics
+      no_percentages_summary
+      multiplier_excerpt
+      multiplier_explanation
+      multiplier_corrective
+      missing_base_excerpt.one
+      missing_base_excerpt.other
+      missing_base_explanation
+      missing_base_corrective
+      pct_of_pct_excerpt
+      pct_of_pct_explanation
+      pct_of_pct_corrective
+    ]
+
+    keys.each do |key|
+      assert I18n.exists?("heuristic_fallbacks.statistical_deception.#{key}", :en), "missing en key #{key}"
+      assert I18n.exists?("heuristic_fallbacks.statistical_deception.#{key}", :"pt-BR"), "missing pt-BR key #{key}"
+    end
+  end
 end

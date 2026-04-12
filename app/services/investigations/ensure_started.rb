@@ -24,7 +24,9 @@ module Investigations
         end
       end
 
-      Investigations::KickoffJob.perform_later(investigation.id) unless investigation.completed?
+      if investigation.queued? && investigation.pipeline_steps.none?
+        Investigations::KickoffJob.perform_later(investigation.id)
+      end
       investigation
     end
 

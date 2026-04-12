@@ -5,7 +5,7 @@ module Investigations
     def perform(investigation_id)
       @investigation = Investigation.includes(:claim_assessments, :root_article).find(investigation_id)
 
-      Pipeline::StepRunner.call(investigation: @investigation, name: "assess_claims", allow_rerun: true) do
+      result = Pipeline::StepRunner.call(investigation: @investigation, name: "assess_claims", allow_rerun: true) do
         run_authority_retrieval!
         run_active_evidence_retrieval!
 
@@ -73,7 +73,7 @@ module Investigations
 
         { assessed_claims_count: @investigation.claim_assessments.count }
       end
-      @step_succeeded = true
+      @step_succeeded = result.executed
     ensure
       if @investigation
         Investigations::BatchContentAnalysisJob.perform_later(@investigation.id) if @step_succeeded

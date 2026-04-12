@@ -5,7 +5,7 @@ module Investigations
     def perform(investigation_id)
       @investigation = Investigation.includes(:root_article, claim_assessments: :claim).find(investigation_id)
 
-      Pipeline::StepRunner.call(investigation: @investigation, name: "analyze_rhetorical_structure", allow_rerun: true) do
+      result = Pipeline::StepRunner.call(investigation: @investigation, name: "analyze_rhetorical_structure", allow_rerun: true) do
         result = Analyzers::RhetoricalFallacyAnalyzer.call(investigation: @investigation)
 
         analysis_data = {
@@ -29,7 +29,7 @@ module Investigations
           narrative_bias_score: result.narrative_bias_score
         }
       end
-      @step_succeeded = true
+      @step_succeeded = result.executed
     ensure
       if @investigation
         enqueue_next_if_converged if @step_succeeded

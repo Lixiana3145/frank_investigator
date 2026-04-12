@@ -5,13 +5,13 @@ module Investigations
     def perform(investigation_id)
       @investigation = Investigation.includes(:root_article).find(investigation_id)
 
-      Pipeline::StepRunner.call(investigation: @investigation, name: "extract_claims") do
+      result = Pipeline::StepRunner.call(investigation: @investigation, name: "extract_claims") do
         article = @investigation.root_article || raise("Investigation is missing a root article")
         Articles::SyncClaims.call(investigation: @investigation, article:)
 
         { claims_count: @investigation.claim_assessments.count }
       end
-      @step_succeeded = true
+      @step_succeeded = result.executed
     ensure
       if @investigation
         Investigations::AssessClaimsJob.perform_later(@investigation.id) if @step_succeeded

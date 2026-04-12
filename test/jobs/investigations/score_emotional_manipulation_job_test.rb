@@ -41,4 +41,26 @@ class Investigations::ScoreEmotionalManipulationJobTest < ActiveSupport::TestCas
     step = investigation.pipeline_steps.find_by(name: "score_emotional_manipulation")
     assert_equal "completed", step.status
   end
+
+  test "does not enqueue summary when the step is already running elsewhere" do
+    root = Article.create!(
+      url: "https://emjob3.com/article", normalized_url: "https://emjob3.com/article",
+      host: "emjob3.com", fetch_status: :fetched,
+      body_text: "Content.", title: "Test"
+    )
+    investigation = Investigation.create!(
+      submitted_url: root.url, normalized_url: root.normalized_url,
+      root_article: root, status: :processing
+    )
+    investigation.pipeline_steps.create!(
+      name: "score_emotional_manipulation",
+      status: :running,
+      started_at: 1.minute.ago,
+      attempts_count: 1
+    )
+
+    assert_no_enqueued_jobs only: Investigations::GenerateSummaryJob do
+      Investigations::ScoreEmotionalManipulationJob.perform_now(investigation.id)
+    end
+  end
 end
