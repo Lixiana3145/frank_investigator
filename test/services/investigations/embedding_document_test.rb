@@ -82,4 +82,26 @@ class Investigations::EmbeddingDocumentTest < ActiveSupport::TestCase
     assert_includes document, "Quais foram os resultados fiscais do periodo?"
     refute_includes document, "Daniel Vorcaro"
   end
+
+  test "uses the headline segment instead of byline suffixes in the embedding title" do
+    article = Article.create!(
+      url: "https://example.com/with-byline",
+      normalized_url: "https://example.com/with-byline",
+      host: "example.com",
+      title: "Haddad foi um bom ministro - 11/04/2026 - Celso Rocha de Barros - Folha",
+      body_text: "O texto discute Haddad e politica fiscal.",
+      fetch_status: :fetched
+    )
+    investigation = Investigation.create!(
+      submitted_url: article.url,
+      normalized_url: article.normalized_url,
+      root_article: article,
+      status: :completed
+    )
+
+    document = Investigations::EmbeddingDocument.call(investigation:)
+
+    assert_includes document, "title: Haddad foi um bom ministro"
+    refute_includes document, "Celso Rocha de Barros"
+  end
 end

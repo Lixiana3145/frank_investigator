@@ -30,6 +30,22 @@ module Investigations
       root_article&.title.to_s.squish
     end
 
+    def headline_title
+      @headline_title ||= begin
+        raw = title
+        return raw if raw.blank?
+
+        segments = raw.split(" - ").map(&:strip).reject(&:blank?)
+        return raw if segments.size < 2
+
+        if date_segment?(segments.second) || publication_suffix?(segments.last)
+          segments.first
+        else
+          raw
+        end
+      end
+    end
+
     def host
       root_article&.host.to_s.squish
     end
@@ -52,11 +68,11 @@ module Investigations
       @primary_subjects ||= begin
         subjects = Set.new
 
-        title.scan(/\b[A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)+\b/).each do |name|
+        headline_title.scan(/\b[A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)+\b/).each do |name|
           subjects << name.downcase
         end
 
-        title.scan(/\b[A-ZÀ-Ú][a-zà-ú]{4,}\b/).each do |name|
+        headline_title.scan(/\b[A-ZÀ-Ú][a-zà-ú]{4,}\b/).each do |name|
           normalized = name.downcase
           next if GENERIC_ENTITY_TOKENS.include?(normalized)
 
@@ -102,11 +118,11 @@ module Investigations
     end
 
     def identity_segments
-      [ title, lead_text, *central_claim_texts, *relevant_gap_questions ].reject(&:blank?)
+      [ headline_title, lead_text, *central_claim_texts, *relevant_gap_questions ].reject(&:blank?)
     end
 
     def subject_reference_text
-      [ title, lead_text, *central_claim_texts ].reject(&:blank?).join(" ")
+      [ headline_title, lead_text, *central_claim_texts ].reject(&:blank?).join(" ")
     end
 
     def mentions_any_subject?(subjects)
@@ -164,7 +180,7 @@ module Investigations
     end
 
     def title_keywords
-      @title_keywords ||= normalized_tokens_for(title)
+      @title_keywords ||= normalized_tokens_for(headline_title)
     end
 
     def fallback_claim_texts
@@ -191,13 +207,22 @@ module Investigations
     end
 
     def lead_sentence?(sentence)
-      return true if title.blank?
+      return true if headline_title.blank?
 
       tokens = normalized_tokens_for(sentence)
       return false if tokens.empty?
       return true if (tokens & title_keywords).size >= 2
 
       primary_subject_tokens.any? { |token| tokens.include?(token) }
+    end
+
+    def date_segment?(segment)
+      segment.to_s.match?(/\A\d{1,2}\/\d{1,2}\/\d{4}\z/)
+    end
+
+    def publication_suffix?(segment)
+      normalized = normalized_tokens_for(segment)
+      normalized.any? { |token| GENERIC_ENTITY_TOKENS.include?(token) }
     end
   end
 end

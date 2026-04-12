@@ -299,6 +299,60 @@ class Analyzers::CrossInvestigationEnricherTest < ActiveSupport::TestCase
     refute_includes related, inv_b
   end
 
+  test "ignores byline suffix names when matching headline subjects" do
+    root_a = Article.create!(
+      url: "https://example.com/k",
+      normalized_url: "https://example.com/k",
+      host: "example.com",
+      title: "Haddad foi um bom ministro - 11/04/2026 - Celso Rocha de Barros - Folha",
+      body_text: "O texto discute Haddad, impostos e politica fiscal.",
+      fetch_status: :fetched
+    )
+    inv_a = Investigation.create!(submitted_url: root_a.url, normalized_url: root_a.normalized_url, root_article: root_a, status: :completed)
+    claim_a = Claim.create!(
+      canonical_text: "Haddad foi um bom ministro.",
+      canonical_fingerprint: "haddad-bom-ministro-byline",
+      checkability_status: :not_checkable
+    )
+    ArticleClaim.create!(
+      article: root_a,
+      claim: claim_a,
+      role: :headline,
+      surface_text: claim_a.canonical_text,
+      importance_score: 1.0,
+      title_related: true
+    )
+    ClaimAssessment.create!(investigation: inv_a, claim: claim_a, verdict: :not_checkable, checkability_status: :not_checkable)
+
+    root_b = Article.create!(
+      url: "https://example.com/l",
+      normalized_url: "https://example.com/l",
+      host: "example.tv",
+      title: "Ibaneis Rocha discute compra do Banco Master",
+      body_text: "A reportagem trata de Ibaneis Rocha e Banco Master.",
+      fetch_status: :fetched
+    )
+    inv_b = Investigation.create!(submitted_url: root_b.url, normalized_url: root_b.normalized_url, root_article: root_b, status: :completed)
+    claim_b = Claim.create!(
+      canonical_text: "Ibaneis Rocha discutiu a compra do Banco Master.",
+      canonical_fingerprint: "ibaneis-rocha-master",
+      checkability_status: :checkable
+    )
+    ArticleClaim.create!(
+      article: root_b,
+      claim: claim_b,
+      role: :headline,
+      surface_text: claim_b.canonical_text,
+      importance_score: 1.0,
+      title_related: true
+    )
+    ClaimAssessment.create!(investigation: inv_b, claim: claim_b, verdict: :supported, checkability_status: :checkable)
+
+    related = Analyzers::CrossInvestigationEnricher.new(investigation: inv_a).send(:find_related_investigations)
+
+    refute_includes related, inv_b
+  end
+
   test "builds heuristic composite when llm is unavailable" do
     root_a = Article.create!(
       url: "https://example.com/a",

@@ -28,9 +28,9 @@ module Investigations
     private
 
     def title_line
-      return if signals.title.blank?
+      return if signals.headline_title.blank?
 
-      "title: #{signals.title}"
+      "title: #{signals.headline_title}"
     end
 
     def host_line
