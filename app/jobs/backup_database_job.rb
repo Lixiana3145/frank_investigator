@@ -1,13 +1,12 @@
 class BackupDatabaseJob < ApplicationJob
   queue_as :default
+  BACKUP_PATH = "/content/backups/frank_investigator.sqlite3".freeze
 
   def perform
-    backup_dir = "/content/backups"
-    FileUtils.mkdir_p(backup_dir)
+    FileUtils.mkdir_p(File.dirname(BACKUP_PATH))
 
-    dest = File.join(backup_dir, "frank_investigator.sqlite3")
-    ActiveRecord::Base.connection.execute("VACUUM INTO '#{dest}'")
+    ActiveRecord::Base.connection.execute("VACUUM INTO '/content/backups/frank_investigator.sqlite3'")
 
-    Rails.logger.info("[BackupDatabaseJob] Backed up to #{dest} (#{File.size(dest)} bytes)")
+    Rails.logger.info("[BackupDatabaseJob] Backed up to #{BACKUP_PATH} (#{File.size(BACKUP_PATH)} bytes)")
   end
 end

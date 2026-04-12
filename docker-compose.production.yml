@@ -2,7 +2,7 @@ name: frank_investigator
 
 services:
   web:
-    container_name: frank_investigator
+    container_name: frank_investigator_web
     image: ${REGISTRY_HOST}:${REGISTRY_PORT}/akitaonrails/frank_investigator:latest
     restart: unless-stopped
     ports:
@@ -11,10 +11,12 @@ services:
       - ${APP_DATA_DIR}/.env.production
     environment:
       - RAILS_ENV=production
-      - SOLID_QUEUE_IN_PUMA=1
+      - SOLID_QUEUE_IN_PUMA=false
       - RAILS_LOG_TO_STDOUT=1
+      - WEB_CONCURRENCY=${WEB_CONCURRENCY:-0}
     volumes:
       - ${APP_DATA_DIR}/storage:/rails/storage
+      - /opt/makita/content:/content
     tmpfs:
       - /tmp:size=256M
     shm_size: '512m'
@@ -24,3 +26,24 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+
+  worker:
+    container_name: frank_investigator_worker
+    image: ${REGISTRY_HOST}:${REGISTRY_PORT}/akitaonrails/frank_investigator:latest
+    command: ./bin/jobs start
+    restart: unless-stopped
+    env_file:
+      - ${APP_DATA_DIR}/.env.production
+    environment:
+      - RAILS_ENV=production
+      - RAILS_LOG_TO_STDOUT=1
+      - FETCH_JOB_THREADS=${FETCH_JOB_THREADS:-1}
+      - FETCH_JOB_CONCURRENCY=${FETCH_JOB_CONCURRENCY:-1}
+      - DEFAULT_JOB_THREADS=${DEFAULT_JOB_THREADS:-2}
+      - DEFAULT_JOB_CONCURRENCY=${DEFAULT_JOB_CONCURRENCY:-1}
+    volumes:
+      - ${APP_DATA_DIR}/storage:/rails/storage
+      - /opt/makita/content:/content
+    tmpfs:
+      - /tmp:size=256M
+    shm_size: '512m'

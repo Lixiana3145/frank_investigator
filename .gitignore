@@ -38,10 +38,12 @@
 /config/*.key
 
 # Ignore deploy configuration (contains server-specific IPs, ports, etc.)
-/config/deploy.env
+/config/deploy.env*
+!/config/deploy.env.example
 
 # Ignore Kamal secrets (contains raw credentials)
-/.kamal/secrets
+/.kamal/secrets*
+!/.kamal/secrets.example
 
 
 /app/assets/builds/*

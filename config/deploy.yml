@@ -11,6 +11,24 @@ servers:
     options:
       network: makita-network
       shm-size: 512m
+    env:
+      clear:
+        WEB_CONCURRENCY: 0
+        SOLID_QUEUE_IN_PUMA: false
+  worker:
+    hosts:
+      - 107.170.70.49
+    cmd: "./bin/jobs start"
+    proxy: false
+    options:
+      network: makita-network
+      shm-size: 512m
+    env:
+      clear:
+        FETCH_JOB_THREADS: 1
+        FETCH_JOB_CONCURRENCY: 1
+        DEFAULT_JOB_THREADS: 2
+        DEFAULT_JOB_CONCURRENCY: 1
 
 proxy:
   ssl: true
@@ -31,12 +49,10 @@ env:
   clear:
     RAILS_ENV: production
     RAILS_LOG_TO_STDOUT: true
-    SOLID_QUEUE_IN_PUMA: 1
     FRANK_INVESTIGATOR_LOCALE: pt-BR
     CHROMIUM_PATH: /usr/bin/chromium
     LLM_TIMEOUT_SECONDS: 120
     FRANK_INVESTIGATOR_MAX_LINK_DEPTH: 1
-    WEB_CONCURRENCY: 0
     RAILS_MAX_THREADS: 5
     JOBS_AUTH_USER: admin
   secret:
@@ -50,9 +66,11 @@ env:
     - GOOGLE_ANALYTICS_ID
 
 aliases:
-  console: app exec --interactive --reuse "bin/rails console"
-  shell: app exec --interactive --reuse "bash"
-  logs: app logs -f
+  console: app exec --interactive --reuse -r web "bin/rails console"
+  shell: app exec --interactive --reuse -r web "bash"
+  logs: app logs -r web -f
+  worker_shell: app exec --interactive --reuse -r worker "bash"
+  worker_logs: app logs -r worker -f
 
 volumes:
   - "frank_investigator_storage:/rails/storage"

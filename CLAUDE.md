@@ -72,7 +72,7 @@ Tests use WebMock (`test/support/llm_stubs.rb`) to stub OpenRouter API calls. Th
 - **Tailwind CSS v4.** Propshaft pipeline with `tailwindcss-rails`. Custom theme in `app/assets/tailwind/application.css` with warm cream/brown palette. Utility-first classes in templates, minimal custom CSS for popovers and timeline.
 - **SQLite in production.** WAL mode, tuned pragmas. No Postgres dependency.
 - **LLM via OpenRouter.** Multi-model consensus through `RubyLLM` gem. Models configurable via `OPENROUTER_MODELS` env var.
-- **Background jobs via Solid Queue.** Recurring jobs in `config/recurring.yml`.
+- **Background jobs via Solid Queue.** Production runs Solid Queue in a dedicated Kamal `worker` role via `bin/jobs start`; the web role does not embed Solid Queue inside Puma. Fetch-heavy jobs use a dedicated low-concurrency `fetch` queue to keep Chromium failures from wedging the rest of the pipeline. Recurring jobs remain defined in `config/recurring.yml`.
 
 ## Link Extraction and Noise Filtering
 

@@ -38,7 +38,7 @@ REGISTRY_PORT=3007
 APP_DATA_DIR=/home/akitaonrails/frank_investigator
 APP_PORT=3666
 
-# --- App runtime environment (passed into the container) ---
+# --- App runtime environment (passed into the containers) ---
 
 # Required
 OPENROUTER_API_KEY=your-openrouter-api-key
@@ -52,9 +52,12 @@ CHROMIUM_PATH=/usr/bin/chromium
 LLM_TIMEOUT_SECONDS=120
 FRANK_INVESTIGATOR_MAX_LINK_DEPTH=1
 FRANK_INVESTIGATOR_OPENROUTER_MODELS=google/gemini-2.0-flash-001,meta-llama/llama-4-maverick,qwen/qwen-2.5-72b-instruct
-WEB_CONCURRENCY=1
+WEB_CONCURRENCY=0
 RAILS_MAX_THREADS=3
-JOB_CONCURRENCY=3
+FETCH_JOB_THREADS=1
+FETCH_JOB_CONCURRENCY=1
+DEFAULT_JOB_THREADS=2
+DEFAULT_JOB_CONCURRENCY=1
 ENVBLOCK
   echo "  Created $ENV_FILE — edit it with real values."
 else
@@ -85,7 +88,7 @@ SETUP
     $SCP_CMD "$SCRIPT_DIR/docker-compose.production.yml" \
       "${DEPLOY_USER}@${DEPLOY_HOST}:${COMPOSE_FILE}"
 
-    echo "==> Pulling on server and restarting..."
+    echo "==> Pulling on server and restarting frank_investigator web + worker..."
     $SSH_CMD bash -s <<DEPLOY
 set -euo pipefail
 docker pull "$PULL_TAG"
@@ -114,20 +117,25 @@ DEPLOY
     $SSH_CMD -t "$DC exec web bash"
     ;;
 
+  worker-shell)
+    $SSH_CMD -t "$DC exec worker bash"
+    ;;
+
   console)
     $SSH_CMD -t "$DC exec web bin/rails console"
     ;;
 
   *)
-    echo "Usage: bin/deploy [setup|deploy|logs|status|stop|shell|console]"
+    echo "Usage: bin/deploy [setup|deploy|logs|status|stop|shell|worker-shell|console]"
     echo ""
     echo "  setup    - Idempotent server setup (directories, env files, compose file)"
-    echo "  deploy   - Build, push, pull, restart (default)"
+    echo "  deploy   - Build, push, pull, restart frank_investigator web + worker (default)"
     echo "  logs     - Tail production logs"
     echo "  status   - Show container status"
     echo "  stop     - Stop containers"
-    echo "  shell    - Open bash in the running container"
-    echo "  console  - Open Rails console in the running container"
+    echo "  shell    - Open bash in the running web container"
+    echo "  worker-shell - Open bash in the running worker container"
+    echo "  console  - Open Rails console in the running web container"
     exit 1
     ;;
 esac

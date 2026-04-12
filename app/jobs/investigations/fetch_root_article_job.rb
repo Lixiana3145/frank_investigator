@@ -1,6 +1,6 @@
 module Investigations
   class FetchRootArticleJob < ApplicationJob
-    queue_as :default
+    queue_as :fetch
 
     def perform(investigation_id)
       @investigation = Investigation.includes(:root_article).find(investigation_id)

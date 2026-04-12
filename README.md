@@ -102,10 +102,16 @@ export JOBS_AUTH_PASSWORD=$(openssl rand -hex 16)
 export GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX               # Optional
 ```
 
+Secret hygiene:
+
+- Never commit `.kamal/secrets`, `.kamal/secrets.<destination>`, `.kamal/secrets-common`, `config/deploy.env`, or `config/master.key`.
+- The repo only tracks example files such as `.kamal/secrets.example` and `config/deploy.env.example`.
+- Keep real runtime secrets in ignored local files or your shell environment, not in tracked YAML, compose files, or docs.
+
 Then bootstrap the server:
 
 ```bash
-kamal setup
+bin/kamal setup
 ```
 
 Point your DNS (A record) to the server IP for the hostname configured in `config/deploy.yml`.
@@ -113,16 +119,18 @@ Point your DNS (A record) to the server IP for the hostname configured in `confi
 ### Deploy
 
 ```bash
-kamal deploy
+bin/kamal deploy
 ```
 
 ### Other commands
 
 ```bash
-kamal console           # Open Rails console
-kamal shell             # Open bash in the container
-kamal logs              # Tail production logs
-kamal app details       # Show container status
+bin/kamal console       # Open Rails console in the web container
+bin/kamal shell         # Open bash in the web container
+bin/kamal logs          # Tail web logs
+bin/kamal worker_shell  # Open bash in the worker container
+bin/kamal worker_logs   # Tail worker logs
+bin/kamal app details   # Show container status
 ```
 
 ### How it works
@@ -131,8 +139,28 @@ kamal app details       # Show container status
 - `.kamal/secrets` pulls secrets from local env vars — no raw credentials in git
 - kamal-proxy handles SSL via Let's Encrypt and routes by hostname
 - `frank_investigator_storage` Docker volume persists SQLite databases
-- Solid Queue runs inside Puma (`SOLID_QUEUE_IN_PUMA=1`) — single container
+- Production runs separate `web` and `worker` containers for this app only
+- The `web` role serves HTTP traffic and does not embed Solid Queue in Puma
+- The `worker` role runs `./bin/jobs start` and is not exposed through kamal-proxy
+- Fetch-heavy jobs run on a dedicated low-concurrency `fetch` queue to limit Chromium pressure
 - Chromium is included in the Docker image for headless page fetching
+
+## Deployment Notes
+
+- `bin/kamal deploy` only touches containers labeled for the `frank-investigator` service.
+- This app's proxy configuration only serves `investigator.themakitachronicles.com`.
+- Both `web` and `worker` mount the same persistent `/rails/storage` path, so SQLite databases remain outside container lifecycle.
+- The shared `/opt/makita/content` bind mount is still passed into both containers at `/content`.
+
+## Legacy Compose Helper
+
+The repo still includes `docker-compose.production.yml` and `bin/deploy` as a legacy non-Kamal path. They mirror the same split runtime:
+
+- `web` serves Rails/Thruster only
+- `worker` runs Solid Queue only
+- both share the same persistent storage and content mounts
+
+Prefer Kamal for production unless you intentionally need the compose-based path.
 
 ## Internationalization
 

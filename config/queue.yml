@@ -15,4 +15,15 @@ test:
   <<: *default
 
 production:
-  <<: *default
+  dispatchers:
+    - polling_interval: 1
+      batch_size: 500
+  workers:
+    - queues: fetch
+      threads: <%= ENV.fetch("FETCH_JOB_THREADS", 1) %>
+      processes: <%= ENV.fetch("FETCH_JOB_CONCURRENCY", 1) %>
+      polling_interval: 0.1
+    - queues: default
+      threads: <%= ENV.fetch("DEFAULT_JOB_THREADS", 2) %>
+      processes: <%= ENV.fetch("DEFAULT_JOB_CONCURRENCY", 1) %>
+      polling_interval: 0.1

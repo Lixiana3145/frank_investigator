@@ -1,6 +1,6 @@
 module Investigations
   class FetchLinkedArticleJob < ApplicationJob
-    queue_as :default
+    queue_as :fetch
 
     def perform(investigation_id, article_link_id)
       investigation = Investigation.find(investigation_id)
