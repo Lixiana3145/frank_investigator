@@ -3,6 +3,7 @@ require "test_helper"
 class Analyzers::ClaimAssessorTest < ActiveSupport::TestCase
   FakeEntry = Struct.new(:authority_tier, :relevance_score, :independence_group,
     :stance, :article, :authority_score, :headline_divergence, :source_kind,
+    :source_role,
     keyword_init: true)
   FakeArticle = Struct.new(:published_at, :fetched_at, keyword_init: true)
 
@@ -66,15 +67,16 @@ class Analyzers::ClaimAssessorTest < ActiveSupport::TestCase
       independence_group: "city.gov"
     )
     disputing = Article.create!(
-      url: "https://records.example.net/check",
-      normalized_url: "https://records.example.net/check",
-      host: "records.example.net",
+      url: "https://news.example.net/check",
+      normalized_url: "https://news.example.net/check",
+      host: "news.example.net",
       title: "No evidence the mayor approved the measure yesterday",
       body_text: "There is no evidence the mayor approved the measure yesterday.",
       excerpt: "No evidence the mayor approved the measure yesterday.",
       fetch_status: :fetched,
       fetched_at: Time.current,
-      source_kind: :reference,
+      source_kind: :news_article,
+      source_role: :news_reporting,
       authority_tier: :secondary,
       authority_score: 0.64,
       independence_group: "example.net"
@@ -151,5 +153,60 @@ class Analyzers::ClaimAssessorTest < ActiveSupport::TestCase
 
     sufficiency = assessor.send(:normalized_sufficiency_score, single_entries)
     assert_kind_of Numeric, sufficiency
+  end
+
+  test "secondary opinion and blog evidence cannot sustain evaluative performance claims" do
+    root = Article.create!(
+      url: "https://example.com/performance",
+      normalized_url: "https://example.com/performance",
+      host: "example.com",
+      fetch_status: :fetched
+    )
+    investigation = Investigation.create!(submitted_url: root.url, normalized_url: root.normalized_url, root_article: root)
+    claim = Claim.create!(
+      canonical_text: "The minister was an effective leader during the crisis.",
+      canonical_fingerprint: "effective-leader-crisis",
+      checkability_status: :checkable
+    )
+    ArticleClaim.create!(article: root, claim:, role: :body, surface_text: claim.canonical_text)
+
+    opinion_article = Article.create!(
+      url: "https://newspaper.example.com/colunas/effective-leader",
+      normalized_url: "https://newspaper.example.com/colunas/effective-leader",
+      host: "newspaper.example.com",
+      title: "Why the minister was an effective leader",
+      body_text: "In this opinion column, the author argues the minister was an effective leader during the crisis.",
+      excerpt: "Opinion column about leadership.",
+      fetch_status: :fetched,
+      fetched_at: Time.current,
+      source_kind: :news_article,
+      source_role: :opinion_column,
+      authority_tier: :secondary,
+      authority_score: 0.72,
+      independence_group: "newspaper.example.com"
+    )
+    blog_article = Article.create!(
+      url: "https://blogexample.com/2026/04/leadership/",
+      normalized_url: "https://blogexample.com/2026/04/leadership/",
+      host: "blogexample.com",
+      title: "The minister handled the crisis well",
+      body_text: "A blog post repeating that the minister handled the crisis well and deserved praise.",
+      excerpt: "Blog commentary about leadership.",
+      fetch_status: :fetched,
+      fetched_at: Time.current,
+      source_kind: :news_article,
+      source_role: :blog_amplification,
+      authority_tier: :secondary,
+      authority_score: 0.58,
+      independence_group: "blogexample.com"
+    )
+
+    ArticleClaim.create!(article: opinion_article, claim:, role: :supporting, surface_text: claim.canonical_text)
+    ArticleClaim.create!(article: blog_article, claim:, role: :supporting, surface_text: claim.canonical_text)
+
+    result = Analyzers::ClaimAssessor.call(investigation:, claim:)
+
+    assert_equal :needs_more_evidence, result.verdict
+    assert_operator result.confidence_score, :<=, 0.35
   end
 end

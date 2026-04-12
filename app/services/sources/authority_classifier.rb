@@ -39,6 +39,10 @@ module Sources
     PRESS_RELEASE_HOST_PATTERNS = [ /\bprnewswire\.com\z/i, /\bbusinesswire\.com\z/i ].freeze
     SOCIAL_HOST_PATTERNS = [ /\bx\.com\z/i, /\btwitter\.com\z/i, /\bfacebook\.com\z/i, /\binstagram\.com\z/i, /\btiktok\.com\z/i, /\byoutube\.com\z/i ].freeze
     REFERENCE_HOST_PATTERNS = [ /\bwikipedia\.org\z/i ].freeze
+    OPINION_URL_PATTERNS = [ %r{/(?:colunas?|columnists?|opinion|opiniao|analysis|analise|op-ed|artigos?)/}i ].freeze
+    EDITORIAL_URL_PATTERNS = [ %r{/(?:editorial|editoriais)/}i ].freeze
+    BLOG_URL_PATTERNS = [ %r{/(?:blog|blogs)(?:/|$)}i ].freeze
+    BLOG_HOST_PATTERN = /\Ablog[a-z0-9-]*\./i
 
     def self.call(url:, host:, title: nil)
       new(url:, host:, title:).call
@@ -52,12 +56,13 @@ module Sources
 
     def call
       if (profile = Sources::ProfileRegistry.match(@host))
+        source_role = infer_source_role(profile.source_role.presence&.to_sym || :news_reporting)
         return Result.new(
           source_kind: profile.source_kind.to_sym,
           authority_tier: profile.authority_tier.to_sym,
           authority_score: profile.authority_score,
           independence_group: profile.independence_group.presence || independence_group,
-          source_role: profile.source_role.present? ? profile.source_role.to_sym : :news_reporting
+          source_role:
         )
       end
 
@@ -99,13 +104,40 @@ module Sources
       return Result.new(source_kind: :social_post, authority_tier: :low, authority_score: 0.22, independence_group:, source_role: :unknown) if matches?(SOCIAL_HOST_PATTERNS)
       return Result.new(source_kind: :reference, authority_tier: :secondary, authority_score: 0.42, independence_group:, source_role: :unknown) if matches?(REFERENCE_HOST_PATTERNS)
 
-      Result.new(source_kind: :news_article, authority_tier: :secondary, authority_score: 0.58, independence_group:, source_role: :news_reporting)
+      Result.new(
+        source_kind: :news_article,
+        authority_tier: :secondary,
+        authority_score: 0.58,
+        independence_group:,
+        source_role: infer_source_role(:news_reporting)
+      )
     end
 
     private
 
+    def infer_source_role(base_role)
+      return base_role unless %i[news_reporting unknown].include?(base_role)
+      return :editorial if editorial_url?
+      return :opinion_column if opinion_url?
+      return :blog_amplification if blog_like_url?
+
+      base_role
+    end
+
     def matches?(patterns)
       patterns.any? { |pattern| @host.match?(pattern) }
+    end
+
+    def opinion_url?
+      OPINION_URL_PATTERNS.any? { |pattern| @url.match?(pattern) } || @title.include?("opinião") || @title.include?("opinion")
+    end
+
+    def editorial_url?
+      EDITORIAL_URL_PATTERNS.any? { |pattern| @url.match?(pattern) } || @title.include?("editorial")
+    end
+
+    def blog_like_url?
+      @host.match?(BLOG_HOST_PATTERN) || BLOG_URL_PATTERNS.any? { |pattern| @url.match?(pattern) }
     end
 
     def press_release_url?

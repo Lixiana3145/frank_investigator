@@ -157,12 +157,15 @@ module Parsing
 
     # Section headers like "Tópicos relacionados", "Leia também", etc.
     SECTION_HEADER_PATTERN = /\A(?:Tópicos?\s+relacionados?|Tags?|Leia\s+(?:também|mais)|Veja\s+(?:também|mais)|Related\s+(?:topics?|articles?)|Continua\s+depois\s+da\s+publicidade)\z/i
+    LEADING_UI_FRAGMENT_PATTERN = /\A(?:entrar|minha\s+conta|minha\s+folha|newsletters?|minha\s+assinatura|forma\s+de\s+pagamento|editar\s+senha|atendimento|sair|english\s+edition|edici[oó]n\s+en\s+espa[ñn]ol|assine|subscribe|subscriber|assine\s+ou\s+fa[çc]a\s+login|sim,\s*aceito|n[aã]o,\s*obrigado)\z/i
+    LEADING_UI_PROMPT_PATTERN = /\A(?:gostaria\s+de\s+receber|would\s+you\s+like\s+to\s+receive|recurso\s+exclusivo\s+para\s+assinantes)\b/i
 
     def extract_body_text(node)
       paragraphs = node.css("p, h2, h3, li")
         .map { |element| element.text.squish }
         .reject { |t| t.blank? || t.match?(AD_MARKER_PATTERN) || t.match?(SHARE_TEXT_PATTERN) || t.match?(SECTION_HEADER_PATTERN) }
       text = paragraphs.join("\n\n")
+      text = strip_leading_portal_chrome(text) if text.present?
       text = strip_trailing_tags(text) if text.present?
       text = strip_leading_byline(text) if text.present?
       text.presence || node.text.squish
@@ -195,6 +198,24 @@ module Parsing
         lines.shift
       end
       lines.join("\n\n")
+    end
+
+    def strip_leading_portal_chrome(text)
+      lines = text.split("\n\n")
+      while lines.size > 1 && leading_ui_fragment?(lines.first)
+        lines.shift
+      end
+      lines.join("\n\n")
+    end
+
+    def leading_ui_fragment?(line)
+      snippet = line.to_s.squish
+      return false if snippet.blank?
+      return true if snippet.match?(LEADING_UI_FRAGMENT_PATTERN)
+      return true if snippet.match?(LEADING_UI_PROMPT_PATTERN)
+      return false if snippet.match?(/[.!]/) && snippet.length > 80
+
+      snippet.length < 90 && snippet.split.size <= 8 && snippet.match?(/\A[\p{L}\s,]+\z/)
     end
 
     def strip_noise(node)

@@ -84,6 +84,7 @@ module Analyzers
           authority_score: entry.authority_score,
           authority_tier: entry.authority_tier,
           source_kind: entry.source_kind,
+          source_role: entry.source_role,
           independence_group: entry.independence_group,
           fetched_at: entry.article.fetched_at,
           published_at: entry.article.published_at,
@@ -98,6 +99,7 @@ module Analyzers
       final_verdict, final_confidence = merge_with_llm(heuristic_verdict:, heuristic_confidence:, llm_result:)
       pre_veto_verdict = final_verdict
       final_verdict, final_confidence = apply_primary_veto(final_verdict, final_confidence, entries)
+      final_verdict, final_confidence = apply_evaluative_evidence_guard(final_verdict, final_confidence, entries)
       vetoed = final_verdict != pre_veto_verdict
       viral = scores[:unsubstantiated_viral] || false
 
@@ -211,18 +213,18 @@ module Analyzers
 
       primary_weight = stance_entries
         .select { |e| e.authority_tier == "primary" }
-        .sum { |e| e.relevance_score.to_f * e.authority_score.to_f }
+        .sum { |e| e.relevance_score.to_f * effective_authority_score(e) }
 
       secondary_weight = stance_entries
         .reject { |e| e.authority_tier == "primary" }
-        .sum { |e| e.relevance_score.to_f * e.authority_score.to_f }
+        .sum { |e| e.relevance_score.to_f * effective_authority_score(e) }
 
       primary_weight + [ secondary_weight, SECONDARY_WEIGHT_CAP ].min
     end
 
     def normalized_authority_score(entries)
       return 0.05 if entries.empty?
-      [ entries.sum { |entry| entry.authority_score.to_f * entry.relevance_score.to_f }, 1.0 ].min
+      [ entries.sum { |entry| effective_authority_score(entry) * entry.relevance_score.to_f }, 1.0 ].min
     end
 
     def normalized_independence_score(entries)
@@ -262,9 +264,9 @@ module Analyzers
 
     def normalized_sufficiency_score(entries)
       return 0 if entries.empty?
-      primary_entries = entries.count { |entry| entry.authority_tier == "primary" }
+      primary_entries = entries.count { |entry| robust_entry?(entry) }
       independent_groups = entries.map(&:independence_group).reject(&:blank?).uniq.count
-      weighted_count = entries.sum { |entry| entry.relevance_score.to_f }
+      weighted_count = entries.sum { |entry| entry.relevance_score.to_f * source_reliability_multiplier(entry) }
       independence_bonus = [ independent_groups * 0.1, 0.3 ].min
       [ (weighted_count * 0.25) + (primary_entries * 0.2) + independence_bonus, 1.0 ].min
     end
@@ -289,6 +291,20 @@ module Analyzers
       end
 
       [ verdict, confidence ]
+    end
+
+    EVALUATIVE_SECONDARY_CONFIDENCE_CAP = 0.35
+
+    def apply_evaluative_evidence_guard(verdict, confidence, entries)
+      return [ verdict, confidence ] unless Analyzers::CheckabilityClassifier.evaluative_performance_claim?(@claim.canonical_text)
+      return [ verdict, confidence ] if verdict == :not_checkable
+
+      robust_support = entries.any? { |entry| entry.stance == :supports && robust_entry?(entry) }
+      robust_dispute = entries.any? { |entry| entry.stance == :disputes && robust_entry?(entry) }
+      return [ verdict, confidence ] if robust_support || robust_dispute
+
+      guarded_verdict = verdict == :mixed ? :mixed : :needs_more_evidence
+      [ guarded_verdict, [ confidence, EVALUATIVE_SECONDARY_CONFIDENCE_CAP ].min ]
     end
 
     # ── Circular citation, headline amplification & unsubstantiated viral detection ──
@@ -320,6 +336,36 @@ module Analyzers
 
       # All supporting evidence is secondary/low tier — flag as viral
       true
+    end
+
+    def effective_authority_score(entry)
+      (entry.authority_score.to_f * source_reliability_multiplier(entry)).round(3)
+    end
+
+    def source_reliability_multiplier(entry)
+      source_role = entry.respond_to?(:source_role) ? entry.source_role.to_s : ""
+      source_kind = entry.respond_to?(:source_kind) ? entry.source_kind.to_s : ""
+
+      multiplier = case source_role
+      when "opinion_column"
+        0.45
+      when "editorial"
+        0.40
+      when "blog_amplification"
+        0.30
+      else
+        1.0
+      end
+
+      multiplier *= 0.35 if source_kind == "reference"
+      multiplier
+    end
+
+    def robust_entry?(entry)
+      return true if entry.authority_tier == "primary"
+
+      source_role = entry.respond_to?(:source_role) ? entry.source_role.to_s : ""
+      %w[authenticated_legal_text neutral_statistics oversight].include?(source_role)
     end
 
     # Cap for claims where many outlets repeat an unsubstantiated allegation.

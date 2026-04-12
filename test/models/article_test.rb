@@ -65,7 +65,10 @@ class ArticleTest < ActiveSupport::TestCase
   end
 
   test "source_role enum accepts all defined values" do
-    %i[unknown official_position authenticated_legal_text neutral_statistics oversight research_discovery news_reporting].each do |role|
+    %i[
+      unknown official_position authenticated_legal_text neutral_statistics oversight
+      research_discovery news_reporting opinion_column editorial blog_amplification
+    ].each do |role|
       article = Article.new(url: "https://x.com", normalized_url: "https://x.com/#{role}", host: "x.com", source_role: role)
       assert article.valid?, "Expected source_role #{role} to be valid"
     end

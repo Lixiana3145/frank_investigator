@@ -13,6 +13,7 @@ A fact does not become false because a million sources repeat a falsehood, and a
 - LLM votes are weighted by confidence, not counted by heads.
 - Independence matters more than quantity. Ten articles from the same wire service count as one voice.
 - Smear and viral campaign defense. Unsubstantiated viral claims are capped at low confidence.
+- Evaluative thesis claims are treated conservatively. Broad judgments like "X was a good minister" must decompose into measurable subclaims before they can earn strong support.
 - Circular citation detection. Echo chambers where outlets only cite each other are penalized.
 - Headline bait detection. Articles with sensational headlines that hedge in the body are discounted.
 - Rhetorical fallacy analysis. Bait-and-pivot, appeal to authority, strawman, and other fallacies are detected and flagged.
@@ -23,7 +24,7 @@ A fact does not become false because a million sources repeat a falsehood, and a
 - Extracts main content with noise filtering (ads, sidebars, comment sections, trending lists)
 - Handles PDF, DOCX, XLSX, and CSV document evidence
 - Extracts and deduplicates claims using fingerprint, semantic key, and similarity matching
-- Classifies source authority (primary/secondary/low) and source role (government, legal, statistics, oversight, research, news)
+- Classifies source authority (primary/secondary/low) and source role (government, legal, statistics, oversight, research, reporting, opinion, editorial, blog amplification)
 - Detects editorial independence groups to prevent volume-based manipulation
 - Follows in-body links up to configurable depth, building an evidence graph
 - Assesses claims via multi-model LLM consensus with graduated disagreement penalties
@@ -40,6 +41,7 @@ A fact does not become false because a million sources repeat a falsehood, and a
 - Analyzes contextual gaps: what the article omits that would change the reader's conclusion
 - Searches for counter-evidence addressing each identified gap
 - Detects coordinated narrative campaigns: finds related coverage, compares narrative fingerprints, flags convergent framing and convergent omissions across outlets
+- Links related investigations more aggressively when the same subject is covered through opposed policy or fiscal framing
 - Scores emotional manipulation: emotional temperature vs evidence density, calibrated so passionate journalism backed by evidence is not penalized
 - Generates an executive summary from 15 pipeline steps with calibrated scoring that distinguishes normal editorial imperfections from deliberate manipulation
 - Live updates via Turbo Streams as the pipeline progresses
@@ -133,6 +135,16 @@ bin/kamal worker_logs   # Tail worker logs
 bin/kamal app details   # Show container status
 ```
 
+### Maintenance tasks
+
+```bash
+bin/rails 'frank:reanalyze[SLUG]'   # Reset analysis-stage steps and rerun analyzers for one investigation
+bin/rails 'frank:crossref[SLUG]'    # Recompute related-investigation context for one investigation
+bin/rails frank:crossref_all        # Recompute related-investigation context for all completed investigations
+```
+
+Use `frank:reanalyze` when analyzer logic changes and you want a report to pick up new heuristics without re-fetching the source article.
+
 ### How it works
 
 - `config/deploy.yml` defines the Kamal service (server, image, volumes, env)
@@ -144,6 +156,7 @@ bin/kamal app details   # Show container status
 - The `worker` role runs `./bin/jobs start` and is not exposed through kamal-proxy
 - Fetch-heavy jobs run on a dedicated low-concurrency `fetch` queue to limit Chromium pressure
 - Chromium is included in the Docker image for headless page fetching
+- If LLM-backed analysis degrades, the heuristic fallback remains conservative: evaluative claims stay `not_checkable` or `needs_more_evidence`, and opinion/blog amplification is downweighted automatically
 
 ## Deployment Notes
 

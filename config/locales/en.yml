@@ -354,6 +354,9 @@ en:
       official_position: "Official government position (may reflect political stance)"
       research_discovery: "Academic or research publication"
       news_reporting: "Journalistic reporting"
+      opinion_column: "Opinion or analysis column"
+      editorial: "Institutional editorial stance"
+      blog_amplification: "Blog or commentary amplification"
       unknown: "Role not classified"
     headline_bait:
       high: "Headline appears materially more sensational than the article body."
@@ -405,6 +408,9 @@ en:
       oversight: "Oversight"
       research_discovery: "Research"
       news_reporting: "News reporting"
+      opinion_column: "Opinion column"
+      editorial: "Editorial"
+      blog_amplification: "Blog amplification"
     claim_kind:
       statement: "Statement"
       prediction: "Prediction"

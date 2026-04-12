@@ -13,6 +13,11 @@ class Analyzers::CheckabilityClassifierTest < ActiveSupport::TestCase
     assert_equal :not_checkable, Analyzers::CheckabilityClassifier.call("I think this is the best policy ever proposed.")
   end
 
+  test "classifies evaluative public-performance claims as not_checkable" do
+    assert_equal :not_checkable, Analyzers::CheckabilityClassifier.call("Haddad foi um bom ministro.")
+    assert_equal :not_checkable, Analyzers::CheckabilityClassifier.call("The governor was a terrible leader during the crisis.")
+  end
+
   test "classifies statements with numbers as checkable" do
     assert_equal :checkable, Analyzers::CheckabilityClassifier.call("Inflation rose to 8 percent in March.")
   end

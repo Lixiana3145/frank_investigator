@@ -86,4 +86,36 @@ class Sources::AuthorityClassifierTest < ActiveSupport::TestCase
     assert_equal :primary, result.authority_tier
     assert_operator result.authority_score, :>=, 0.9
   end
+
+  test "classifies column URLs as opinion columns" do
+    result = Sources::AuthorityClassifier.call(
+      url: "https://www1.folha.uol.com.br/colunas/exemplo/2026/04/titulo.shtml",
+      host: "www1.folha.uol.com.br",
+      title: "Exemplo"
+    )
+
+    assert_equal :news_article, result.source_kind
+    assert_equal :opinion_column, result.source_role
+  end
+
+  test "classifies blog hosts as blog amplification" do
+    result = Sources::AuthorityClassifier.call(
+      url: "https://blogdopaulinho.com.br/2026/04/12/exemplo/",
+      host: "blogdopaulinho.com.br",
+      title: "Exemplo"
+    )
+
+    assert_equal :news_article, result.source_kind
+    assert_equal :blog_amplification, result.source_role
+  end
+
+  test "classifies editorial URLs as editorials" do
+    result = Sources::AuthorityClassifier.call(
+      url: "https://example.com/editorial/economic-policy",
+      host: "example.com",
+      title: "Editorial: Economic Policy"
+    )
+
+    assert_equal :editorial, result.source_role
+  end
 end

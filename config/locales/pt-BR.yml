@@ -354,6 +354,9 @@ pt-BR:
       official_position: "Posição oficial do governo (pode refletir postura política)"
       research_discovery: "Publicação acadêmica ou de pesquisa"
       news_reporting: "Reportagem jornalística"
+      opinion_column: "Coluna de opinião ou análise"
+      editorial: "Posicionamento editorial institucional"
+      blog_amplification: "Amplificação por blog ou comentário"
       unknown: "Papel não classificado"
     headline_bait:
       high: "A manchete parece materialmente mais sensacionalista que o corpo do artigo."
@@ -405,6 +408,9 @@ pt-BR:
       oversight: "Fiscalização"
       research_discovery: "Pesquisa"
       news_reporting: "Reportagem"
+      opinion_column: "Coluna de opinião"
+      editorial: "Editorial"
+      blog_amplification: "Amplificação por blog"
     claim_kind:
       statement: "Declaração"
       prediction: "Previsão"

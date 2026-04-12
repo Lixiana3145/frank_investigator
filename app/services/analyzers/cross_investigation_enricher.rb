@@ -15,7 +15,8 @@ module Analyzers
     include LlmHelpers
 
     MIN_ENTITY_OVERLAP = 2
-    MIN_KEYWORD_OVERLAP = 12
+    MIN_KEYWORD_OVERLAP = 8
+    MIN_TOPIC_OVERLAP = 2
     MAX_RELATED = 10
 
     SYSTEM_PROMPT_TEMPLATE = <<~PROMPT.freeze
@@ -94,7 +95,7 @@ module Analyzers
     def find_related_investigations
       # Extract entity names from this investigation's claims
       entities = extract_entities
-      return [] if entities.size < 2
+      return [] if entities.empty?
 
       # Search other completed investigations for overlapping entities
       candidates = Investigation.where(status: "completed")
@@ -103,6 +104,7 @@ module Analyzers
         .limit(50)
 
       keywords = extract_keywords_from(@investigation)
+      topics = extract_topics_from(@investigation)
 
       related = candidates.select do |inv|
         # Match by entity names (proper nouns)
@@ -113,7 +115,11 @@ module Analyzers
         # Match by keyword overlap (significant words from claims + title)
         other_keywords = extract_keywords_from(inv)
         keyword_overlap = (keywords & other_keywords).size
-        keyword_overlap >= MIN_KEYWORD_OVERLAP
+        next true if keyword_overlap >= MIN_KEYWORD_OVERLAP
+
+        other_topics = extract_topics_from(inv)
+        topic_overlap = (topics & other_topics).size
+        entity_overlap >= 1 && topic_overlap >= MIN_TOPIC_OVERLAP
       end
 
       related.first(MAX_RELATED)
@@ -142,10 +148,46 @@ module Analyzers
         investigation.claim_assessments.includes(:claim).map { |ca| ca.claim.canonical_text }
       ].flatten.compact.join(" ")
 
-      text.downcase
-        .gsub(/[^a-zà-ú0-9\s]/, " ")
+      Analyzers::TextAnalysis.normalize(text)
         .split
-        .reject { |w| w.length < 6 || STOP_WORDS.include?(w) }
+        .map { |token| keyword_stem(token) }
+        .reject { |w| w.length < 4 || STOP_WORDS.include?(w) }
+        .uniq
+        .to_set
+    end
+
+    def extract_topics_from(investigation)
+      text = [
+        investigation.root_article&.title,
+        investigation.root_article&.body_text.to_s.truncate(2500),
+        investigation.claim_assessments.includes(:claim).map { |ca| ca.claim.canonical_text }
+      ].flatten.compact.join(" ")
+
+      extract_keywords_from_text(text)
+    end
+
+    STEM_SUFFIXES = %w[
+      amentos amento imentos imento ciones coes ções ção cao dade dades mente ismo ismos
+      ista istas tico tica ticos ticas ivel iveis ario arios aria arias al ais os as es s
+    ].freeze
+
+    def keyword_stem(token)
+      stem = token.to_s
+      STEM_SUFFIXES.each do |suffix|
+        next unless stem.length > suffix.length + 3
+        next unless stem.end_with?(suffix)
+
+        stem = stem.delete_suffix(suffix)
+        break
+      end
+      stem[0, 7]
+    end
+
+    def extract_keywords_from_text(text)
+      Analyzers::TextAnalysis.normalize(text)
+        .split
+        .map { |token| keyword_stem(token) }
+        .reject { |w| w.length < 4 || STOP_WORDS.include?(w) }
         .uniq
         .to_set
     end

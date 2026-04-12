@@ -22,19 +22,23 @@ This is the foundational design constraint of the entire system. Every scoring, 
 
 6. **Smear/viral campaign defense.** When 3+ secondary sources support a claim but zero primary sources exist, the system flags this as "unsubstantiated viral" and caps confidence at 0.45. Volume of gossip without original evidence (no confession, no court verdict, no official record) must never produce a high-confidence `:supported` verdict.
 
-7. **Circular citation detection.** Articles that only cite each other (A→B, B→A) or cite sources with no substantive content are flagged as thin citation chains. The `CircularCitationDetector` walks `ArticleLink` relationships to identify echo chambers where outlets reference each other but none have original evidence. Citation depth score penalizes these patterns.
+7. **Evaluative thesis claims are not factual verdicts by default.** Broad value judgments about a person's performance ("X was a good minister", "Y was a terrible leader") are opinion/framing unless the article decomposes them into measurable subclaims. The system should assess the underlying fiscal, legal, statistical, or documented performance claims, not ratify the headline's value judgment.
 
-8. **Citation grounding required.** An article is only "grounded" if it links to substantive external sources outside the evidence set. Articles with no outbound citations or that only cite other articles in the same evidence set are treated as ungrounded, reducing the overall citation depth score.
+8. **Circular citation detection.** Articles that only cite each other (A→B, B→A) or cite sources with no substantive content are flagged as thin citation chains. The `CircularCitationDetector` walks `ArticleLink` relationships to identify echo chambers where outlets reference each other but none have original evidence. Citation depth score penalizes these patterns.
 
-9. **Headline-body divergence penalty.** Articles whose headlines make definitive claims ("accused of", "caught", "confirmed") while their body text hedges ("allegedly", "no police report filed", "sources say", "could not be verified") have their authority score discounted. A baiting article is unreliable evidence regardless of the outlet's general reputation.
+9. **Citation grounding required.** An article is only "grounded" if it links to substantive external sources outside the evidence set. Articles with no outbound citations or that only cite other articles in the same evidence set are treated as ungrounded, reducing the overall citation depth score.
 
-10. **Headline citation amplification detection.** When Article B quotes Article A's sensational headline but not its qualifying body content, this is flagged as "headline amplification". This is a key mechanism in smear campaigns: one outlet writes a baiting headline, others cite it as established fact. The `HeadlineCitationDetector` catches this pattern and penalizes the evidence set's citation depth score.
+10. **Headline-body divergence penalty.** Articles whose headlines make definitive claims ("accused of", "caught", "confirmed") while their body text hedges ("allegedly", "no police report filed", "sources say", "could not be verified") have their authority score discounted. A baiting article is unreliable evidence regardless of the outlet's general reputation.
 
-11. **Rhetorical fallacy detection.** After claims are assessed, the `RhetoricalFallacyAnalyzer` examines the article's written structure against its own factual claims. It detects 16 fallacy types including classical fallacies and six patterns derived from Schopenhauer's 38 Stratagems ("The Art of Being Right", 1831): equivocation (#2), twisted conclusion (#9), false admission (#11), paradox framing (#13), odious categorization (#32), and faulty proof exploitation (#37). Of Schopenhauer's 38, 19 are covered by this system (6 as dedicated types, 13 via other analyzers like headline bait, source misrepresentation, and emotional manipulation); the remaining 19 are debate-specific tactics that don't reliably apply to written news analysis.
+11. **Headline citation amplification detection.** When Article B quotes Article A's sensational headline but not its qualifying body content, this is flagged as "headline amplification". This is a key mechanism in smear campaigns: one outlet writes a baiting headline, others cite it as established fact. The `HeadlineCitationDetector` catches this pattern and penalizes the evidence set's citation depth score.
 
-12. **Contextual gap detection.** An article can be factually correct in every individual claim and still be manipulative through omission. The `ContextualGapAnalyzer` identifies what the article chooses not to say: scope mismatches (citing foreign studies for local conclusions), missing counter-evidence, theoretical-vs-practical gaps, distributional blindness, historical amnesia, reversal framing (presenting partial rollbacks as new benefits), benefit pass-through gaps (assuming policy benefits reach consumers without evidence), and selective attribution (crediting actors for outcomes they didn't cause). It then searches the web for evidence addressing each gap. An article with all claims "supported" but major contextual gaps cannot receive a "strong" quality rating.
+12. **Rhetorical fallacy detection.** After claims are assessed, the `RhetoricalFallacyAnalyzer` examines the article's written structure against its own factual claims. It detects 16 fallacy types including classical fallacies and six patterns derived from Schopenhauer's 38 Stratagems ("The Art of Being Right", 1831): equivocation (#2), twisted conclusion (#9), false admission (#11), paradox framing (#13), odious categorization (#32), and faulty proof exploitation (#37). Of Schopenhauer's 38, 19 are covered by this system (6 as dedicated types, 13 via other analyzers like headline bait, source misrepresentation, and emotional manipulation); the remaining 19 are debate-specific tactics that don't reliably apply to written news analysis.
 
-13. **Completeness over accuracy.** Factual accuracy alone does not make an article trustworthy. An article that assembles true facts into a misleading narrative by omitting critical context is the most dangerous kind of misinformation because it passes every individual fact-check. The contextual completeness score penalizes this pattern.
+13. **Contextual gap detection.** An article can be factually correct in every individual claim and still be manipulative through omission. The `ContextualGapAnalyzer` identifies what the article chooses not to say: scope mismatches (citing foreign studies for local conclusions), missing counter-evidence, theoretical-vs-practical gaps, distributional blindness, historical amnesia, reversal framing (presenting partial rollbacks as new benefits), benefit pass-through gaps (assuming policy benefits reach consumers without evidence), and selective attribution (crediting actors for outcomes they didn't cause). It then searches the web for evidence addressing each gap. An article with all claims "supported" but major contextual gaps cannot receive a "strong" quality rating.
+
+14. **Completeness over accuracy.** Factual accuracy alone does not make an article trustworthy. An article that assembles true facts into a misleading narrative by omitting critical context is the most dangerous kind of misinformation because it passes every individual fact-check. The contextual completeness score penalizes this pattern.
+
+15. **Conservative degradation when semantic analysis is unavailable.** If LLM-backed extraction or contradiction analysis is unavailable, the heuristic fallback must become more conservative, not more confident. In degraded mode, evaluative claims should stay `not_checkable` or `needs_more_evidence`, and opinion/blog amplification must not be able to manufacture a `:supported` verdict by repetition alone.
 
 When in doubt, prefer `needs_more_evidence` over a weakly supported verdict. Conservative assessment protects users better than false confidence.
 
@@ -72,6 +76,7 @@ Tests use WebMock (`test/support/llm_stubs.rb`) to stub OpenRouter API calls. Th
 - **Tailwind CSS v4.** Propshaft pipeline with `tailwindcss-rails`. Custom theme in `app/assets/tailwind/application.css` with warm cream/brown palette. Utility-first classes in templates, minimal custom CSS for popovers and timeline.
 - **SQLite in production.** WAL mode, tuned pragmas. No Postgres dependency.
 - **LLM via OpenRouter.** Multi-model consensus through `RubyLLM` gem. Models configurable via `OPENROUTER_MODELS` env var.
+- **Heuristic fallback must be safe.** The app continues operating when LLM-backed steps fail, but heuristic-only output must remain conservative. Do not let degraded semantic analysis silently inflate verdict confidence.
 - **Background jobs via Solid Queue.** Production runs Solid Queue in a dedicated Kamal `worker` role via `bin/jobs start`; the web role does not embed Solid Queue inside Puma. Fetch-heavy jobs use a dedicated low-concurrency `fetch` queue to keep Chromium failures from wedging the rest of the pipeline. Recurring jobs remain defined in `config/recurring.yml`.
 
 ## Link Extraction and Noise Filtering
@@ -86,6 +91,19 @@ The `UrlClassifier` rejects known non-article hosts (app stores, login subdomain
 - Run `bundle exec rails test` — the test suite includes extraction tests with realistic HTML from multiple outlet styles. Existing tests use inline citation links embedded in sentences (e.g., `<p>See the full breakdown in the <a href="...">Budget document</a> published last week.</p>`), not bare `<p><a>link</a></p>` blocks, because the extractor requires surrounding prose to distinguish editorial links from navigation.
 - When adding a new noise pattern to `UrlClassifier` or `MainContentExtractor`, verify it doesn't match legitimate citation patterns. For example, `/login\./` catches `login.folha.com.br` but would also catch a hypothetical `login.gov` (which is a real US government site). Prefer specific patterns over broad ones.
 - If a new outlet produces noisy links, first check whether the noise comes from the HTML structure (fix in `MainContentExtractor` selectors or `BLOCKED_SELECTORS`) or from the URLs themselves (fix in `UrlClassifier`). Prefer structural fixes over URL pattern matching.
+- Paywalled and subscriber-heavy outlets frequently leak account chrome into the extracted body. Prefer stripping portal UI fragments before claim extraction rather than teaching the claim layer to cope with polluted text later.
+
+## Operational Tasks
+
+The repo includes safe maintenance rake tasks for post-deploy repair work:
+
+```bash
+bin/rails 'frank:reanalyze[SLUG]'   # Reset analysis-stage steps and re-run from headline analysis
+bin/rails 'frank:crossref[SLUG]'    # Recompute related-investigation context for one report
+bin/rails frank:crossref_all        # Recompute event context for all completed investigations
+```
+
+`frank:reanalyze` only resets analysis-stage steps (`analyze_headline` onward). It does not re-fetch the article or rebuild the entire investigation from scratch. Use it when analyzer logic changed and the root fetch/claim extraction data are still valid.
 
 ## Code Conventions
 

@@ -109,7 +109,13 @@ module Analyzers
     private
 
     def ui_boilerplate?
-      UI_BOILERPLATE_PATTERNS.any? { |p| @text.match?(p) }
+      return true if UI_BOILERPLATE_PATTERNS.any? { |p| @text.match?(p) }
+
+      ui_hits = %w[
+        newsletter assinatura assinante subscriber subscribe login entrar conta account
+        atendimento suporte payment senha logout sair edition english
+      ].count { |term| @text.downcase.include?(term) }
+      ui_hits >= 4
     end
 
     def metadata?

@@ -7,6 +7,7 @@ module Analyzers
       :authority_score,
       :authority_tier,
       :source_kind,
+      :source_role,
       :independence_group,
       :headline_divergence,
       keyword_init: true
@@ -47,6 +48,7 @@ module Analyzers
           authority_score: authority,
           authority_tier: article.authority_tier,
           source_kind: article.source_kind,
+          source_role: article.source_role,
           independence_group: article.independence_group.presence || article.host,
           headline_divergence: divergence
         )

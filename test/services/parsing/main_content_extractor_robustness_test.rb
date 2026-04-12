@@ -159,4 +159,28 @@ class Parsing::MainContentExtractorRobustnessTest < ActiveSupport::TestCase
     result = Parsing::MainContentExtractor.call(html:, url: "https://example.com/test")
     refute_includes result.body_text, "Sponsored"
   end
+
+  test "strips leading portal chrome before the article body" do
+    html = <<~HTML
+      <html><body>
+        <div class="content-text">
+          <p>Entrar</p>
+          <p>Minha Folha</p>
+          <p>Newsletters</p>
+          <p>Minha assinatura</p>
+          <p>Atendimento</p>
+          <p>Gostaria de receber as principais notícias do Brasil e do mundo?</p>
+          <p>Sim, aceito</p>
+          <p>Não, obrigado</p>
+          <p>O ministro apresentou novos dados fiscais e defendeu que a arrecadação cresceu em 2025.</p>
+          <p>O artigo também menciona críticas sobre a carga tributária e o resultado primário.</p>
+        </div>
+      </body></html>
+    HTML
+
+    result = Parsing::MainContentExtractor.call(html:, url: "https://folha.uol.com.br/test")
+    assert_includes result.body_text, "novos dados fiscais"
+    refute_includes result.body_text, "Minha Folha"
+    refute_includes result.body_text, "Sim, aceito"
+  end
 end

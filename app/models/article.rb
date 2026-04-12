@@ -33,7 +33,10 @@ class Article < ApplicationRecord
     neutral_statistics: "neutral_statistics",
     oversight: "oversight",
     research_discovery: "research_discovery",
-    news_reporting: "news_reporting"
+    news_reporting: "news_reporting",
+    opinion_column: "opinion_column",
+    editorial: "editorial",
+    blog_amplification: "blog_amplification"
   }, default: :unknown, validate: true, prefix: true
 
   has_many :article_claims, dependent: :destroy
