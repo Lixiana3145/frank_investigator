@@ -183,4 +183,22 @@ class Parsing::MainContentExtractorRobustnessTest < ActiveSupport::TestCase
     refute_includes result.body_text, "Minha Folha"
     refute_includes result.body_text, "Sim, aceito"
   end
+
+  test "strips long concatenated portal chrome lines" do
+    html = <<~HTML
+      <html><body>
+        <div class="content-text">
+          <p>Entrar Minha Folha Newsletters Minha assinatura Forma de Pagamento Editar senha e conta Atendimento Sair</p>
+          <p>English edition Edición en español</p>
+          <p>Gostaria de receber as principais notícias do Brasil e do mundo?</p>
+          <p>O texto principal começa aqui com análise da política fiscal e de seus efeitos concretos.</p>
+        </div>
+      </body></html>
+    HTML
+
+    result = Parsing::MainContentExtractor.call(html:, url: "https://folha.uol.com.br/test")
+    assert_includes result.body_text, "O texto principal começa aqui"
+    refute_includes result.body_text, "Forma de Pagamento"
+    refute_includes result.body_text, "English edition"
+  end
 end

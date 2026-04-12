@@ -118,4 +118,14 @@ class Sources::AuthorityClassifierTest < ActiveSupport::TestCase
 
     assert_equal :editorial, result.source_role
   end
+
+  test "classifies vozes URLs as opinion columns" do
+    result = Sources::AuthorityClassifier.call(
+      url: "https://www.gazetadopovo.com.br/vozes/guilherme-fiuza/exemplo/",
+      host: "www.gazetadopovo.com.br",
+      title: "Exemplo"
+    )
+
+    assert_equal :opinion_column, result.source_role
+  end
 end

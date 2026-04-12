@@ -159,6 +159,11 @@ module Parsing
     SECTION_HEADER_PATTERN = /\A(?:Tópicos?\s+relacionados?|Tags?|Leia\s+(?:também|mais)|Veja\s+(?:também|mais)|Related\s+(?:topics?|articles?)|Continua\s+depois\s+da\s+publicidade)\z/i
     LEADING_UI_FRAGMENT_PATTERN = /\A(?:entrar|minha\s+conta|minha\s+folha|newsletters?|minha\s+assinatura|forma\s+de\s+pagamento|editar\s+senha|atendimento|sair|english\s+edition|edici[oó]n\s+en\s+espa[ñn]ol|assine|subscribe|subscriber|assine\s+ou\s+fa[çc]a\s+login|sim,\s*aceito|n[aã]o,\s*obrigado)\z/i
     LEADING_UI_PROMPT_PATTERN = /\A(?:gostaria\s+de\s+receber|would\s+you\s+like\s+to\s+receive|recurso\s+exclusivo\s+para\s+assinantes)\b/i
+    LEADING_UI_TERMS = %w[
+      entrar minha folha newsletters assinatura assinante login atendimento sair
+      payment senha account english edition español subscribe subscriber
+      assine aceito obrigado
+    ].freeze
 
     def extract_body_text(node)
       paragraphs = node.css("p, h2, h3, li")
@@ -213,9 +218,16 @@ module Parsing
       return false if snippet.blank?
       return true if snippet.match?(LEADING_UI_FRAGMENT_PATTERN)
       return true if snippet.match?(LEADING_UI_PROMPT_PATTERN)
+      return true if portal_chrome_sentence?(snippet)
       return false if snippet.match?(/[.!]/) && snippet.length > 80
 
       snippet.length < 90 && snippet.split.size <= 8 && snippet.match?(/\A[\p{L}\s,]+\z/)
+    end
+
+    def portal_chrome_sentence?(snippet)
+      lower = snippet.downcase
+      ui_hits = LEADING_UI_TERMS.count { |term| lower.include?(term) }
+      ui_hits >= 3 && !snippet.match?(/[.!?]/)
     end
 
     def strip_noise(node)

@@ -39,7 +39,7 @@ module Sources
     PRESS_RELEASE_HOST_PATTERNS = [ /\bprnewswire\.com\z/i, /\bbusinesswire\.com\z/i ].freeze
     SOCIAL_HOST_PATTERNS = [ /\bx\.com\z/i, /\btwitter\.com\z/i, /\bfacebook\.com\z/i, /\binstagram\.com\z/i, /\btiktok\.com\z/i, /\byoutube\.com\z/i ].freeze
     REFERENCE_HOST_PATTERNS = [ /\bwikipedia\.org\z/i ].freeze
-    OPINION_URL_PATTERNS = [ %r{/(?:colunas?|columnists?|opinion|opiniao|analysis|analise|op-ed|artigos?)/}i ].freeze
+    OPINION_URL_PATTERNS = [ %r{/(?:colunas?|columnists?|opinion|opiniao|analysis|analise|op-ed|artigos?|vozes?|voices?)/}i ].freeze
     EDITORIAL_URL_PATTERNS = [ %r{/(?:editorial|editoriais)/}i ].freeze
     BLOG_URL_PATTERNS = [ %r{/(?:blog|blogs)(?:/|$)}i ].freeze
     BLOG_HOST_PATTERN = /\Ablog[a-z0-9-]*\./i
