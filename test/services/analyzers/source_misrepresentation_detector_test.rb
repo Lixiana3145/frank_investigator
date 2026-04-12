@@ -39,4 +39,11 @@ class Analyzers::SourceMisrepresentationDetectorTest < ActiveSupport::TestCase
     assert_respond_to result, :misrepresentation_score
     assert_respond_to result, :summary
   end
+
+  test "response schema marks every declared item property as required" do
+    schema = Analyzers::SourceMisrepresentationDetector.new(investigation: @investigation).send(:response_schema)
+    item_schema = schema.dig(:schema, :properties, :misrepresentations, :items)
+
+    assert_equal item_schema[:properties].keys.map(&:to_s).sort, item_schema[:required].sort
+  end
 end

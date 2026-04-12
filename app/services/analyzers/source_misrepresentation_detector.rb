@@ -207,12 +207,12 @@ module Analyzers
                 properties: {
                   article_claim: { type: "string" },
                   source_url: { type: "string" },
-                  source_excerpt: { type: "string" },
+                  source_excerpt: { type: [ "string", "null" ] },
                   verdict: { type: "string", enum: %w[accurate distorted fabricated unverifiable] },
                   severity: { type: "string", enum: %w[low medium high] },
                   explanation: { type: "string" }
                 },
-                required: %w[article_claim source_url verdict severity explanation]
+                required: %w[article_claim source_url source_excerpt verdict severity explanation]
               }
             },
             misrepresentation_score: { type: "number" },

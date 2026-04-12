@@ -281,7 +281,7 @@ module Analyzers
                   },
                   explanation: { type: "string" }
                 },
-                required: %w[quoted_text verdict severity explanation]
+                required: %w[quoted_text attributed_to source_url full_context verdict severity explanation]
               }
             },
             quotation_integrity_score: { type: "number" },

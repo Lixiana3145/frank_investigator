@@ -39,4 +39,11 @@ class Analyzers::SelectiveQuotationDetectorTest < ActiveSupport::TestCase
     assert_respond_to result, :quotation_integrity_score
     assert_respond_to result, :summary
   end
+
+  test "response schema marks every declared item property as required" do
+    schema = Analyzers::SelectiveQuotationDetector.new(investigation: @investigation).send(:response_schema)
+    item_schema = schema.dig(:schema, :properties, :quotations, :items)
+
+    assert_equal item_schema[:properties].keys.map(&:to_s).sort, item_schema[:required].sort
+  end
 end

@@ -146,11 +146,12 @@ module Analyzers
                 misrepresentations: { type: "array", items: {
                   type: "object", additionalProperties: false,
                   properties: {
-                    article_claim: { type: "string" }, source_url: { type: "string" },
+                    article_claim: { type: "string" },
+                    source_url: { type: [ "string", "null" ] },
                     verdict: { type: "string", enum: %w[accurate distorted fabricated unverifiable] },
                     severity: { type: "string", enum: %w[low medium high] },
                     explanation: { type: "string" }
-                  }, required: %w[article_claim verdict severity explanation]
+                  }, required: %w[article_claim source_url verdict severity explanation]
                 } },
                 misrepresentation_score: { type: "number" },
                 summary: { type: "string" }
@@ -165,10 +166,11 @@ module Analyzers
                   type: "object", additionalProperties: false,
                   properties: {
                     type: { type: "string", enum: %w[stale_data timeline_mixing implicit_recency selective_timeframe] },
-                    excerpt: { type: "string" }, referenced_period: { type: "string" },
+                    excerpt: { type: "string" },
+                    referenced_period: { type: [ "string", "null" ] },
                     severity: { type: "string", enum: %w[low medium high] },
                     explanation: { type: "string" }
-                  }, required: %w[type excerpt severity explanation]
+                  }, required: %w[type excerpt referenced_period severity explanation]
                 } },
                 temporal_integrity_score: { type: "number" },
                 summary: { type: "string" }
@@ -186,8 +188,8 @@ module Analyzers
                     excerpt: { type: "string" },
                     severity: { type: "string", enum: %w[low medium high] },
                     explanation: { type: "string" },
-                    corrective_context: { type: "string" }
-                  }, required: %w[type excerpt severity explanation]
+                    corrective_context: { type: [ "string", "null" ] }
+                  }, required: %w[type excerpt severity explanation corrective_context]
                 } },
                 statistical_integrity_score: { type: "number" },
                 summary: { type: "string" }
@@ -201,11 +203,12 @@ module Analyzers
                 quotations: { type: "array", items: {
                   type: "object", additionalProperties: false,
                   properties: {
-                    quoted_text: { type: "string" }, attributed_to: { type: "string" },
+                    quoted_text: { type: "string" },
+                    attributed_to: { type: [ "string", "null" ] },
                     verdict: { type: "string", enum: %w[faithful truncated reversed fabricated unverifiable] },
                     severity: { type: "string", enum: %w[low medium high] },
                     explanation: { type: "string" }
-                  }, required: %w[quoted_text verdict severity explanation]
+                  }, required: %w[quoted_text attributed_to verdict severity explanation]
                 } },
                 quotation_integrity_score: { type: "number" },
                 summary: { type: "string" }
@@ -221,14 +224,19 @@ module Analyzers
                   properties: {
                     steps: { type: "array", items: {
                       type: "object", additionalProperties: false,
-                      properties: { url: { type: "string" }, host: { type: "string" }, authority_tier: { type: "string" } },
-                      required: %w[host authority_tier]
+                      properties: {
+                        url: { type: [ "string", "null" ] },
+                        host: { type: "string" },
+                        authority_tier: { type: "string" }
+                      },
+                      required: %w[url host authority_tier]
                     } },
-                    originating_authority: { type: "string" }, final_authority: { type: "string" },
+                    originating_authority: { type: [ "string", "null" ] },
+                    final_authority: { type: [ "string", "null" ] },
                     new_evidence_added: { type: "boolean" },
                     severity: { type: "string", enum: %w[low medium high] },
                     explanation: { type: "string" }
-                  }, required: %w[severity explanation]
+                  }, required: %w[steps originating_authority final_authority new_evidence_added severity explanation]
                 } },
                 laundering_score: { type: "number" },
                 summary: { type: "string" }
