@@ -18,8 +18,11 @@ module Investigations
       source_embedding = Investigations::EmbeddingIndexer.call(investigation: @investigation)
       return [] unless source_embedding&.indexed?
 
+      source_vector = vector_for(@investigation.id)
+      return [] unless source_vector
+
       candidate_rows = SqliteVec.nearest_neighbors(
-        vector: vector_for(@investigation.id),
+        vector: source_vector,
         limit: @limit + 1,
         exclude_ids: [ @investigation.id ]
       ).select { |row| row["distance"].to_f <= MAX_DISTANCE }
@@ -43,8 +46,10 @@ module Investigations
     private
 
     def vector_for(investigation_id)
-      json = InvestigationEmbedding.indexed.find_by!(investigation_id:)&.embedding_json
-      JSON.parse(json)
+      embedding = InvestigationEmbedding.indexed.find_by(investigation_id:)
+      return nil unless embedding
+
+      JSON.parse(embedding.embedding_json)
     end
   end
 end

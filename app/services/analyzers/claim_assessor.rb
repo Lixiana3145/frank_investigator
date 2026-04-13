@@ -342,6 +342,8 @@ module Analyzers
       (entry.authority_score.to_f * source_reliability_multiplier(entry)).round(3)
     end
 
+    UNCLASSIFIED_ROLE_DISCOUNT = 0.75
+
     def source_reliability_multiplier(entry)
       source_role = entry.respond_to?(:source_role) ? entry.source_role.to_s : ""
       source_kind = entry.respond_to?(:source_kind) ? entry.source_kind.to_s : ""
@@ -353,6 +355,8 @@ module Analyzers
         0.40
       when "blog_amplification"
         0.30
+      when ""
+        UNCLASSIFIED_ROLE_DISCOUNT
       else
         1.0
       end

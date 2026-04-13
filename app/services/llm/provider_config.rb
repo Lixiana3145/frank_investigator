@@ -4,9 +4,15 @@ module Llm
 
     OPENROUTER_DEFAULT_MODELS = "openai/gpt-5-mini,anthropic/claude-sonnet-4-6,google/gemini-2.5-pro".freeze
     OPENAI_DEFAULT_MODELS = "gpt-5-mini".freeze
+    KNOWN_PROVIDERS = %w[openrouter openai].freeze
 
     def provider
-      Rails.configuration.x.frank_investigator.llm_provider.to_s.presence || "openrouter"
+      raw = Rails.configuration.x.frank_investigator.llm_provider.to_s.presence || "openrouter"
+      unless KNOWN_PROVIDERS.include?(raw)
+        Rails.logger.warn("[ProviderConfig] Unrecognized LLM provider #{raw.inspect}, falling back to openrouter")
+        return "openrouter"
+      end
+      raw
     end
 
     def models
